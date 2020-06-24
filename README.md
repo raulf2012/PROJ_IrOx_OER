@@ -37,12 +37,14 @@ Python version: 3.6.10
     yaml nbclean notedown
 
 Run these jupyter commands to install useful labextensions
+
     jupyter labextension install @rahlir/theme-gruvbox --no-build
     jupyter labextension install axelfahy/jupyterlab-vim --no-build
 
 TODO Move this
 
-jupyter nbextension enable --py widgetsnbextension
-conda install -c conda-forge ipywidgets
+This was needed to get the `tqdm` python module to work properly with Jupyterlab
 
-jupyter labextension install @jupyter-widgets/jupyterlab-manager
+    jupyter nbextension enable --py widgetsnbextension
+    conda install -c conda-forge ipywidgets
+    jupyter labextension install @jupyter-widgets/jupyterlab-manager
