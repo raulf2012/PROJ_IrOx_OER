@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# #########################################################
+# Source this file to properly set paths and stuff
+#
+# #########################################################
+
+root_folder=<User input here>
+
+
+# ########################################################
+# Activate the custom and local conda environment for repo
+conda_env_name='PROJ_irox_oer'
+conda activate $conda_env_name
+
+
+# ########################################################
+# Set the location of repo as project environment variable
+export PROJ_irox_oer=<User input here>
+
+
+# ########################################################
+# Adding the PROJ_DATA location to PATH
+
+PROJ_DATA_path=$PROJ_DATA  # USER
+export PROJ_DATA=$PROJ_DATA_path
+
+PROJ_DATA_path=$PROJ_DATA/PROJ_IrOx_OER  # USER
+export PROJ_irox_oer_data=$PROJ_DATA_path
+
+
+# #######################################################
+# DON'T NEED USER BELOW HERE
+
+export PYTHONPATH=$PROJ_irox_oer/data:$PYTHONPATH
+

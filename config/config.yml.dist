@@ -1,0 +1,6 @@
+# This not needed now
+mpcontrib:
+    api_key: <Only needed for MPContrib data upload>
+materials_project:
+    # API key is needed for code that generates bulk Pourbaix diagram
+    api_key: <INPUT HERE API KEY>
