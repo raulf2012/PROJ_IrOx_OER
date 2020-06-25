@@ -5,29 +5,40 @@
 import os
 import sys
 
+import copy
+from pathlib import Path
+
+import json
+
 import numpy as np
+import pandas as pd
 
 # #############################################################################
-from pymatgen.analysis.chemenv.coordination_environments.coordination_geometry_finder import LocalGeometryFinder
+from ase import io
 
+from pymatgen.analysis.chemenv.coordination_environments.coordination_geometry_finder import LocalGeometryFinder
 from pymatgen.analysis.chemenv.coordination_environments.chemenv_strategies import (
     SimplestChemenvStrategy,
     MultiWeightsChemenvStrategy)
 from pymatgen.analysis.chemenv.coordination_environments.structure_environments import LightStructureEnvironments
-
 from pymatgen.io.ase import AseAtomsAdaptor
+
+from catkit.gen.surface import SlabGenerator
+
+# #############################################################################
+from methods import (
+    get_df_dft, symmetrize_atoms,
+    get_structure_coord_df, remove_atoms)
+from proj_data import metal_atom_symbol
 #__|
 
 
 def analyse_local_coord_env(
     atoms=None,
-
     ):
     """
     """
     #| - analyse_local_coord_env
-    # print("RUNNING!")
-    # atoms = row_i.atoms
     out_dict = dict()
 
     Ir_indices = []
@@ -36,20 +47,6 @@ def analyse_local_coord_env(
             Ir_indices.append(i)
 
     struct = AseAtomsAdaptor.get_structure(atoms)
-
-    # TEMP
-    # Pickling data ###########################################
-    out_dict = dict()
-    out_dict["struct"] = struct
-
-    import os; import pickle
-    path_i = os.path.join(
-        os.environ["HOME"],
-        "__temp__",
-        "temp.pickle")
-    with open(path_i, "wb") as fle:
-        pickle.dump(out_dict, fle)
-    # #########################################################
 
 
     lgf = LocalGeometryFinder()
@@ -74,15 +71,6 @@ def analyse_local_coord_env(
         cor_env += [c_env[0]['ce_symbol']]
 
     out_dict["coor_env_dict"] = coor_env_dict
-
-    # uniques, counts = np.unique(cor_env, return_counts=True)
-    # if len(uniques) > 1:
-    #     coor = 'mixed'
-    #     coor_l = [int(c.split(':')[-1]) for c in cor_env]
-    #     mean_coor = np.mean(coor_l)
-    # else:
-    #     coor = uniques[0]
-    #     mean_coor = int(coor.split(':')[-1])
 
     return(out_dict)
     #__|
@@ -117,4 +105,398 @@ def check_if_sys_processed(
             row_i = df.iloc[0]
 
     return(sys_processed)
+    #__|
+
+def remove_nonsaturated_surface_metal_atoms(
+    atoms=None,
+    dz=None,
+    ):
+    """
+    """
+    #| - remove_nonsaturated_surface_metal_atoms
+
+    # #################################################
+    # #################################################
+    z_positions = atoms.positions[:,2]
+
+    z_max = np.max(z_positions)
+    z_min = np.min(z_positions)
+
+    # #################################################
+    # #################################################
+    df_coord_slab_i = get_structure_coord_df(atoms)
+
+    # #################################################
+    metal_atoms_to_remove = []
+    for atom in atoms:
+        if atom.symbol == metal_atom_symbol:
+            z_pos_i = atom.position[2]
+            if z_pos_i >= z_max - dz or z_pos_i <= z_min + dz:
+                row_coord = df_coord_slab_i[
+                    df_coord_slab_i.structure_index == atom.index].iloc[0]
+                num_o_neighbors = row_coord.neighbor_count.get("O", 0)
+
+                if num_o_neighbors < 6:
+                    metal_atoms_to_remove.append(atom.index)
+
+    slab_new = remove_atoms(atoms=atoms, atoms_to_remove=metal_atoms_to_remove)
+
+    return(slab_new)
+    # __|
+
+def remove_noncoord_oxygens(
+    atoms=None,
+    ):
+    """
+    """
+    #| - remove_noncoord_oxygens
+    df_coord_slab_i = get_structure_coord_df(atoms)
+
+    df_i = df_coord_slab_i[df_coord_slab_i.element == "O"]
+    df_i = df_i[df_i.num_neighbors == 0]
+
+    o_atoms_to_remove = df_i.structure_index.tolist()
+
+    slab_new = remove_atoms(atoms, atoms_to_remove=o_atoms_to_remove)
+
+    return(slab_new)
+    # __|
+
+def create_slab_from_bulk(atoms=None, facet=None):
+    """
+    """
+    #| - create_slab_from_bulk
+    SG = SlabGenerator(
+        atoms, facet, 20, vacuum=15,
+        fixed=None, layer_type='ang',
+        attach_graph=True,
+        standardize_bulk=True,
+        primitive=True, tol=1e-03)
+
+    # print("TEMP", "SlabGenerator:", SlabGenerator)
+
+    slab_i = SG.get_slab()
+    slab_i.set_pbc([True, True, True])
+
+
+    # #############################################
+    # Write slab to file ##########################
+    directory = "out_data"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    path_i = os.path.join("out_data", "temp.cif")
+    slab_i.write(path_i)
+
+    # Rereading the structure file to get it back into ase format
+    slab_i = io.read(path_i)
+    # data_dict_i["slab_0"] = slab_i
+
+    return(slab_i)
+    #__|
+
+def get_slab_thickness(atoms=None):
+    """
+    """
+    #| - get_slab_thickness
+    z_positions = atoms.positions[:,2]
+
+    z_max = np.max(z_positions)
+    z_min = np.min(z_positions)
+
+    slab_thickness = z_max - z_min
+
+    return(slab_thickness)
+    # print("slab_thickness:", slab_thickness)
+    #__|
+
+def remove_highest_metal_atoms(
+    atoms=None,
+    num_atoms_to_remove=1,
+    metal_atomic_number=77,
+    ):
+    """
+    """
+    #| - remove_highest_metal_atom
+    slab_m = atoms[atoms.numbers == metal_atomic_number]
+
+    positions_cpy = copy.deepcopy(slab_m.positions)
+
+    positions_cpy.sort()
+
+    positions_z = positions_cpy[:, 2]
+
+    positions_z.sort()
+    positions_z = np.flip(positions_z)
+
+
+    indices_to_remove = []
+    # print("TEMP", "num_atoms_to_remove:", num_atoms_to_remove)
+
+    for z_coord_i in positions_z[0:num_atoms_to_remove]:
+        for i_cnt, atom in enumerate(atoms):
+            z_coord_j = atom.position[2]
+
+            if z_coord_j == z_coord_i:
+                indices_to_remove.append(i_cnt)
+                break
+
+    slab_new = remove_atoms(
+        atoms=atoms,
+        atoms_to_remove=indices_to_remove,
+        )
+
+    return(slab_new)
+    #__|
+
+def calc_surface_area(atoms=None):
+    """
+    """
+    #| - calc_surface_area
+    cell = atoms.cell
+
+    cross_prod = np.cross(cell[0], cell[1])
+    area = np.linalg.norm(cross_prod)
+
+    return(area)
+    #__|
+
+def remove_all_atoms_above_cutoff(
+    atoms=None,
+    cutoff_thickness=17,
+    ):
+    """
+    """
+    #| - remove_all_atoms_above_cutoff
+    positions = atoms.positions
+
+    z_positions = positions[:,2]
+
+    z_max = np.max(z_positions)
+    z_min = np.min(z_positions)
+
+    atoms_new = atoms[z_positions < z_min + cutoff_thickness]
+
+    return(atoms_new)
+    #__|
+
+def create_final_slab_master(
+    atoms=None,
+    ):
+    """Master method to create final IrOx slab.
+    """
+    #| - create_final_slab_master
+    slab = atoms
+
+    ###########################################################
+    slab_thickness_i = get_slab_thickness(atoms=slab)
+    # print("slab_thickness_i:", slab_thickness_i)
+
+    slab = remove_all_atoms_above_cutoff(atoms=slab, cutoff_thickness=17)
+    # slab.write("out_data/temp_1.cif")
+
+    slab_thickness_i = get_slab_thickness(atoms=slab)
+    # print("slab_thickness_i:", slab_thickness_i)
+
+
+    ###########################################################
+    slab = remove_nonsaturated_surface_metal_atoms(
+        atoms=slab,
+        dz=4)
+
+    # slab.write("out_data/temp_2.cif")
+    slab_thickness_i = get_slab_thickness(atoms=slab)
+    # print("slab_thickness_i:", slab_thickness_i)
+
+    slab = remove_noncoord_oxygens(atoms=slab)
+
+    # slab.write("out_data/temp_3.cif")
+    slab_thickness_i = get_slab_thickness(atoms=slab)
+    # print("slab_thickness_i:", slab_thickness_i)
+
+
+
+    ###########################################################
+    i_cnt = 3
+    while slab_thickness_i > 15:
+        i_cnt += 1
+        # print(i_cnt)
+
+        # #####################################################
+        # Figuring out how many surface atoms to remove at one time
+        # Taken from R-IrO2 (100), which has 8 surface Ir atoms and a surface area of 58 A^2
+        surf_area_per_surface_metal = 58 / 8
+        surface_area_i = calc_surface_area(atoms=slab)
+        ideal_num_surface_atoms = surface_area_i / surf_area_per_surface_metal
+        num_atoms_to_remove = ideal_num_surface_atoms / 3
+        num_atoms_to_remove = int(np.round(num_atoms_to_remove))
+        # #####################################################
+
+        slab_new_0 = remove_highest_metal_atoms(
+            atoms=slab,
+            num_atoms_to_remove=num_atoms_to_remove,
+            metal_atomic_number=77)
+
+        slab_new_1 = remove_nonsaturated_surface_metal_atoms(
+            atoms=slab_new_0,
+            dz=4)
+
+        slab_new_2 = remove_noncoord_oxygens(atoms=slab_new_1)
+
+
+        slab_thickness_i = get_slab_thickness(atoms=slab_new_2)
+        # print("slab_thickness_i:", slab_thickness_i)
+
+        # slab_new_2.write("out_data/temp_" + str(i_cnt) + ".cif")
+
+        slab = slab_new_2
+
+    return(slab)
+    #__|
+
+def create_save_dataframe(data_dict_list=None, df_slab_old=None):
+    """
+    """
+    #| - create_save_dataframe
+    # #####################################################
+    # Create dataframe
+    df_slab = pd.DataFrame(data_dict_list)
+    num_new_rows = len(data_dict_list)
+
+    if num_new_rows > 0:
+        df_slab = df_slab.set_index("slab_id")
+    elif num_new_rows == 0:
+        print("There aren't any new rows to process")
+        assert False
+
+    # #####################################################
+    df_slab = pd.concat([
+        df_slab_old,
+        df_slab,
+        ])
+
+    # Pickling data #######################################
+    import os; import pickle
+    directory = "out_data"
+    if not os.path.exists(directory): os.makedirs(directory)
+    with open(os.path.join(directory, "df_slab.pickle"), "wb") as fle:
+        pickle.dump(df_slab, fle)
+    # #####################################################
+
+    df_slab_old = df_slab
+
+    return(df_slab_old)
+    #__|
+
+def constrain_slab(
+    atoms=None,
+    ):
+    """Constrain lower portion of slab geometry.
+
+    Has a little bit of built in logic which should provide better slabs.
+    """
+    #| - constrain_slab
+    slab = atoms
+
+    positions = slab.positions
+
+    z_pos = positions[:,2]
+
+    z_max = np.max(z_pos)
+    z_min = np.min(z_pos)
+
+    # ang_of_slab_to_constrain = (2 / 4) * (z_max - z_min)
+    ang_of_slab_to_constrain = (z_max - z_min) - 6
+
+
+    # #########################################################
+    indices_to_constrain = []
+    for atom in slab:
+        if atom.symbol == metal_atom_symbol:
+            if atom.position[2] < (z_min + ang_of_slab_to_constrain):
+                indices_to_constrain.append(atom.index)
+
+    for atom in slab:
+        if atom.position[2] < (z_min + ang_of_slab_to_constrain - 2):
+            indices_to_constrain.append(atom.index)
+
+    df_coord_slab_i = get_structure_coord_df(slab)
+
+    # #########################################################
+    other_atoms_to_constrain = []
+    for ind_i in indices_to_constrain:
+        row_i = df_coord_slab_i[df_coord_slab_i.structure_index == ind_i]
+        row_i = row_i.iloc[0]
+
+        nn_info = row_i.nn_info
+
+        for nn_i in nn_info:
+            ind_j = nn_i["site_index"]
+            other_atoms_to_constrain.append(ind_j)
+
+    # print(len(indices_to_constrain))
+
+    indices_to_constrain.extend(other_atoms_to_constrain)
+
+    # print(len(indices_to_constrain))
+
+    # #########################################################
+    constrain_bool_mask = []
+    for atom in slab:
+        if atom.index in indices_to_constrain:
+            constrain_bool_mask.append(True)
+        else:
+            constrain_bool_mask.append(False)
+
+    # #########################################################
+    slab_cpy = copy.deepcopy(slab)
+
+    from ase.constraints import FixAtoms
+    c = FixAtoms(mask=constrain_bool_mask)
+    slab_cpy.set_constraint(c)
+
+    # slab_cpy.constraints
+
+    return(slab_cpy)
+    #__|
+
+def read_data_json():
+    """
+    """
+    #| - read_data_json
+    path_i = os.path.join(
+        "out_data", "data.json")
+    my_file = Path(path_i)
+    if my_file.is_file():
+        data_path = os.path.join(
+            "out_data/data.json")
+        with open(data_path, "r") as fle:
+            data = json.load(fle)
+    else:
+        data = dict()
+
+    return(data)
+    #__|
+
+def resize_z_slab(atoms=None, vacuum=15):
+    """
+    """
+    #| - resize_z_slab
+    z_pos = atoms.positions[:,2]
+    z_max = np.max(z_pos)
+    z_min = np.min(z_pos)
+
+    new_z_height = z_max - z_min + vacuum
+
+    cell = atoms.cell
+
+    cell_cpy = cell.copy()
+    cell_cpy = cell_cpy.tolist()
+
+    cell_cpy[2][2] = new_z_height
+
+    atoms_cpy = copy.deepcopy(atoms)
+    atoms_cpy.set_cell(cell_cpy)
+
+    return(atoms_cpy)
     #__|
