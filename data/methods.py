@@ -545,7 +545,9 @@ def get_df_bulk_manual_class():
     # #################################################
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
+        # "workflow/process_bulk_dft/manually_classify_bulks",
         "workflow/process_bulk_dft/manually_classify_bulks",
+        "out_data",
         "bulk_manual_classification.csv")
     df_bulk_class = pd.read_csv(path_i)
     # df_bulk_class = pd.read_csv("./bulk_manual_classification.csv")
