@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# python $PROJ_irox_oer/dft_workflow/bin/run_unsub_jobs.py $1
+python $PROJ_irox_oer/dft_workflow/bin/run_unsub_jobs.py "$@"

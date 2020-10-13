@@ -1,4 +1,5 @@
 # Mine
+.virtual_documents
 workspace.xml
 .idea
 *.swp
@@ -14,6 +15,7 @@ __test__
 .ipynb_checkpoints
 outdata
 out_data
+out_data*
 out_plot
 out_plots
 __bkp__

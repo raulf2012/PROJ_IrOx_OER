@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python $PROJ_irox_oer/dft_workflow/bin/anal_job_out.py $1

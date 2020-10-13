@@ -32,6 +32,7 @@ from methods import (
 from proj_data import metal_atom_symbol
 #__|
 
+from methods import get_slab_thickness
 
 def analyse_local_coord_env(
     atoms=None,
@@ -147,27 +148,46 @@ def remove_nonsaturated_surface_metal_atoms(
 def remove_noncoord_oxygens(
     atoms=None,
     ):
-    """
-    """
+    """ """
     #| - remove_noncoord_oxygens
     df_coord_slab_i = get_structure_coord_df(atoms)
 
+    # #########################################################
     df_i = df_coord_slab_i[df_coord_slab_i.element == "O"]
     df_i = df_i[df_i.num_neighbors == 0]
 
     o_atoms_to_remove = df_i.structure_index.tolist()
+
+    # #########################################################
+    o_atoms_to_remove_1 = []
+    df_j = df_coord_slab_i[df_coord_slab_i.element == "O"]
+    for j_cnt, row_j in  df_j.iterrows():
+        neighbor_count = row_j.neighbor_count
+
+        if neighbor_count.get("Ir", 0) == 0:
+            if neighbor_count.get("O", 0) == 1:
+                o_atoms_to_remove_1.append(row_j.structure_index)
+
+
+    o_atoms_to_remove = list(set(o_atoms_to_remove + o_atoms_to_remove_1))
 
     slab_new = remove_atoms(atoms, atoms_to_remove=o_atoms_to_remove)
 
     return(slab_new)
     # __|
 
-def create_slab_from_bulk(atoms=None, facet=None):
-    """
+def create_slab_from_bulk(atoms=None, facet=None, layers=20):
+    """Create slab from bulk atoms object and facet.
+
+    Args:
+        atoms (ASE atoms object): ASE atoms object of bulk structure.
+        facet (str): Facet cut
+        layers (int): Number of layers
     """
     #| - create_slab_from_bulk
     SG = SlabGenerator(
-        atoms, facet, 20, vacuum=15,
+        atoms, facet, layers, vacuum=15,
+        # atoms, facet, 20, vacuum=15,
         fixed=None, layer_type='ang',
         attach_graph=True,
         standardize_bulk=True,
@@ -195,51 +215,23 @@ def create_slab_from_bulk(atoms=None, facet=None):
     return(slab_i)
     #__|
 
-def get_slab_thickness(atoms=None):
-    """
-    """
-    #| - get_slab_thickness
-    z_positions = atoms.positions[:,2]
-
-    z_max = np.max(z_positions)
-    z_min = np.min(z_positions)
-
-    slab_thickness = z_max - z_min
-
-    return(slab_thickness)
-    # print("slab_thickness:", slab_thickness)
-    #__|
-
 def remove_highest_metal_atoms(
     atoms=None,
-    num_atoms_to_remove=1,
+    num_atoms_to_remove=None,
     metal_atomic_number=77,
     ):
-    """
-    """
+    """ """
     #| - remove_highest_metal_atom
     slab_m = atoms[atoms.numbers == metal_atomic_number]
 
     positions_cpy = copy.deepcopy(slab_m.positions)
-
-    positions_cpy.sort()
-
-    positions_z = positions_cpy[:, 2]
-
-    positions_z.sort()
-    positions_z = np.flip(positions_z)
-
+    positions_cpy_sorted = positions_cpy[positions_cpy[:,2].argsort()]
 
     indices_to_remove = []
-    # print("TEMP", "num_atoms_to_remove:", num_atoms_to_remove)
-
-    for z_coord_i in positions_z[0:num_atoms_to_remove]:
+    for coord_i in positions_cpy_sorted[-2:]:
         for i_cnt, atom in enumerate(atoms):
-            z_coord_j = atom.position[2]
-
-            if z_coord_j == z_coord_i:
+            if all(atom.position == coord_i):
                 indices_to_remove.append(i_cnt)
-                break
 
     slab_new = remove_atoms(
         atoms=atoms,
@@ -250,8 +242,7 @@ def remove_highest_metal_atoms(
     #__|
 
 def calc_surface_area(atoms=None):
-    """
-    """
+    """ """
     #| - calc_surface_area
     cell = atoms.cell
 
@@ -286,70 +277,83 @@ def create_final_slab_master(
     """Master method to create final IrOx slab.
     """
     #| - create_final_slab_master
-    slab = atoms
+    TEMP = True
+    slab_0 = atoms
 
     ###########################################################
-    slab_thickness_i = get_slab_thickness(atoms=slab)
+    slab_thickness_i = get_slab_thickness(atoms=slab_0)
     # print("slab_thickness_i:", slab_thickness_i)
-
-    slab = remove_all_atoms_above_cutoff(atoms=slab, cutoff_thickness=17)
-    # slab.write("out_data/temp_1.cif")
-
-    slab_thickness_i = get_slab_thickness(atoms=slab)
-    # print("slab_thickness_i:", slab_thickness_i)
+    slab_thickness_out = slab_thickness_i
 
 
-    ###########################################################
-    slab = remove_nonsaturated_surface_metal_atoms(
-        atoms=slab,
-        dz=4)
+    cutoff_thickness_i = 14
+    break_loop = False
+    while not break_loop:
+        #| - Getting slab pre-ready
+        slab = remove_all_atoms_above_cutoff(
+            atoms=slab_0,
+            cutoff_thickness=cutoff_thickness_i)
 
-    # slab.write("out_data/temp_2.cif")
-    slab_thickness_i = get_slab_thickness(atoms=slab)
-    # print("slab_thickness_i:", slab_thickness_i)
+        ###########################################################
+        slab = remove_nonsaturated_surface_metal_atoms(atoms=slab, dz=4)
+        slab = remove_noncoord_oxygens(atoms=slab)
 
-    slab = remove_noncoord_oxygens(atoms=slab)
-
-    # slab.write("out_data/temp_3.cif")
-    slab_thickness_i = get_slab_thickness(atoms=slab)
-    # print("slab_thickness_i:", slab_thickness_i)
-
-
-
-    ###########################################################
-    i_cnt = 3
-    while slab_thickness_i > 15:
-        i_cnt += 1
-        # print(i_cnt)
-
-        # #####################################################
-        # Figuring out how many surface atoms to remove at one time
-        # Taken from R-IrO2 (100), which has 8 surface Ir atoms and a surface area of 58 A^2
-        surf_area_per_surface_metal = 58 / 8
-        surface_area_i = calc_surface_area(atoms=slab)
-        ideal_num_surface_atoms = surface_area_i / surf_area_per_surface_metal
-        num_atoms_to_remove = ideal_num_surface_atoms / 3
-        num_atoms_to_remove = int(np.round(num_atoms_to_remove))
-        # #####################################################
-
-        slab_new_0 = remove_highest_metal_atoms(
-            atoms=slab,
-            num_atoms_to_remove=num_atoms_to_remove,
-            metal_atomic_number=77)
-
-        slab_new_1 = remove_nonsaturated_surface_metal_atoms(
-            atoms=slab_new_0,
-            dz=4)
-
-        slab_new_2 = remove_noncoord_oxygens(atoms=slab_new_1)
-
-
-        slab_thickness_i = get_slab_thickness(atoms=slab_new_2)
+        slab_thickness_i = get_slab_thickness(atoms=slab)
         # print("slab_thickness_i:", slab_thickness_i)
 
-        # slab_new_2.write("out_data/temp_" + str(i_cnt) + ".cif")
+        if slab_thickness_i < 15:
+            cutoff_thickness_i = cutoff_thickness_i + 1.
+        else:
+            break_loop = True
+        #__|
 
-        slab = slab_new_2
+
+    #| - Main loop, chipping off surface atoms
+    # print("SIDJFISDIFJISDJFIJSDIJF")
+    # ###########################################################
+    # i_cnt = 2
+    # while slab_thickness_i > 15:
+    #     print("slab_thickness_i:", slab_thickness_i)
+    #
+    #     i_cnt += 1
+    #     # print(i_cnt)
+    #
+    #     # #####################################################
+    #     # Figuring out how many surface atoms to remove at one time
+    #     # Taken from R-IrO2 (100), which has 8 surface Ir atoms and a surface area of 58 A^2
+    #     surf_area_per_surface_metal = 58 / 8
+    #     surface_area_i = calc_surface_area(atoms=slab)
+    #     ideal_num_surface_atoms = surface_area_i / surf_area_per_surface_metal
+    #     num_atoms_to_remove = ideal_num_surface_atoms / 3
+    #     num_atoms_to_remove = int(np.round(num_atoms_to_remove))
+    #     # #####################################################
+    #
+    #     slab_new_0 = remove_highest_metal_atoms(
+    #         atoms=slab,
+    #         num_atoms_to_remove=num_atoms_to_remove,
+    #         metal_atomic_number=77)
+    #     if TEMP:
+    #         slab_new_0.write("out_data/temp_out/slab_1_" + str(i_cnt) + "_0" + ".cif")
+    #
+    #     slab_new_1 = remove_nonsaturated_surface_metal_atoms(
+    #         atoms=slab_new_0,
+    #         dz=4)
+    #     if TEMP:
+    #         slab_new_1.write("out_data/temp_out/slab_1_" + str(i_cnt) + "_1" + ".cif")
+    #
+    #     slab_new_2 = remove_noncoord_oxygens(atoms=slab_new_1)
+    #     if TEMP:
+    #         slab_new_2.write("out_data/temp_out/slab_1_" + str(i_cnt) + "_2" + ".cif")
+    #
+    #
+    #     slab_thickness_i = get_slab_thickness(atoms=slab_new_2)
+    #     # print("slab_thickness_i:", slab_thickness_i)
+    #
+    #     if TEMP:
+    #         slab_new_2.write("out_data/temp_out/slab_1_" + str(i_cnt) + ".cif")
+    #
+    #     slab = slab_new_2
+    #__|
 
     return(slab)
     #__|
@@ -500,3 +504,46 @@ def resize_z_slab(atoms=None, vacuum=15):
 
     return(atoms_cpy)
     #__|
+
+def repeat_xy(atoms=None, min_len_x=6, min_len_y=6):
+    """
+    """
+    #| - repeat_xy
+    print("min_len_x:", min_len_x, "min_len_y:", min_len_y)
+
+    cell = atoms.cell.array
+
+    x_mag = np.linalg.norm(cell[0])
+    y_mag = np.linalg.norm(cell[1])
+
+    import math
+    mult_x = 1
+    if x_mag < min_len_x:
+        mult_x = math.ceil(min_len_x / x_mag)
+        #  mult_x = round(min_len_x / x_mag)
+        mult_x = int(mult_x)
+        # print(mult_x)
+    mult_y = 1
+    if y_mag < min_len_y:
+        mult_y = math.ceil(min_len_y / y_mag)
+        #  mult_y = round(min_len_y / y_mag)
+        mult_y = int(mult_y)
+
+    repeat_list = (mult_x, mult_y, 1)
+    atoms_repeated = atoms.repeat(repeat_list)
+
+    # Check if the atoms were repeated or not
+    if mult_x > 1 or mult_y > 1:
+        is_repeated = True
+    else:
+        is_repeated = False
+
+    # Construct final out dict
+    out_dict = dict(
+        atoms_repeated=atoms_repeated,
+        is_repeated=is_repeated,
+        repeat_list=repeat_list,
+        )
+    return(out_dict)
+    #__|
+

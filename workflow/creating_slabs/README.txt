@@ -1,3 +1,11 @@
+create_slabs.ipynb:
+  Creates the slabs from the bulk crystal structures. This notebook takes a really long time to run, it can churn out about 100 slabs every 5 hours or so.
+
+process_slabs.ipynb:
+  Primarily functions to add constraints and reapply the vacuum.
+
+
+
 # ###############################################
 Structures that has unsaturated octahedra
 

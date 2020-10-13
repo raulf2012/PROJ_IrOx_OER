@@ -1,3 +1,15 @@
+# Project path variables and commands
+
+### Paths:
+`$PROJ_irox_oer`
+`$PROJ_irox_oer_gdrive`
+`$PROJ_irox_oer_data`
+`$PROJ_irox_oer_paper` 
+
+### Commands:
+`PROJ_irox_oer__comm_rclone_sync`
+
+
 # Import links
 Github repo for project code:
 https://github.com/raulf2012/PROJ_IrOx_OER
@@ -21,7 +33,7 @@ https://github.com/raulf2012/PAPER_IrOx_OER
 
 Create conda environment
 
-`conda create --name PROJ_irox_oer --no-default-packages`
+`conda create --name PROJ_irox_oer python=3.6.10 --no-default-packages`
 
 Python version: 3.6.10
 
@@ -29,17 +41,19 @@ Python version: 3.6.10
     -c plotly \
     -c conda-forge \
     -c anaconda \
-    nodejs jupyterlab jupytext \
-    scikit-learn matplotlib scipy pandas \
-    plotly chart-studio plotly-orca psutil colormap colorlover \
-    ase pymatgen=2020.4.29 gpflow \
-    nodejs=10 nb_conda_kernels tensorflow \
-    yaml nbclean notedown
+    jupyterlab jupytext \
+    scikit-learn=0.23.1 matplotlib=3.2.1 scipy=1.4.1 pandas=1.0.4 \
+    plotly=4.8.1 chart-studio=1.1.0 plotly-orca psutil=5.7.0 colormap colorlover \
+    ase=3.19.1 pymatgen=2020.4.29 gpflow \
+    nodejs=10  tensorflow \
+    yaml nbclean notedown ipywidgets nb_conda_kernels nodejs dictdiffer
 
 Run these jupyter commands to install useful labextensions
 
     jupyter labextension install @rahlir/theme-gruvbox --no-build
     jupyter labextension install axelfahy/jupyterlab-vim --no-build
+    jupyter labextension install @jupyter-widgets/jupyterlab-manager
+
 
 TODO Move this
 
