@@ -122,9 +122,10 @@ df_tmp = pd.concat([df, df_features], axis=1)
 df_tmp = df_tmp.dropna()
 
 df_tmp = df_tmp.drop(columns=["compenv", "slab_id", "ads", "active_site", "att_num", ])
-# -
 
-assert False
+# +
+# assert False
+# -
 
 for feature_i in feature_cols:
     mean_val = df_tmp[feature_i].mean()
@@ -298,6 +299,3 @@ for name_i, row_i in df_tmp.iterrows():
             # print("IYUIHUuids")
 
 # name_str_i
-# -
-
-
