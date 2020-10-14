@@ -1,4 +1,5 @@
 # Mine
+*.kate-swp
 in_data
 .virtual_documents
 workspace.xml

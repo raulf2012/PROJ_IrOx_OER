@@ -236,12 +236,259 @@ idx = pd.IndexSlice
 df_jobs_anal_o_ok__nersc = df_jobs_anal_o_ok.loc[idx["nersc", :, :, :, :], :]
 # -
 
+# # Bare systems accounting
+
+# +
+# #########################################################
+tot_num_active_sites = 0
+tot_num_completed_bare_jobs =  0
+# #########################################################
+for name_i, row_i in df_jobs_anal_o_ok__slac.iterrows():
+
+    # #####################################################
+    compenv_i = name_i[0]
+    slab_id_i = name_i[1]
+    ads_i = name_i[2]
+    active_site_i = name_i[3]
+    att_num_i = name_i[4]
+    # #####################################################
+
+    # #####################################################
+    row_active_sites_i = df_active_sites.loc[slab_id_i]
+    # #####################################################
+    active_sites_unique_i = row_active_sites_i.active_sites_unique
+    # #####################################################
+
+    num_active_sites_i = len(active_sites_unique_i)
+
+    # Totalling the number of unique active sites
+    tot_num_active_sites += num_active_sites_i
+
+    for active_site_j in active_sites_unique_i:
+
+        df_jobs_i = df_jobs[
+            (df_jobs.compenv == compenv_i) & \
+            (df_jobs.slab_id == slab_id_i) & \
+            (df_jobs.ads == "bare") & \
+            (df_jobs.active_site == active_site_j) & \
+            [True for i in range(len(df_jobs))]
+            ]
+
+        df_index = df_jobs_anal.index.to_frame()
+        df_index_j = df_index[
+            (df_index.compenv == compenv_i) & \
+            (df_index.slab_id == slab_id_i) & \
+            (df_index.ads == "bare") & \
+            (df_index.active_site == active_site_j) & \
+            [True for i in range(len(df_index))]
+            ]
+
+        df_jobs_anal_bare_j = df_jobs_anal.loc[
+            df_index_j.index    
+            ]
+
+        job_completely_done_i = df_jobs_anal_bare_j.iloc[0].job_completely_done
+
+        if job_completely_done_i:
+            tot_num_completed_bare_jobs += 1
+
 print(40 * "*")
 print(40 * "*")
 print(40 * "*")
 print("Slac")
 
-# + jupyter={"outputs_hidden": true}
+print(
+    "Total number of bare calcs:",
+    tot_num_active_sites,
+    )
+
+print(
+    "Completed bare jobs:",
+    tot_num_completed_bare_jobs
+    )
+
+# +
+# #########################################################
+tot_num_active_sites = 0
+tot_num_completed_bare_jobs =  0
+# #########################################################
+for name_i, row_i in df_jobs_anal_o_ok__sher.iterrows():
+
+    # #####################################################
+    compenv_i = name_i[0]
+    slab_id_i = name_i[1]
+    ads_i = name_i[2]
+    active_site_i = name_i[3]
+    att_num_i = name_i[4]
+    # #####################################################
+
+    # #####################################################
+    row_active_sites_i = df_active_sites.loc[slab_id_i]
+    # #####################################################
+    active_sites_unique_i = row_active_sites_i.active_sites_unique
+    # #####################################################
+
+    num_active_sites_i = len(active_sites_unique_i)
+
+    # Totalling the number of unique active sites
+    tot_num_active_sites += num_active_sites_i
+
+    for active_site_j in active_sites_unique_i:
+
+        df_jobs_i = df_jobs[
+            (df_jobs.compenv == compenv_i) & \
+            (df_jobs.slab_id == slab_id_i) & \
+            (df_jobs.ads == "bare") & \
+            (df_jobs.active_site == active_site_j) & \
+            [True for i in range(len(df_jobs))]
+            ]
+
+        df_index = df_jobs_anal.index.to_frame()
+        df_index_j = df_index[
+            (df_index.compenv == compenv_i) & \
+            (df_index.slab_id == slab_id_i) & \
+            (df_index.ads == "bare") & \
+            (df_index.active_site == active_site_j) & \
+            [True for i in range(len(df_index))]
+            ]
+
+        df_jobs_anal_bare_j = df_jobs_anal.loc[
+            df_index_j.index    
+            ]
+
+        job_completely_done_i = df_jobs_anal_bare_j.iloc[0].job_completely_done
+
+        if job_completely_done_i:
+            tot_num_completed_bare_jobs += 1
+
+print(40 * "*")
+print(40 * "*")
+print(40 * "*")
+print("Sherlock")
+
+
+print(
+    "Total number of bare calcs:",
+    tot_num_active_sites,
+    )
+
+print(
+    "Completed bare jobs:",
+    tot_num_completed_bare_jobs
+    )
+
+# +
+# #########################################################
+tot_num_active_sites = 0
+tot_num_completed_bare_jobs =  0
+# #########################################################
+for name_i, row_i in df_jobs_anal_o_ok__nersc.iterrows():
+
+    # #####################################################
+    compenv_i = name_i[0]
+    slab_id_i = name_i[1]
+    ads_i = name_i[2]
+    active_site_i = name_i[3]
+    att_num_i = name_i[4]
+    # #####################################################
+
+    # #####################################################
+    row_active_sites_i = df_active_sites.loc[slab_id_i]
+    # #####################################################
+    active_sites_unique_i = row_active_sites_i.active_sites_unique
+    # #####################################################
+
+    num_active_sites_i = len(active_sites_unique_i)
+
+    # Totalling the number of unique active sites
+    tot_num_active_sites += num_active_sites_i
+
+    for active_site_j in active_sites_unique_i:
+
+        df_jobs_i = df_jobs[
+            (df_jobs.compenv == compenv_i) & \
+            (df_jobs.slab_id == slab_id_i) & \
+            (df_jobs.ads == "bare") & \
+            (df_jobs.active_site == active_site_j) & \
+            [True for i in range(len(df_jobs))]
+            ]
+
+        df_index = df_jobs_anal.index.to_frame()
+        df_index_j = df_index[
+            (df_index.compenv == compenv_i) & \
+            (df_index.slab_id == slab_id_i) & \
+            (df_index.ads == "bare") & \
+            (df_index.active_site == active_site_j) & \
+            [True for i in range(len(df_index))]
+            ]
+
+        df_jobs_anal_bare_j = df_jobs_anal.loc[
+            df_index_j.index    
+            ]
+
+        if df_jobs_anal_bare_j.shape[0] > 0:
+
+            job_completely_done_i = df_jobs_anal_bare_j.iloc[0].job_completely_done
+
+            if job_completely_done_i:
+                tot_num_completed_bare_jobs += 1
+
+
+        # job_completely_done_i = df_jobs_anal_bare_j.iloc[0].job_completely_done
+
+        # if job_completely_done_i:
+        #     tot_num_completed_bare_jobs += 1
+
+
+print(40 * "*")
+print(40 * "*")
+print(40 * "*")
+print("Nersc")
+
+print(
+    "Total number of bare calcs:",
+    tot_num_active_sites,
+    )
+
+print(
+    "Completed bare jobs:",
+    tot_num_completed_bare_jobs
+    )
+
+# +
+# #         job_completely_done_i = 
+# # df_jobs_anal_bare_j.iloc[0].job_completely_done
+# # df_jobs_anal_bare_j.iloc[0]
+
+# if df_jobs_anal_bare_j.shape[0] > 0:
+
+#     job_completely_done_i = df_jobs_anal_bare_j.iloc[0].job_completely_done
+
+#     if job_completely_done_i:
+#         tot_num_completed_bare_jobs += 1
+# -
+
+print(80 * "*")
+print(80 * "*")
+print(12 * "*OH Jobs")
+print(80 * "*")
+print(80 * "*")
+
+# +
+# assert False
+
+# + active=""
+#
+#
+#
+# -
+
+print(40 * "*")
+print(40 * "*")
+print(40 * "*")
+print("Slac")
+
+# +
 tot_num_oh_jobs = 0
 tot_num_oh_jobs_2 = 0
 tot_num_completed_oh_jobs = 0
@@ -567,3 +814,43 @@ for name, group in grouped:
 # df_jobs_anal
 
 # df_active_sites
+
+# + jupyter={"source_hidden": true}
+#         num_oh_calcs = df_jobs_i.att_num.unique().shape[0]
+#         tot_num_oh_jobs += num_oh_calcs
+#         tot_num_oh_jobs_2 += 4
+
+#         # #################################################
+#         df_index = df_jobs_anal.index.to_frame()
+#         df_index_j = df_index[
+#             (df_index.compenv == compenv_i) & \
+#             (df_index.slab_id == slab_id_i) & \
+#             (df_index.ads == "oh") & \
+#             (df_index.active_site == active_site_j) & \
+#             [True for i in range(len(df_index))]
+#             ]
+
+#         df_jobs_anal_oh_j = df_jobs_anal.loc[
+#             df_index_j.index    
+#             ]
+
+#         df_i = df_jobs_anal_oh_j[df_jobs_anal_oh_j.job_completely_done == True]
+#         completed_oh_i = df_i.shape[0]
+
+#         tot_num_completed_oh_jobs += completed_oh_i
+
+#         if completed_oh_i > 0:
+#             tot_num_job_sets_with_compl_oh += 1
+#         else:
+#             tmp = 42
+# #             from IPython.display import display
+# #             print(40 * "*")
+# #             print(name_i, active_site_j)
+# #             display(df_jobs_anal_oh_j)
+
+
+# # print("tot_num_oh_jobs:", tot_num_oh_jobs)
+# # print("tot_num_oh_jobs_2:", tot_num_oh_jobs_2)
+# # print("tot_num_completed_oh_jobs:", tot_num_completed_oh_jobs)
+# # print("tot_num_oh_job_sets:", tot_num_oh_job_sets)
+# # print("tot_num_job_sets_with_compl_oh:", tot_num_job_sets_with_compl_oh)

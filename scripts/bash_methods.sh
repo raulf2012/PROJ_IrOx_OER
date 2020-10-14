@@ -118,6 +118,30 @@ if [[ "$COMPENV" == "wsl" ]]; then
       echo "****************************************"
       python $PROJ_irox_oer/dft_workflow/job_analysis/create_oh_slabs/create_oh_slabs.py
 
+      echo ""
+      echo ""
+      echo ""
+      echo "****************************************"
+      echo "python $PROJ_irox_oer/dft_workflow/job_analysis/analyze_oh_jobs/anal_oh_slabs.py"
+      echo "****************************************"
+      python $PROJ_irox_oer/dft_workflow/job_analysis/analyze_oh_jobs/anal_oh_slabs.py
+
+      echo ""
+      echo ""
+      echo ""
+      echo "****************************************"
+      echo "python $PROJ_irox_oer/dft_workflow/job_analysis/compare_magmoms/compare_magoms.py"
+      echo "****************************************"
+      python $PROJ_irox_oer/dft_workflow/job_analysis/compare_magmoms/compare_magoms.py
+
+      echo ""
+      echo ""
+      echo ""
+      echo "****************************************"
+      echo "python $PROJ_irox_oer/dft_workflow/job_analysis/compare_magmoms/decide_jobs_magmoms.py"
+      echo "****************************************"
+      python $PROJ_irox_oer/dft_workflow/job_analysis/compare_magmoms/decide_jobs_magmoms.py
+
     fi
 
 

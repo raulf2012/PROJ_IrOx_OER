@@ -576,7 +576,11 @@ with open(file_path_i, "wb") as fle:
     pickle.dump(df, fle)
 # #########################################################
 
-file_path_i
+# +
+# file_path_i
+
+# +
+# compenv
 
 # +
 db_path = os.path.join(
@@ -589,7 +593,8 @@ bash_comm = "rclone copyto " + file_path_i + " " + rclone_remote + ":" + db_path
 if verbose:
     print("bash_comm:", bash_comm)
 
-os.system(bash_comm)
+if compenv != "wsl":
+    os.system(bash_comm)
 # -
 
 # #########################################################
@@ -600,14 +605,15 @@ print(20 * "# # ")
 # assert False
 # #########################################################
 
-df_i = df[
-    (df.compenv == "sherlock") & \
-    (df.bulk_id == "v59s9lxdxr") & \
-    (df.facet == "131") & \
-    (df.ads == "oh") & \
-    (df.att_num == 3)
-    ]
-df_i.gdrive_path.tolist()
+# +
+# df_i = df[
+#     (df.compenv == "sherlock") & \
+#     (df.bulk_id == "v59s9lxdxr") & \
+#     (df.facet == "131") & \
+#     (df.ads == "oh") & \
+#     (df.att_num == 3)
+#     ]
+# df_i.gdrive_path.tolist()
 
 # + active=""
 #

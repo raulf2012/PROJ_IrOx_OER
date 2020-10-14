@@ -1,8 +1,5 @@
 #!/bin/bash
 
-"""
-"""
-
 if [[ $1 == "to_local" ]]; then
     # | - to_local
     rclone sync \
