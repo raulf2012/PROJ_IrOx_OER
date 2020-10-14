@@ -21,7 +21,7 @@
 
 # # Import Modules
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 import os
 print(os.getcwd())
 import sys
@@ -238,6 +238,18 @@ df_jobs_oh_anal = df_jobs_oh_anal.loc[shared_index]
 df_m = df_m.loc[shared_index]
 
 # +
+# # df_m.index.difference?
+
+# df_jobs_oh_anal
+
+# +
+# index_diff_0
+# index_diff_1
+
+# +
+# assert False
+
+# +
 list_0 = list(df_m.columns)
 list_1 = list(df_jobs_oh_anal.columns)
 
@@ -331,48 +343,7 @@ df_rerun_from_oh_tmp = get_df_rerun_from_oh()
 df_rerun_from_oh_tmp.head()
 
 # +
-# # #########################################################
-# import pickle; import os
-# directory = os.path.join(
-#     os.environ["PROJ_irox_oer"],
-#     "dft_workflow/job_analysis/compare_magmoms",
-#     "out_data")
-# path_i = os.path.join(directory, "df_rerun_from_oh.pickle")
-# with open(path_i, "rb") as fle:
-#     df_rerun_from_oh = pickle.load(fle)
-# # #########################################################
-
-# +
-# df_rerun_from_oh
-# -
-
-assert False
-
-# +
-# compenv_i
-# compenv_i = 
-# row_i.compenv
-
-# compenv_i = row_i.compenv
-# slab_id_i = row_i.slab_id
-# active_site_i = row_i.active_site
-# all_oh_attempts_done_i = row_i.all_oh_attempts_done
-# job_ids_sorted_energy_i = row_i.job_ids_sorted_energy
-# job_id_most_stable_i = row_i.job_id_most_stable
-
-# row_i
-
-# +
-# df_magmoms[
-#     (df_magmoms.compenv == compenv_i) & \
-#     (df_magmoms.slab_id == slab_id_i) & \
-#     # (df_magmoms.active_site == active_site_i) & \
-#     [True for i in range(len(df_magmoms))]
-#     ]
-
-# +
-# row_oh_anal_i
-# row_i
+# assert False
 # -
 
 # # Writing the slabs with the smallest magmoms to file to manually inspect
@@ -408,164 +379,13 @@ for i_cnt, (job_id_i, row_i) in enumerate(df_i.iloc[0:20].iterrows()):
         path_i,
         out_path)
 
-df_i.iloc[0:20]
-
-# + active=""
-#
-#
-#
-#
-#
+# df_i.iloc[0:20]
 # -
 
-assert False
-
-# + jupyter={"source_hidden": true}
-# df_index_i = df_i.index.to_frame()
-
-# df_index_tmp = df_index_i[
-    
-#     # (df_index_i.compenv == "sherlock") & \
-#     # (df_index_i.slab_id == "vuvunira_55") & \
-#     # (df_index_i.active_site == 68.) & \
-
-#     (df_index_i.compenv == "sherlock") & \
-#     (df_index_i.slab_id == "kipatalo_90") & \
-#     (df_index_i.active_site == 81.) & \
-
-#     [True for i in range(len(df_index_i))]
-#     ]
-
-
-# # print("TEMP")
-# # df_i = df_i.loc[
-# #     df_index_tmp.index
-# #     ]
-
-# + jupyter={"source_hidden": true}
-    # write_atoms_objets = True
-
-
-    # out_dict = magmom_data_dict.get(name_i, None)
-
-    # if out_dict is None:
-    #     run_job = True
-    # else:
-    #     run_job = False
-
-    # if redo_all_jobs:
-    #     run_job = True
-
-
-    # if run_job:
-    #     out_dict = process_group_magmom_comp(
-    #         group=group_w_o,
-    #         # write_atoms_objects=False,
-    #         write_atoms_objects=True,
-    #         verbose=False,
-    #         # verbose=True,
-    #         )
-
-
-    # magmom_data_dict[name_i] = out_dict
-
-    # save_magmom_comp_data(magmom_data_dict)
-    # if verbose_local:
-    #     print("")
-
-# + jupyter={"source_hidden": true}
-# def analyze_O_in_set():
-#     """
-#     """
-#     #| - analyze_O_in_set
-# sys_w_not_low_magmoms = False
-# sys_w_low_magmoms = False
-
-# # #########################################################
-# # Check for *O slabs first
-# df_index_i = group_i.index.to_frame()
-# df_index_i = df_index_i[df_index_i.ads == "o"]
-# # #########################################################
-# group_o = group_i.loc[df_index_i.index]
-# # #########################################################
-# for name_i, row_i in group_o.iterrows():
-
-#     # #####################################################
-#     job_id_i = row_i.job_id_max
-#     # #####################################################
-
-#     # #####################################################
-#     row_magmoms_i = df_magmoms.loc[job_id_i]
-#     # #####################################################
-#     sum_magmoms_i = row_magmoms_i.sum_magmoms
-#     # #####################################################
-
-#     # #####################################################
-#     row_magmoms_i = df_magmoms.loc[job_id_i]
-#     # #####################################################
-#     sum_magmoms_i = row_magmoms_i.sum_magmoms
-#     sum_abs_magmoms_i = row_magmoms_i.sum_abs_magmoms
-#     sum_magmoms_pa_i = row_magmoms_i.sum_magmoms_pa
-#     sum_abs_magmoms_pa = row_magmoms_i.sum_abs_magmoms_pa
-#     # #####################################################
-
-#     if sum_abs_magmoms_pa < magmom_cutoff:
-#         sys_w_low_magmoms = True
-#     if sum_abs_magmoms_pa > 0.1:
-#         sys_w_not_low_magmoms = True
-
-
-# # #####################################################
-# data_dict_i["compenv"] = compenv_i
-# data_dict_i["slab_id"] = slab_id_i
-# data_dict_i["active_site"] = active_site_i
-# # #####################################################
-# data_dict_i["*O_w_low_magmoms"] = sys_w_low_magmoms
-# data_dict_i["*O_w_not_low_magmoms"] = sys_w_not_low_magmoms
-# # data_dict_i[""] = 
-# # #####################################################
-# data_dict_list.append(data_dict_i)
-# # #####################################################
-
-# #__|
-
-# + jupyter={"source_hidden": true}
-# # pd.concat?
-
-# + jupyter={"source_hidden": true}
-# df_m
-
-# + jupyter={"source_hidden": true}
-# df_jobs_oh_anal.loc[('slac', 'fagumoha_68', 62.0)]
-
-# df_m
-
-# + jupyter={"source_hidden": true}
-# df_jobs_anal_no_o.loc[
-#     ('slac', 'fagumoha_68', 'oh', 62.0, 3)
-#     ]
-
-# grouped.get_group(('slac', 'fagumoha_68', 62.0))
-
-# + jupyter={"source_hidden": true}
+# #########################################################
+print(20 * "# # ")
+print("All done!")
+print("analyse_jobs.ipynb")
+print(20 * "# # ")
 # assert False
-
-# + jupyter={"source_hidden": true}
-# if is_there_any_sys_w_low_magmoms:
-#     tmp = 42
-
-# group_i
-
-# + jupyter={"source_hidden": true}
-    # # #####################################################
-    # row_oh_anal_i = df_jobs_oh_anal[
-    #     (df_jobs_oh_anal.compenv == compenv_i) & \
-    #     (df_jobs_oh_anal.slab_id == slab_id_i) & \
-    #     (df_jobs_oh_anal.active_site == active_site_i) & \
-    #     [True for i in range(len(df_jobs_oh_anal))]
-    #     ]
-    # # #####################################################
-    # all_oh_attempts_done_i = row_oh_anal_i.all_oh_attempts_done
-    # job_ids_sorted_energy_i = row_oh_anal_i.job_ids_sorted_energy
-    # job_id_most_stable_i = row_oh_anal_i.job_id_most_stable
-    # # #####################################################
+# #########################################################

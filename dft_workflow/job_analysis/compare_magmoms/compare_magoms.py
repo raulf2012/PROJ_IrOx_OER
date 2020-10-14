@@ -134,7 +134,7 @@ df_index_tmp = df_index_i[
 
 # +
 # #########################################################
-verbose_local = True
+verbose_local = False
 # #########################################################
 
 # data_dict = dict()
@@ -196,8 +196,10 @@ for i_cnt, (name_i, group) in enumerate(grouped):
     if redo_all_jobs:
         run_job = True
 
-    print(run_job)
 
+
+    if verbose_local:
+        print(run_job)
 
     if run_job:
         out_dict = process_group_magmom_comp(
@@ -390,7 +392,16 @@ from methods import get_df_magmoms
 df_magmoms_tmp = get_df_magmoms()
 # -
 
-assert False
+# #########################################################
+print(20 * "# # ")
+print("All done!")
+print("analyse_jobs.ipynb")
+print(20 * "# # ")
+# assert False
+# #########################################################
+
+# +
+# assert False
 
 # + active=""
 #
@@ -398,156 +409,46 @@ assert False
 #
 
 # +
-data_dict.keys()
+# data_dict.keys()
 
-magmom_dict_i = data_dict[
-    ('sherlock', 'kipatalo_90', 81.0)
-    ]
+# magmom_dict_i = data_dict[
+#     ('sherlock', 'kipatalo_90', 81.0)
+#     ]
 
-list(magmom_dict_i.keys())
+# list(magmom_dict_i.keys())
 
-df_magmoms_comp = magmom_dict_i["df_magmoms_comp"]
-good_triplet_comb = magmom_dict_i["good_triplet_comb"]
-pair_wise_magmom_comp_data = magmom_dict_i["pair_wise_magmom_comp_data"]
+# df_magmoms_comp = magmom_dict_i["df_magmoms_comp"]
+# good_triplet_comb = magmom_dict_i["good_triplet_comb"]
+# pair_wise_magmom_comp_data = magmom_dict_i["pair_wise_magmom_comp_data"]
 
-# ['df_magmoms_comp', 'good_triplet_comb', 'pair_wise_magmom_comp_data']
+# # ['df_magmoms_comp', 'good_triplet_comb', 'pair_wise_magmom_comp_data']
+
+# +
+# assert False
 # -
-
-assert False
 
 # ### Saving misc data objects for more testing elsewhere
 
 # +
-save_object = group_w_o
+# save_object = group_w_o
 
-# Pickling data ###########################################
-import os; import pickle
-directory = os.path.join(
-    os.environ["HOME"],
-    "__temp__")
-if not os.path.exists(directory): os.makedirs(directory)
-path_i = os.path.join(directory, "temp_data.pickle")
-with open(path_i, "wb") as fle:
-    pickle.dump(save_object, fle)
-# #########################################################
+# # Pickling data ###########################################
+# import os; import pickle
+# directory = os.path.join(
+#     os.environ["HOME"],
+#     "__temp__")
+# if not os.path.exists(directory): os.makedirs(directory)
+# path_i = os.path.join(directory, "temp_data.pickle")
+# with open(path_i, "wb") as fle:
+#     pickle.dump(save_object, fle)
+# # #########################################################
 
-# #########################################################
-import pickle; import os
-directory = os.path.join(
-    os.environ["HOME"],
-    "__temp__")
-path_i = os.path.join(directory, "temp_data.pickle")
-with open(path_i, "rb") as fle:
-    data = pickle.load(fle)
-# #########################################################
-
-# + active=""
-#
-#
-#
-
-# + jupyter={"source_hidden": true}
-# def save_magmom_comp_data(magmom_data_dict):
-#     """
-#     """
-#     #| - save_magmom_comp_data
-#     import os; import pickle
-#     directory = os.path.join(
-#         os.environ["PROJ_irox_oer"],
-#         "workflow/compare_magmoms",
-#         "out_data")
-#     if not os.path.exists(directory): os.makedirs(directory)
-#     path_i = os.path.join(directory, "magmom_comparison_data.pickle")
-#     with open(path_i, "wb") as fle:
-#         pickle.dump(magmom_data_dict, fle)
-#     #__|
-
-# + jupyter={"source_hidden": true}
-# def read_magmom_comp_data():
-#     """
-#     """
-#     # #########################################################
-#     import pickle; import os
-#     directory = os.path.join(
-#         os.environ["PROJ_irox_oer"],
-#         "workflow/compare_magmoms",
-#         "out_data")
-#     path_i = os.path.join(directory, "magmom_comparison_data.pickle")
-#     if Path(path_i).is_file():
-#         with open(path_i, "rb") as fle:
-#             data_dict = pickle.load(fle)
-#     else:
-#         data_dict = dict()
-#     # #########################################################
-    
-#     return(data_dict)
-
-# + jupyter={"source_hidden": true}
-# grouped.get_group(
-#     ('sherlock', 'vuvunira_55', 68.0)
-#     )
-
-# + jupyter={"source_hidden": true}
-# grouped.get_group(
-#     ("sherlock", "kipatalo_90", 81.0)
-#     )
-
-# + jupyter={"source_hidden": true}
-# row_i = df_magmoms.iloc[0]
-
-# # #####################################################
-# compenv_i = row_i.compenv
-# slab_id_i = row_i.slab_id
-# ads_i = row_i.ads
-# active_site_i = row_i.active_site
-# att_num_i = row_i.att_num
-# # #####################################################
-
-# # #####################################################
-# name_i = (compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)
-# row_slab_i = df_init_slabs.loc[name_i]
-# # #####################################################
-# num_atoms_i = row_slab_i.num_atoms
-# # #####################################################
-
-# + jupyter={"source_hidden": true}
 # # #########################################################
 # import pickle; import os
 # directory = os.path.join(
-#     os.environ["PROJ_irox_oer"],
-#     "workflow/compare_magmoms",
-#     "out_data")
-# path_i = os.path.join(directory, "df_magmoms.pickle")
+#     os.environ["HOME"],
+#     "__temp__")
+# path_i = os.path.join(directory, "temp_data.pickle")
 # with open(path_i, "rb") as fle:
-#     df_magmoms_tmp = pickle.load(fle)
+#     data = pickle.load(fle)
 # # #########################################################
-
-# + jupyter={"source_hidden": true}
-# df_o_i = df_magmoms[
-#     (df_magmoms.compenv == compenv_i) & \
-#     (df_magmoms.slab_id == slab_id_i) & \
-#     (df_magmoms.ads == "o") & \
-#     [True for i in range(len(df_magmoms))]
-#     ]
-
-# # df_i = 
-# df_magmoms[
-#     (df_magmoms.compenv == compenv_i) & \
-#     (df_magmoms.slab_id == slab_id_i) & \
-#     (df_magmoms.active_site == active_site_i) & \
-#     # (df_magmoms.ads == "o") & \
-#     [True for i in range(len(df_magmoms))]
-#     ]
-
-# + jupyter={"source_hidden": true}
-# df.head()
-
-# + jupyter={"source_hidden": true}
-# df_magmoms.head()
-
-# + jupyter={"source_hidden": true}
-# df_magmoms[df_magmoms.job_id == "donepote_14"]
-
-# df_magmoms.loc[
-#     "donepote_14"
-#     ]

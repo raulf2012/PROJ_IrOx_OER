@@ -18,7 +18,7 @@
 
 # # Import Modules
 
-# + jupyter={"source_hidden": true}
+# +
 import os
 print(os.getcwd())
 import sys
@@ -89,7 +89,7 @@ df_jobs_anal_no_o = df_jobs_anal_i.loc[idx[:, :, ads_list_no_o, :, :], :]
 
 # +
 # #########################################################
-verbose_local = True
+verbose_local = False
 # #########################################################
 
 data_dict_list = []
@@ -160,7 +160,8 @@ for name_i, group in grouped:
     df_ads_bare = df_tmp[df_tmp.ads == "bare"]
 
     if (df_ads_o.shape[0] > 1) or (df_ads_oh.shape[0] > 1) or (df_ads_bare.shape[0] > 1):
-        print("There is more than 1 row per state here, need a better way to select")
+        if verbose_local:
+            print("There is more than 1 row per state here, need a better way to select")
     # #####################################################
 
 
@@ -210,7 +211,8 @@ for name_i, group in grouped:
 
 
 
-    print(80 * "#")
+    if verbose_local:
+        print(80 * "#")
 
 
 
@@ -242,7 +244,8 @@ df_ads = pd.DataFrame(data_dict_list)
 
 # +
 df_ads_i = df_ads[~df_ads.g_oh.isnull()]
-print(df_ads_i.shape)
+
+# print(df_ads_i.shape)
 
 df_ads_i
 

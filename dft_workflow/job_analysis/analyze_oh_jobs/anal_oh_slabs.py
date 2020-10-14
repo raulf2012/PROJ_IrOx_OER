@@ -54,39 +54,39 @@ df_jobs_anal_i = df_jobs_anal_i.loc[
     ]
 
 # +
-# ('slac', 'fagumoha_68', 62.0)
+# # ('slac', 'fagumoha_68', 62.0)
 
-compenv_i = "slac"
-slab_id_i = "fagumoha_68"
-active_site_i = 62.
+# compenv_i = "slac"
+# slab_id_i = "fagumoha_68"
+# active_site_i = 62.
 
-# df_jobs_oh_anal_tmp[
-#     (df_jobs_oh_anal_tmp.compenv == compenv_i) & \
-#     (df_jobs_oh_anal_tmp.slab_id == slab_id_i) & \
-#     (df_jobs_oh_anal_tmp.active_site == active_site_i) & \
-#     [True for i in range(len(df_jobs_oh_anal_tmp))]
-#     ]
+# # df_jobs_oh_anal_tmp[
+# #     (df_jobs_oh_anal_tmp.compenv == compenv_i) & \
+# #     (df_jobs_oh_anal_tmp.slab_id == slab_id_i) & \
+# #     (df_jobs_oh_anal_tmp.active_site == active_site_i) & \
+# #     [True for i in range(len(df_jobs_oh_anal_tmp))]
+# #     ]
 
-# df_jobs_anal_i.loc[(compenv_i, slab_id_i, )]
+# # df_jobs_anal_i.loc[(compenv_i, slab_id_i, )]
 
-df_index_i = df_jobs_anal_i.index.to_frame()
-
-df_index_i[
-    (df_index_i.compenv == compenv_i) & \
-    (df_index_i.slab_id == slab_id_i) & \
-    (df_index_i.active_site == active_site_i) & \
-    [True for i in range(len(df_index_i))]
-    ].index
-
-# #########################################################
-# df_index_i = df_jobs_anal.index.to_frame()
+# df_index_i = df_jobs_anal_i.index.to_frame()
 
 # df_index_i[
 #     (df_index_i.compenv == compenv_i) & \
 #     (df_index_i.slab_id == slab_id_i) & \
-# #     (df_index_i.active_site == active_site_i) & \
+#     (df_index_i.active_site == active_site_i) & \
 #     [True for i in range(len(df_index_i))]
-#     ]
+#     ].index
+
+# # #########################################################
+# # df_index_i = df_jobs_anal.index.to_frame()
+
+# # df_index_i[
+# #     (df_index_i.compenv == compenv_i) & \
+# #     (df_index_i.slab_id == slab_id_i) & \
+# # #     (df_index_i.active_site == active_site_i) & \
+# #     [True for i in range(len(df_index_i))]
+# #     ]
 
 # +
 # print("TEMP")
@@ -184,6 +184,15 @@ from methods import get_df_jobs_oh_anal
 
 df_jobs_oh_anal_tmp = get_df_jobs_oh_anal()
 df_jobs_oh_anal_tmp.iloc[0:2]
+# -
+
+# #########################################################
+print(20 * "# # ")
+print("All done!")
+print("analyse_jobs.ipynb")
+print(20 * "# # ")
+# assert False
+# #########################################################
 
 # + active=""
 #
