@@ -130,11 +130,21 @@ df = reorder_df_columns(col_order, df)
 # +
 df_i = df[df.is_submitted == False]
 
+bash_comm_files_line_list = []
+
 grouped = df_i.groupby(["compenv", ])
-for name, group in grouped:
+for i_cnt, (name, group) in enumerate(grouped):
     print(40 * "=")
     print(name)
     print(40 * "=")
+
+    # if [[ "$COMPENV" == "wsl" ]]; then
+    if i_cnt == 0:
+        bash_if_statement = 'if [[ "$COMPENV" == "' + name + '" ]]; then'
+    else:
+        bash_if_statement = 'elif [[ "$COMPENV" == "' + name + '" ]]; then'
+
+    bash_comm_files_line_list.append(bash_if_statement)
 
     for name_i, row_i in group.iterrows():
 
@@ -169,8 +179,25 @@ for name, group in grouped:
 
             # " \\" + \
 
+        # bash_comm_files_line_list.append("    " + rclone_comm)
+        bash_comm_files_line_list.append(rclone_comm)
+
         print(rclone_comm)
     print("")
+
+# +
+bash_comm_files_line_list.append("fi")
+
+my_list = bash_comm_files_line_list
+out_path = os.path.join(
+    os.environ["PROJ_irox_oer"],
+    "dft_workflow/bin")
+out_file = os.path.join(
+    out_path,
+    "out_data/bash_sync_out.sh")
+with open(out_file, "w") as fle:
+    for item in my_list:
+        fle.write("%s\n" % item)
 
 # +
 # "rclone copy $rclone_gdrive_stanford:norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/nersc/b19q9p6k72/101/01_attempt/_02 $PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/b19q9p6k72/101/01_attempt/_02"
