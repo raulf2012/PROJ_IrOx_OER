@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -21,34 +21,40 @@
 
 # # Import Modules
 
-# + jupyter={}
+# +
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
 
 import pickle
 import shutil
 from pathlib import Path
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 # #########################################################
 from IPython.display import display
 
 # #########################################################
-from methods import get_df_jobs_anal
-from methods import get_df_jobs_data
-from methods import get_df_atoms_sorted_ind
-from methods import get_df_magmoms
-from methods import get_df_jobs_paths
-from methods import get_df_jobs_oh_anal
+from methods import (
+    get_df_jobs_anal,
+    get_df_jobs_data,
+    get_df_atoms_sorted_ind,
+    get_df_magmoms,
+    get_df_jobs_paths,
+    get_df_jobs_oh_anal,
+    )
 
 # #########################################################
-from local_methods import read_magmom_comp_data, save_magmom_comp_data
-from local_methods import process_group_magmom_comp
-from local_methods import get_oer_set
-from local_methods import analyze_O_in_set
+from local_methods import (
+    read_magmom_comp_data,
+    save_magmom_comp_data,
+    process_group_magmom_comp,
+    get_oer_set,
+    analyze_O_in_set,
+    )
 # -
 
 # # Script Inputs
@@ -66,6 +72,7 @@ redo_all_jobs = False
 # +
 # #########################################################
 df_jobs_anal = get_df_jobs_anal()
+df_jobs_anal_i = df_jobs_anal
 
 # #########################################################
 df_jobs_data = get_df_jobs_data()
@@ -88,9 +95,6 @@ df_magmoms = df_magmoms.set_index("job_id")
 # #########################################################
 df_jobs_oh_anal = get_df_jobs_oh_anal()
 
-# +
-# df_jobs_oh_anal
-
 # + active=""
 #
 #
@@ -101,9 +105,34 @@ df_jobs_oh_anal = get_df_jobs_oh_anal()
 # ## Processing `df_jobs_anal` (only completed job sets, filter out *O)
 
 # +
+from methods import get_df_slab
+df_slab = get_df_slab()
+
+slab_ids_phase_2 = df_slab[df_slab.phase > 0].slab_id.tolist()
+
+# df_m2.loc[
+#     df_m2.slab_id.isin(slab_ids_phase_2)
+#     ]
+
+df_index_i = df_jobs_anal_i.index.to_frame()
+df_jobs_anal_i = df_jobs_anal_i.loc[
+    df_index_i.slab_id.isin(slab_ids_phase_2).index
+    ]
+# -
+
+df_jobs_anal_i
+
+# +
 # #########################################################
 # Only completed jobs will be considered
-df_jobs_anal_i = df_jobs_anal[df_jobs_anal.job_completely_done == True]
+df_jobs_anal_i = df_jobs_anal_i[df_jobs_anal_i.job_completely_done == True]
+
+# #########################################################
+# Dropping rows that failed atoms sort, now it's just one job that blew up
+# job_id = "dubegupi_27"
+df_failed_to_sort = df_atoms_sorted_ind[
+    df_atoms_sorted_ind.failed_to_sort == True]
+df_jobs_anal_i = df_jobs_anal_i.drop(labels=df_failed_to_sort.index)
 
 # #########################################################
 # Remove the *O slabs for now
@@ -135,7 +164,7 @@ for name_i, group in grouped:
         indices_to_keep.extend(group.index.tolist())
 
 df_jobs_anal_no_o_all_ads_pres = df_jobs_anal_no_o.loc[
-    indices_to_keep    
+    indices_to_keep
     ]
 df_i = df_jobs_anal_no_o_all_ads_pres
 # -
@@ -172,14 +201,14 @@ for i_cnt, (name_i, group) in enumerate(grouped):
         print(40 * "*")
         print("name_i:", name_i)
 
-    # #########################################################
+    # #####################################################
     compenv_i = name_i[0]
     slab_id_i = name_i[1]
     active_site_i = name_i[2]
-    # #########################################################
+    # #####################################################
 
 
-    # #########################################################
+    # #####################################################
     group_i = get_oer_set(
         group=group,
         compenv=compenv_i,
@@ -187,7 +216,7 @@ for i_cnt, (name_i, group) in enumerate(grouped):
         df_jobs_anal=df_jobs_anal,
         )
 
-    # #########################################################
+    # #####################################################
     magmom_data_out = analyze_O_in_set(
         data_dict_i,
         group_i,
@@ -209,27 +238,39 @@ df_m = pd.DataFrame(data_dict_list)
 df_m = df_m.set_index(["compenv", "slab_id", "active_site", ], drop=False)
 
 # +
-# data_dict_i.update(
-# data_dict_tmp
-# )
+# # TEMP
+
+# # sherlock	bivahobe_50	32.0
+
+# df = df_jobs_oh_anal
+# df = df[
+#     (df["compenv"] == "sherlock") &
+#     (df["slab_id"] == "bivahobe_50") &
+#     (df["active_site"] == 32.) &
+#     [True for i in range(len(df))]
+#     ]
+# df
 
 # +
-# data_dict_i
-# -
+# # TEMP
 
-df_m.head()
+# # sherlock	bivahobe_50	32.0
 
-# +
-# assert False
+# df = df_m
+# df = df[
+#     (df["compenv"] == "sherlock") &
+#     (df["slab_id"] == "bivahobe_50") &
+#     (df["active_site"] == 32.) &
+#     [True for i in range(len(df))]
+#     ]
+# df
 
 # +
 index_diff_0 = df_jobs_oh_anal.index.difference(df_m.index)
 index_diff_1 = df_m.index.difference(df_jobs_oh_anal.index)
 
-# index_diff_0.shape[0]
-
 mess_i = "This shouldn't be, look into it"
-assert index_diff_1.shape[0] == 0, mess_i
+# assert index_diff_1.shape[0] == 0, mess_i
 
 # #########################################################
 shared_index = df_jobs_oh_anal.index.intersection(df_m.index)
@@ -238,15 +279,29 @@ df_jobs_oh_anal = df_jobs_oh_anal.loc[shared_index]
 df_m = df_m.loc[shared_index]
 
 # +
-# # df_m.index.difference?
+# # df_jobs_oh_anal.loc[
+# #     ('sherlock', 'bivahobe_50', 32.0)
+# #     ]
 
-# df_jobs_oh_anal
+# df_ind = df_jobs_oh_anal.index.to_frame()
+
+# df = df_ind
+# df = df[
+#     (df["compenv"] == "sherlock") &
+#     (df["slab_id"] == "bivahobe_50") &
+#     # (df[""] == "") &
+#     [True for i in range(len(df))]
+#     ]
+
+# df
 
 # +
-# index_diff_0
 # index_diff_1
 
+# # ('sherlock', 'bivahobe_50', 32.0)
+
 # +
+# print(440 * "TEMP")
 # assert False
 
 # +
@@ -255,9 +310,6 @@ list_1 = list(df_jobs_oh_anal.columns)
 
 shared_cols = list(set(list_0).intersection(list_1))
 
-# shared_cols
-# df_m.drop(columns=shared_cols)
-
 df_list = [
     df_m.drop(columns=shared_cols),
     df_jobs_oh_anal,
@@ -265,22 +317,41 @@ df_list = [
 
 df_m2 = pd.concat(df_list, axis=1)
 df_m2 = df_m2.sort_index()
-# -
 
-df_m2.head()
+# +
+# df_ind = df_m2.index.to_frame()
+
+
+# df = df_ind
+# df = df[
+#     (df["compenv"] == "sherlock") &
+#     (df["slab_id"] == "bivahobe_50") &
+#     # (df[""] == "") &
+#     [True for i in range(len(df))]
+#     ]
+
+# df
+
+# +
+# assert False
 
 # +
 df_m3 = df_m2[
-    (df_m2["*O_w_low_magmoms"] == True) & \
-    (df_m2["*O_w_not_low_magmoms"] == False) & \
+    # (df_m2["*O_w_low_magmoms"] == True) & \
+    # (df_m2["*O_w_not_low_magmoms"] == False) & \
     (df_m2["all_oh_attempts_done"] == True) & \
+    (df_m2["all_jobs_bad"] == False) & \
     [True for i in range(len(df_m2))]
     ]
+# df_m3 = df_m3[
+#     df_m3.all_jobs_bad == False
+#              ]
 
 data_dict_list = []
 for i_cnt, row_i in df_m3.iterrows():
+    # print(i_cnt)
     data_dict_i = dict()
-    
+
     # #####################################################
     compenv_i = row_i.compenv
     slab_id_i = row_i.slab_id
@@ -308,10 +379,6 @@ for i_cnt, row_i in df_m3.iterrows():
     data_dict_i["slab_id"] = slab_id_i
     data_dict_i["active_site"] = active_site_i
     data_dict_i["rerun_from_oh"] = rerun_from_oh
-    # data_dict_i["all_oh_attempts_done_i"] = all_oh_attempts_done_i
-    # data_dict_i["job_ids_sorted_energy_i"] = job_ids_sorted_energy_i
-    # data_dict_i["job_id_most_stable_i"] = job_id_most_stable_i
-    # data_dict_i[""] = 
     # #####################################################
     data_dict_i.update(row_i.to_dict())
     # #####################################################
@@ -321,8 +388,25 @@ for i_cnt, row_i in df_m3.iterrows():
 df_rerun_from_oh = pd.DataFrame(data_dict_list)
 # -
 
-df_rerun_from_oh.head()
-# df_rerun_from_oh
+df_rerun_from_oh
+
+# +
+# # TEMP
+
+# # sherlock	bivahobe_50	32.0
+
+# df = df_rerun_from_oh
+# df = df[
+#     (df["compenv"] == "sherlock") &
+#     (df["slab_id"] == "bivahobe_50") &
+#     (df["active_site"] == 32.) &
+#     [True for i in range(len(df))]
+#     ]
+# df
+
+# +
+# assert False
+# -
 
 # # Save data to pickle
 
@@ -341,10 +425,6 @@ with open(path_i, "wb") as fle:
 from methods import get_df_rerun_from_oh
 df_rerun_from_oh_tmp = get_df_rerun_from_oh()
 df_rerun_from_oh_tmp.head()
-
-# +
-# assert False
-# -
 
 # # Writing the slabs with the smallest magmoms to file to manually inspect
 
@@ -366,8 +446,9 @@ for i_cnt, (job_id_i, row_i) in enumerate(df_i.iloc[0:20].iterrows()):
         "final_with_calculator.traj")
 
     directory = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "dft_workflow/job_analysis/compare_magmoms",
         "__temp__/low_magmom_slabs")
-
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -385,7 +466,73 @@ for i_cnt, (job_id_i, row_i) in enumerate(df_i.iloc[0:20].iterrows()):
 # #########################################################
 print(20 * "# # ")
 print("All done!")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
 print("analyse_jobs.ipynb")
 print(20 * "# # ")
-# assert False
 # #########################################################
+
+# + active=""
+#
+#
+#
+
+# + jupyter={"source_hidden": true}
+# # TEMP
+# df_jobs_oh_anal.iloc[0:2]
+
+# + jupyter={"source_hidden": true}
+# print("df_m2.shape:", df_m2.shape)
+
+# # df_m3 =
+# df_m2[
+#     (df_m2["*O_w_low_magmoms"] == True) & \
+#     # (df_m2["*O_w_not_low_magmoms"] == False) & \
+#     (df_m2["all_oh_attempts_done"] == True) & \
+#     [True for i in range(len(df_m2))]
+#     ].shape
+
+# + jupyter={"source_hidden": true}
+# # slac     relovalu_12  24.0
+
+# # df_m2.loc[("slac", "relovalu_12", 24.)]
+
+# df_m2.loc[
+#     ('sherlock', 'vuvunira_55', 73.0)
+#     ]
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# row_i.all_jobs_bad
+
+# + jupyter={"source_hidden": true}
+# row_magmoms_i =
+# df_magmoms.loc[job_id_most_stable_i]
+
+# job_id_most_stable_i
+# + jupyter={"source_hidden": true}
+# df_rerun_from_oh.shape
+# 30 rows
+
+# + jupyter={"source_hidden": true}
+# df_m
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# TEMP
+
+# ('sherlock', 'kenukami_73', 84.0)
+
+# idx = pd.IndexSlice
+# df_i = df_i.loc[idx["sherlock", "kenukami_73", :, 84.], :]
+
+# print(df_i.shape[0])
+
+# + jupyter={"source_hidden": true}
+# df_jobs_oh_anal
+
+# + jupyter={"source_hidden": true}
+# assert False

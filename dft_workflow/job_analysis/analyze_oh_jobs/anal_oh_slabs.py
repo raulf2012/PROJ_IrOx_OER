@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -22,14 +22,19 @@
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
 
 import numpy as np
 import pandas as pd
 
 # #########################################################
-from methods import get_df_jobs
-from methods import get_df_jobs_anal
-from methods import get_df_jobs_data
+from methods import (
+    get_df_jobs,
+    get_df_jobs_anal,
+    get_df_jobs_data,
+    get_df_atoms_sorted_ind,
+    get_df_features,
+    )
 # -
 
 # # Read Data
@@ -38,12 +43,30 @@ from methods import get_df_jobs_data
 df_jobs = get_df_jobs()
 
 df_jobs_anal = get_df_jobs_anal()
+df_jobs_anal_i = df_jobs_anal
 
 df_jobs_data = get_df_jobs_data()
+
+df_atoms_sorted_ind = get_df_atoms_sorted_ind()
+
+df_features = get_df_features()
+# df_features = df_features.droplevel(5, axis=0)
+
+# + active=""
+#
+#
 
 # +
 df_jobs_anal_i = df_jobs_anal[df_jobs_anal.job_completely_done == True]
 
+# #########################################################
+# Dropping rows that failed atoms sort, now it's just one job that blew up 
+# job_id = "dubegupi_27"
+df_failed_to_sort = df_atoms_sorted_ind[
+    df_atoms_sorted_ind.failed_to_sort == True]
+df_jobs_anal_i = df_jobs_anal_i.drop(labels=df_failed_to_sort.index)
+
+# #########################################################
 df_index_i = df_jobs_anal_i.index.to_frame()
 
 # df_index_i = df_index_i[df_index_i.ads != "o"]
@@ -52,61 +75,61 @@ df_index_i = df_index_i[df_index_i.ads == "oh"]
 df_jobs_anal_i = df_jobs_anal_i.loc[
     df_index_i.index 
     ]
+# -
+
+df_jobs_anal_i.iloc[0:2]
+
 
 # +
-# # ('slac', 'fagumoha_68', 62.0)
-
-# compenv_i = "slac"
-# slab_id_i = "fagumoha_68"
-# active_site_i = 62.
-
-# # df_jobs_oh_anal_tmp[
-# #     (df_jobs_oh_anal_tmp.compenv == compenv_i) & \
-# #     (df_jobs_oh_anal_tmp.slab_id == slab_id_i) & \
-# #     (df_jobs_oh_anal_tmp.active_site == active_site_i) & \
-# #     [True for i in range(len(df_jobs_oh_anal_tmp))]
-# #     ]
-
-# # df_jobs_anal_i.loc[(compenv_i, slab_id_i, )]
-
-# df_index_i = df_jobs_anal_i.index.to_frame()
-
-# df_index_i[
-#     (df_index_i.compenv == compenv_i) & \
-#     (df_index_i.slab_id == slab_id_i) & \
-#     (df_index_i.active_site == active_site_i) & \
-#     [True for i in range(len(df_index_i))]
-#     ].index
-
-# # #########################################################
-# # df_index_i = df_jobs_anal.index.to_frame()
-
-# # df_index_i[
-# #     (df_index_i.compenv == compenv_i) & \
-# #     (df_index_i.slab_id == slab_id_i) & \
-# # #     (df_index_i.active_site == active_site_i) & \
-# #     [True for i in range(len(df_index_i))]
-# #     ]
+# row_i = df_jobs_anal_i.iloc[3]
 
 # +
+def method(row_i):
+    job_id_max_i = row_i.job_id_max
+
+    # #########################################################
+    row_feat_i = df_features[df_features["data"]["job_id_max"] == job_id_max_i]
+    if row_feat_i.shape[0] > 0:
+        row_feat_i = row_feat_i.iloc[0]
+        # #########################################################
+        num_missing_Os_i = row_feat_i.data.num_missing_Os
+        # #########################################################
+    else:
+        num_missing_Os_i = None
+
+    return(num_missing_Os_i)
+
+df_jobs_anal_i["num_missing_Os"] = df_jobs_anal_i.apply(method, axis=1)
+# -
+
+df_features
+
+# +
+# # TEMP
 # print("TEMP")
 
-# # sherlock	kenukami_73	84.0	
-# compenv_i =  "sherlock"
-# slab_id_i = "kenukami_73"
-# active_site_i = 84.0
+# df_ind = df_jobs_anal_i.index.to_frame()
 
-# df_index_i = df_jobs_anal_i.index.to_frame()
-# df_index_i = df_index_i[
-#     (df_index_i.compenv == compenv_i) & \
-#     (df_index_i.slab_id == slab_id_i) & \
-#     (df_index_i.active_site == active_site_i) & \
-#     [True for i in range(len(df_index_i))]
+# # sherlock	bivahobe_50	32.0	
+
+# df = df_ind
+# df = df[
+#     (df["compenv"] == "sherlock") &
+#     (df["slab_id"] == "bivahobe_50") &
+#     (df["active_site"] == 32.) &
+#     [True for i in range(len(df))]
 #     ]
 
 # df_jobs_anal_i = df_jobs_anal_i.loc[
-#     df_index_i.index
+#     df.index
 #     ]
+# df_jobs_anal_i
+
+# +
+# assert False
+# -
+
+df_jobs_anal_i
 
 # +
 # #########################################################
@@ -114,39 +137,78 @@ data_dict_list = []
 # #########################################################
 grouped = df_jobs_anal_i.groupby(["compenv", "slab_id", "active_site", ])
 for name, group in grouped:
+    # #####################################################
     data_dict_i = dict()
-    # print(group.shape)
-
     # #####################################################
     compenv_i = name[0]
     slab_id_i = name[1]
     active_site_i = name[2]
     # #####################################################
 
+
+    any_nan_in_missing_O_col = any(group.num_missing_Os.isna())
+    if any_nan_in_missing_O_col:
+        print("There are NaN in missing_Os col")
+        print("name:", name)
+        continue
+
+    if any_nan_in_missing_O_col:
+        print("This shouldn't get printed if the prev 'continue' statement is working")
+
+    job_ids_w_missing_Os = group[group.num_missing_Os > 0].job_id_max.tolist()
+
+
+    # Group of rows that have no missing O bonds
+    group_2 = group.drop(
+        labels=group[group.num_missing_Os > 0].index
+        )
+
+    all_jobs_bad = False
+    if group_2.shape[0] == 0:
+        all_jobs_bad = True
+
+
     # #####################################################
-    df_jobs_i = df_jobs[
-        (df_jobs.compenv == compenv_i) & \
-        (df_jobs.slab_id == slab_id_i) & \
-        (df_jobs.active_site == active_site_i) & \
-        [True for i in range(len(df_jobs))]
+    # df_jobs_i = df_jobs.loc[
+    #     group.job_id_max.tolist()
+    #     ]
+    # #####################################################
+    # att_nums_all = df_jobs_i.att_num.unique()
+    # #####################################################
+
+    # #####################################################
+    df_anal_ind = df_jobs_anal.index.to_frame()
+    df = df_anal_ind
+    df = df[
+        (df["compenv"] == compenv_i) &
+        (df["slab_id"] == slab_id_i) &
+        (df["ads"] == "oh") &
+        (df["active_site"] == active_site_i) &
+        [True for i in range(len(df))]
         ]
+    df_anal_ind_i = df
     # #####################################################
-    att_nums_all = df_jobs_i.att_num.unique()
+    att_nums_all = df_anal_ind_i.att_num.unique().tolist()
     # #####################################################
+
 
     # #####################################################
     # Checking if all *OH slabs are finished, should all be done before making decisions
     group_index_i = group.index.to_frame()
     att_nums_i = group_index_i.att_num.unique()
+
     all_oh_attempts_done = np.array_equal(att_nums_all, att_nums_i)
 
-    # #####################################################
-    df_jobs_data_i = df_jobs_data.loc[group.job_id_max]
-    df_jobs_data_i = df_jobs_data_i.sort_values("pot_e")
-    # #####################################################
-    job_ids_sorted_energy = df_jobs_data_i.job_id.tolist()
-    job_id_most_stable = job_ids_sorted_energy[0]
-    # #####################################################
+    job_ids_sorted_energy = []
+    job_id_most_stable = None
+    if group_2.shape[0] > 0:
+        # #####################################################
+        df_jobs_data_i = df_jobs_data.loc[group_2.job_id_max]
+        df_jobs_data_i = df_jobs_data_i.sort_values("pot_e")
+        # #####################################################
+        job_ids_sorted_energy = df_jobs_data_i.job_id.tolist()
+        job_id_most_stable = job_ids_sorted_energy[0]
+        # #####################################################
 
 
 
@@ -156,8 +218,10 @@ for name, group in grouped:
     data_dict_i["active_site"] = active_site_i
     # #####################################################
     data_dict_i["all_oh_attempts_done"] = all_oh_attempts_done
-    data_dict_i["job_ids_sorted_energy"] = job_ids_sorted_energy
     data_dict_i["job_id_most_stable"] = job_id_most_stable
+    data_dict_i["all_jobs_bad"] = all_jobs_bad
+    data_dict_i["job_ids_sorted_energy"] = job_ids_sorted_energy
+    data_dict_i["job_ids_w_missing_Os"] = job_ids_w_missing_Os
     # #####################################################
     data_dict_list.append(data_dict_i)
     # #####################################################
@@ -165,6 +229,29 @@ for name, group in grouped:
 # #########################################################
 df_jobs_oh_anal = pd.DataFrame(data_dict_list)
 df_jobs_oh_anal.iloc[0:2]
+
+# +
+# df_jobs_oh_anal
+
+# +
+# group
+
+# +
+# # TEMP
+
+# # sherlock	bivahobe_50	32.0	
+
+# df = df_jobs_oh_anal
+# df = df[
+#     (df["compenv"] == "sherlock") &
+#     (df["slab_id"] == "bivahobe_50") &
+#     (df["active_site"] == 32.) &
+#     [True for i in range(len(df))]
+#     ]
+# df
+
+# +
+# assert False
 # -
 
 # Pickling data ###########################################
@@ -189,34 +276,12 @@ df_jobs_oh_anal_tmp.iloc[0:2]
 # #########################################################
 print(20 * "# # ")
 print("All done!")
-print("analyse_jobs.ipynb")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
+print("anal_oh_slabs.ipynb")
 print(20 * "# # ")
-# assert False
 # #########################################################
 
 # + active=""
 #
 #
 #
-
-# + jupyter={"source_hidden": true}
-# all_oh_attempts_done = 
-# np.array_equal(att_nums_all, att_nums_i)
-
-# att_nums_i
-# att_nums_all
-
-# + jupyter={"source_hidden": true}
-# # #########################################################
-# import pickle; import os
-# directory = os.path.join(
-#     os.environ["PROJ_irox_oer"],
-#     "dft_workflow/job_analysis/analyze_oh_jobs",
-#     "out_data")
-# path_i = os.path.join(directory, "df_jobs_oh_anal.pickle")
-# with open(path_i, "rb") as fle:
-#     df_jobs_oh_anal = pickle.load(fle)
-# # #########################################################
-
-# + jupyter={"source_hidden": true}
-# group.job_id_max.tolist()

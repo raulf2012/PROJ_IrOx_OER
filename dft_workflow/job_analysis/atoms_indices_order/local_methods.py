@@ -87,6 +87,10 @@ def all_keys_equal_to_vals(atom_index_mapping):
     return(all_keys_equal_to_vals)
     #__|
 
+
+# df_jobs_i = df_jobs_i
+# df_jobs_paths = df_jobs_paths
+
 def get_df_atoms_ind(
     df_jobs_i=None,
     df_jobs_paths=None,
@@ -96,8 +100,8 @@ def get_df_atoms_ind(
     #| - get_df_atoms_ind
     data_dict_list = []
     for job_id_i, row_i in df_jobs_i.iterrows():
+        # #####################################################
         data_dict_i = dict()
-
         # #####################################################
         job_id_i = row_i.job_id
         compenv_i = row_i.compenv
@@ -105,14 +109,11 @@ def get_df_atoms_ind(
         # #####################################################
 
         # #####################################################
-        df_jobs_paths_i = df_jobs_paths[df_jobs_paths.compenv == compenv_i]
-        row_paths_i = df_jobs_paths_i.loc[job_id_i]
+        row_paths_i = df_jobs_paths.loc[job_id_i]
         # #####################################################
         gdrive_path_i = row_paths_i.gdrive_path
         # #####################################################
 
-
-        # print("rev_num_i:", rev_num_i)
 
         # #########################################################
         gdrive_path_i = os.path.join(
@@ -123,8 +124,15 @@ def get_df_atoms_ind(
             gdrive_path_i,
             "ase-sort.dat")
 
-        atom_index_mapping, sort_list, resort_list = \
-            read_ase_sort_dat(path_i=path_i)
+        from pathlib import Path
+        my_file = Path(path_i)
+        if my_file.is_file():
+            atom_index_mapping, sort_list, resort_list = \
+                read_ase_sort_dat(path_i=path_i)
+        else:
+            atom_index_mapping = None
+            sort_list = None
+            resort_list = None
 
         # #####################################################
         data_dict_i["job_id"] = job_id_i
@@ -143,6 +151,7 @@ def get_df_atoms_ind(
 
     return(df_atoms_ind)
     #__|
+
 
 def unique_ids_with_no_equal(
     unique_job_ids=None,
@@ -163,6 +172,7 @@ def unique_ids_with_no_equal(
     # print("unique_ids_no_equal:", unique_ids_no_equal)
     return(unique_ids_no_equal)
     #__|
+
 
 def atoms_distance_comparison(atoms_0, atoms_1):
     """

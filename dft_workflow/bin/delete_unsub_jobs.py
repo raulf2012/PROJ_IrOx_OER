@@ -77,7 +77,6 @@ df = parse_job_dirs(root_dir=root_dir)
 
 
 # +
-# def method(row_i, argument_0, optional_arg=None):
 def method(row_i):
     new_column_values_dict = {
         "compenv": None,
@@ -131,7 +130,6 @@ df = reorder_df_columns(col_order, df)
 df_i = df
 df_i = df_i[
     (df_i.is_submitted == False) & \
-    # (df_i.compenv == "nersc") & \
     [True for i in range(len(df_i))]
     ]
 

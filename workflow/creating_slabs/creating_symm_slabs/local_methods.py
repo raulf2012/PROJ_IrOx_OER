@@ -213,6 +213,8 @@ def create_slab_from_bulk_tmp(atoms=None, facet=None):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
+    assert False, "Fix os.makedirs"
+
     # TEMP write to file
     path_i = os.path.join("out_data", "temp.cif")
     slab_i.write(path_i)

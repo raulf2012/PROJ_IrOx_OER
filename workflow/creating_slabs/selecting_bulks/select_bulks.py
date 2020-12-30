@@ -35,6 +35,7 @@ from methods import get_df_dft
 # Contents will be saved to json
 out_dict = dict()
 
+assert False, "Fix os.makedirs"
 directory = "out_data"
 if not os.path.exists(directory):
     os.makedirs(directory)

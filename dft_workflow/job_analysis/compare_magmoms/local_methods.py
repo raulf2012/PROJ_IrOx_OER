@@ -22,6 +22,7 @@ from methods import (
 
 
 def process_group_magmom_comp(
+    name=None,
     group=None,
     write_atoms_objects=False,
     verbose=False,
@@ -36,7 +37,10 @@ def process_group_magmom_comp(
     out_dict = dict()
     out_dict["df_magmoms_comp"] = None
     out_dict["good_triplet_comb"] = None
+    out_dict["job_ids"] = None
     # out_dict[""] =
+
+    job_ids_list = list(set(group.job_id_max.tolist()))
 
 
     #| - Reading data
@@ -50,6 +54,15 @@ def process_group_magmom_comp(
     # #########################################################
     df_job_ids = get_df_job_ids()
     df_job_ids = df_job_ids.set_index("job_id")
+
+    from methods import read_magmom_comp_data
+
+    assert name != None, "Must pass name to read previous data"
+
+    magmom_comp_data_prev = read_magmom_comp_data(name=name)
+    if magmom_comp_data_prev is not None:
+        pair_wise_magmom_comp_data_prev = \
+            magmom_comp_data_prev["pair_wise_magmom_comp_data"]
     #__|
 
     if write_atoms_objects:
@@ -82,7 +95,9 @@ def process_group_magmom_comp(
 
             file_name = ads + "_" + job_id + ".traj"
 
+            print("Is this saving to the right place d9sf")
             root_file_path = os.path.join("__temp__", folder_name)
+            print(os.getcwd(), root_file_path)
             if not os.path.exists(root_file_path):
                 os.makedirs(root_file_path)
 
@@ -100,6 +115,8 @@ def process_group_magmom_comp(
     for tri_i in all_triplet_comb:
         df_jobs_i = df_jobs.loc[list(tri_i)]
 
+        # Triplet must not contain duplicate ads
+        # Must strictly be a *O, *OH, and *bare triplet
         ads_freq_dict = CountFrequency(df_jobs_i.ads.tolist())
 
         tmp_list = list(ads_freq_dict.values())
@@ -110,11 +127,17 @@ def process_group_magmom_comp(
     #__|
 
     # #####################################################
-    # #####################################################
     #| - MAIN LOOP
+    if verbose:
+        print(
+            "Number of viable triplet combinations:",
+            len(good_triplet_comb)
+            )
+
     data_dict_list = []
     pair_wise_magmom_comp_data = dict()
     for tri_i in good_triplet_comb:
+        #| - Process triplets
         data_dict_i = dict()
 
         if verbose:
@@ -126,66 +149,67 @@ def process_group_magmom_comp(
 
         sum_norm_abs_magmom_diff = 0.
         for pair_i in all_pairs:
-            if verbose:
-                print("pair_i:", pair_i)
 
-            row_jobs_0 = df_jobs.loc[pair_i[0]]
-            row_jobs_1 = df_jobs.loc[pair_i[1]]
-
-            ads_0 = row_jobs_0.ads
-            ads_1 = row_jobs_1.ads
-
-            # #############################################
-            if set([ads_0, ads_1]) == set(["o", "oh"]):
-                job_id_0 = df_jobs_i[df_jobs_i.ads == "o"].iloc[0].job_id
-                job_id_1 = df_jobs_i[df_jobs_i.ads == "oh"].iloc[0].job_id
-            elif set([ads_0, ads_1]) == set(["o", "bare"]):
-                job_id_0 = df_jobs_i[df_jobs_i.ads == "bare"].iloc[0].job_id
-                job_id_1 = df_jobs_i[df_jobs_i.ads == "o"].iloc[0].job_id
-            elif set([ads_0, ads_1]) == set(["oh", "bare"]):
-                job_id_0 = df_jobs_i[df_jobs_i.ads == "bare"].iloc[0].job_id
-                job_id_1 = df_jobs_i[df_jobs_i.ads == "oh"].iloc[0].job_id
+            # if pair_i in list(pair_wise_magmom_comp_data_prev.keys()):
+            if (magmom_comp_data_prev is not None) and \
+               (pair_i in list(pair_wise_magmom_comp_data_prev.keys())):
+                magmom_data_out = pair_wise_magmom_comp_data_prev[pair_i]
             else:
-                print("Woops something went wrong here")
+                # print("Need to run manually")
+                # print("pair_i:", pair_i)
+                #| - Process pairs
+                row_jobs_0 = df_jobs.loc[pair_i[0]]
+                row_jobs_1 = df_jobs.loc[pair_i[1]]
+
+                ads_0 = row_jobs_0.ads
+                ads_1 = row_jobs_1.ads
+
+                # #############################################
+                if set([ads_0, ads_1]) == set(["o", "oh"]):
+                    job_id_0 = df_jobs_i[df_jobs_i.ads == "o"].iloc[0].job_id
+                    job_id_1 = df_jobs_i[df_jobs_i.ads == "oh"].iloc[0].job_id
+                elif set([ads_0, ads_1]) == set(["o", "bare"]):
+                    job_id_0 = df_jobs_i[df_jobs_i.ads == "bare"].iloc[0].job_id
+                    job_id_1 = df_jobs_i[df_jobs_i.ads == "o"].iloc[0].job_id
+                elif set([ads_0, ads_1]) == set(["oh", "bare"]):
+                    job_id_0 = df_jobs_i[df_jobs_i.ads == "bare"].iloc[0].job_id
+                    job_id_1 = df_jobs_i[df_jobs_i.ads == "oh"].iloc[0].job_id
+                else:
+                    print("Woops something went wrong here")
 
 
-            # #############################################
-            row_atoms_i = df_atoms_sorted_ind.loc[job_id_0]
-            # #############################################
-            atoms_0 = row_atoms_i.atoms_sorted_good
-            magmoms_sorted_good_0 = row_atoms_i.magmoms_sorted_good
-            was_sorted_0 = row_atoms_i.was_sorted
-            # #############################################
+                # #############################################
+                row_atoms_i = df_atoms_sorted_ind.loc[job_id_0]
+                # #############################################
+                atoms_0 = row_atoms_i.atoms_sorted_good
+                magmoms_sorted_good_0 = row_atoms_i.magmoms_sorted_good
+                was_sorted_0 = row_atoms_i.was_sorted
+                # #############################################
 
-            # #############################################
-            row_atoms_i = df_atoms_sorted_ind.loc[job_id_1]
-            # #############################################
-            atoms_1 = row_atoms_i.atoms_sorted_good
-            magmoms_sorted_good_1 = row_atoms_i.magmoms_sorted_good
-            was_sorted_1 = row_atoms_i.was_sorted
-            # #############################################
+                # #############################################
+                row_atoms_i = df_atoms_sorted_ind.loc[job_id_1]
+                # #############################################
+                atoms_1 = row_atoms_i.atoms_sorted_good
+                magmoms_sorted_good_1 = row_atoms_i.magmoms_sorted_good
+                was_sorted_1 = row_atoms_i.was_sorted
+                # #############################################
 
 
-            # #############################################
-            magmom_data_out = get_magmom_diff_data(
-                ads_atoms=atoms_1,
-                slab_atoms=atoms_0,
-                ads_magmoms=magmoms_sorted_good_1,
-                slab_magmoms=magmoms_sorted_good_0,
-                )
+                # #############################################
+                magmom_data_out = get_magmom_diff_data(
+                    ads_atoms=atoms_1,
+                    slab_atoms=atoms_0,
+                    ads_magmoms=magmoms_sorted_good_1,
+                    slab_magmoms=magmoms_sorted_good_0,
+                    )
+                #__|
 
-            # list(magmom_data_out.keys())
-
-            # pair_wise_magmom_comp_data[set(pair_i)] = magmom_data_out
-            # print("pair_i:", pair_i)
             pair_wise_magmom_comp_data[pair_i] = magmom_data_out
 
-
             tot_abs_magmom_diff = magmom_data_out["tot_abs_magmom_diff"]
-            # print("    ", pair_i, ": ", np.round(tot_abs_magmom_diff, 2), sep="")
             norm_abs_magmom_diff = magmom_data_out["norm_abs_magmom_diff"]
             if verbose:
-                print("    ", pair_i, ": ", np.round(norm_abs_magmom_diff, 3), sep="")
+                print("    ", "pair_i: ", pair_i, ": ", np.round(norm_abs_magmom_diff, 3), sep="")
 
             sum_norm_abs_magmom_diff += norm_abs_magmom_diff
 
@@ -196,9 +220,9 @@ def process_group_magmom_comp(
         data_dict_list.append(data_dict_i)
         # #################################################
 
-        # print("")
-    #__|
+        #__|
 
+    #__|
 
     # #####################################################
     df_magmoms_i = pd.DataFrame(data_dict_list)
@@ -207,55 +231,98 @@ def process_group_magmom_comp(
     out_dict["df_magmoms_comp"] = df_magmoms_i
     out_dict["good_triplet_comb"] = good_triplet_comb
     out_dict["pair_wise_magmom_comp_data"] = pair_wise_magmom_comp_data
+    out_dict["job_ids"] = job_ids_list
     # #####################################################
-
 
     return(out_dict)
     #__|
 
-def read_magmom_comp_data():
-    """
-    """
-    #| - read_magmom_comp_data
-    # #########################################################
-    import pickle; import os
-    directory = os.path.join(
-        os.environ["PROJ_irox_oer"],
-        # "workflow/compare_magmoms",
-        "dft_workflow/job_analysis/compare_magmoms",
-        "out_data")
-    path_i = os.path.join(directory, "magmom_comparison_data.pickle")
-    if Path(path_i).is_file():
-        with open(path_i, "rb") as fle:
-            data_dict = pickle.load(fle)
-    else:
-        data_dict = dict()
-    # #########################################################
 
-    return(data_dict)
-    #__|
+from methods import read_magmom_comp_data
 
-def save_magmom_comp_data(magmom_data_dict):
+def save_magmom_comp_data(name_key, data_dict):
     """
     """
     #| - save_magmom_comp_data
+    # magmom_data_dict = read_magmom_comp_data()
+    # magmom_data_dict[name_key] = data_dict
+
+    name_i = name_key
+
+    name_i_new = []
+    for i in name_i:
+        if type(i) == float:
+            i_new = str(int(i))
+            name_i_new.append(i_new)
+        else:
+            name_i_new.append(i)
+    name_str = "__".join(name_i_new)
+    file_name_i = name_str + ".pickle"
+
+
     import os; import pickle
     directory = os.path.join(
         os.environ["PROJ_irox_oer"],
         "dft_workflow/job_analysis/compare_magmoms",
-        # "workflow/compare_magmoms",
-        "out_data")
+        "out_data/magmom_comparison_data")
     if not os.path.exists(directory): os.makedirs(directory)
-    path_i = os.path.join(directory, "magmom_comparison_data.pickle")
+    path_i = os.path.join(directory, file_name_i)
     with open(path_i, "wb") as fle:
-        pickle.dump(magmom_data_dict, fle)
+        pickle.dump(data_dict, fle)
+        # pickle.dump(magmom_data_dict, fle)
     #__|
 
+
+#| - __old__
+# def save_magmom_comp_data(name_key, data_dict):
+#     """
+#     """
+#     #| - save_magmom_comp_data
+#     magmom_data_dict = read_magmom_comp_data()
+#
+#     magmom_data_dict[name_key] = data_dict
+#
+#
+#
+#     import os; import pickle
+#     directory = os.path.join(
+#         os.environ["PROJ_irox_oer"],
+#         "dft_workflow/job_analysis/compare_magmoms",
+#         "out_data")
+#     if not os.path.exists(directory): os.makedirs(directory)
+#     path_i = os.path.join(directory, "magmom_comparison_data.pickle")
+#     with open(path_i, "wb") as fle:
+#         pickle.dump(magmom_data_dict, fle)
+#     #__|
+
+
+# def save_magmom_comp_data(magmom_data_dict):
+#     """
+#     """
+#     #| - save_magmom_comp_data
+#     import os; import pickle
+#     directory = os.path.join(
+#         os.environ["PROJ_irox_oer"],
+#         "dft_workflow/job_analysis/compare_magmoms",
+#         "out_data")
+#     if not os.path.exists(directory): os.makedirs(directory)
+#     path_i = os.path.join(directory, "magmom_comparison_data.pickle")
+#     with open(path_i, "wb") as fle:
+#         pickle.dump(magmom_data_dict, fle)
+#     #__|
+
+#__|
+
 # #########################################################
 # #########################################################
 # #########################################################
 # #########################################################
 
+
+# group = group
+# compenv = compenv_i
+# slab_id = slab_id_i
+# df_jobs_anal = df_jobs_anal
 
 def get_oer_set(
     group=None,
@@ -278,12 +345,18 @@ def get_oer_set(
         (df_index.compenv == compenv_i) & \
         (df_index.slab_id == slab_id_i) & \
         (df_index.ads == "o") & \
+        (df_index.active_site == "NaN") & \
         [True for i in range(len(df_index))]
         ]
+
     # df_index_i.shape
 
-    mess_i = "ISJIdfjisdjij"
-    assert df_index_i.shape[0] == 1, mess_i
+    # print(40 * "*")
+    # print(df_index_i)
+    # print(40 * "*")
+
+    # mess_i = "ISJIdfjisdjij"
+    # assert df_index_i.shape[0] == 1, mess_i
 
     row_o_i = df_jobs_anal_i.loc[
         df_index_i.index

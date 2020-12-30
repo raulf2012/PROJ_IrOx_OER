@@ -6,6 +6,10 @@ process_slabs.ipynb:
 
 
 
+
+
+
+
 # ###############################################
 Structures that has unsaturated octahedra
 

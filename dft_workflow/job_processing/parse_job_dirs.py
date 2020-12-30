@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -26,6 +26,9 @@ import os
 print(os.getcwd())
 import sys
 
+import time; ti = time.time()
+import shutil
+import pickle
 from pathlib import Path
 
 import numpy as np
@@ -41,27 +44,27 @@ from local_methods import (
     is_rev_dir,
     get_job_paths_info,
     )
+
+# +
+# assert False
 # -
 
-# # Script Inputs
-
-verbose = False
-# verbose = True
+from methods import isnotebook    
+isnotebook_i = isnotebook()
+if isnotebook_i:
+    from tqdm.notebook import tqdm
+    verbose = True
+else:
+    from tqdm import tqdm
+    verbose = False
 
 # +
 compenv = os.environ.get("COMPENV", "wsl")
-if verbose:
-    print("compenv:", compenv)
 
 if compenv == "wsl":
-    # This is a test compenv
-    # jobs_root_dir = os.path.join(
-    #     os.environ["PROJ_irox_oer"],
-    #     "__test__/dft_workflow")
     jobs_root_dir = os.path.join(
         os.environ["PROJ_irox_oer_gdrive"],
         "dft_workflow")
-
 elif compenv == "nersc" or compenv == "sherlock" or compenv == "slac":
     jobs_root_dir = os.path.join(
         os.environ["PROJ_irox_oer"],
@@ -89,21 +92,16 @@ def get_path_rel_to_proj(full_path):
     path_rel_to_proj = subdir[ind_tmp:]
     path_rel_to_proj = "/".join(path_rel_to_proj.split("/")[1:])
 
-
-
-    # subdir = full_path
-    # PROJ_dir = os.environ["PROJ_irox_oer"]
-    # ind_tmp = subdir.find(PROJ_dir.split("/")[-1])
-    # path_rel_to_proj = subdir[ind_tmp:]
-    # path_rel_to_proj = "/".join(path_rel_to_proj.split("/")[1:])
-
     return(path_rel_to_proj)
     #__|
 
-# +
-# jobs_root_dir = "/home/raulf2012/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/__test__/dft_workflow/run_slabs/run_oh_covered/"
 
-# +
+# + active=""
+#
+#
+#
+
+# + jupyter={"outputs_hidden": true}
 data_dict_list = []
 for subdir, dirs, files in os.walk(jobs_root_dir):
 
@@ -115,6 +113,17 @@ for subdir, dirs, files in os.walk(jobs_root_dir):
     # path_i = subdir[len(jobs_root_dir) + 1:]
 
 
+
+
+
+
+
+
+
+
+
+
+
     if "dft_jobs" not in subdir:
         continue
     if ".old" in subdir:
@@ -122,28 +131,44 @@ for subdir, dirs, files in os.walk(jobs_root_dir):
     if path_i == "":
         continue
 
+    # # TEMP
+    # # print("TEMP")
+    # # frag_i = "slac/mwmg9p7s6o/11-20"
+    # frag_i = "slac/mwmg9p7s6o/11-20/bare/active_site__26/01_attempt"
+    # if frag_i not in subdir:
+    #     continue
+    # print(10 * "Got through | ")
+    # print(subdir)
+
+
+
+
+
+
+
+
+
+
+
+
     if verbose:
         print(path_i)
 
-
-
     path_rel_to_proj = get_path_rel_to_proj(subdir)
-    data_dict_i["path_rel_to_proj"] = path_rel_to_proj
-
-    # # #####################################################
-    # # TEMP
-    # if not "v59s9lxdxr/131/oh/active_site__86/03_attempt" in path_i:
-    #     continue
-    # print(path_i)
-
-    
     out_dict = get_job_paths_info(path_i)
-    data_dict_i.update(out_dict)
 
     # Only add job directory if it's been submitted
     my_file = Path(os.path.join(subdir, ".SUBMITTED"))
+    submitted = False
     if my_file.is_file():
-        data_dict_list.append(data_dict_i)
+        submitted = True
+
+    # #####################################################
+    data_dict_i.update(out_dict)
+    data_dict_i["path_rel_to_proj"] = path_rel_to_proj
+    data_dict_i["submitted"] = submitted
+    # #####################################################
+    data_dict_list.append(data_dict_i)
     # #####################################################
 
 if len(data_dict_list) == 0:
@@ -158,6 +183,7 @@ if len(data_dict_list) == 0:
         "is_attempt_dir",
         "path_job_root_w_att",
         "gdrive_path",
+        "submitted",
         ]
 
     df = pd.DataFrame(columns=df_cols)
@@ -168,213 +194,77 @@ else:
     df = df.reset_index(drop=True)
 
 assert df.index.is_unique, "Index must be unique here"
+# -
+
+# # DEPRECATED | Moved to fix_gdrive_conflicts.ipynb
+#
+# ### Removing paths that have the GDrive duplicate syntax in them ' (1)'
 
 # +
-# path_i = "/home/raulf2012/rclone_temp/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/v59s9lxdxr/131/oh/active_site__86/03_attempt/_01"
-# path_i = "/home/raulf2012/rclone_temp/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/v59s9lxdxr/131/oh/active_site__86/03_attempt/_01"
-# path_i = "dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/v59s9lxdxr/131/oh/active_site__86/03_attempt/_01"
-# path_i = "dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/v59s9lxdxr/131/oh/active_site__86/03_attempt"
+# for ind_i, row_i in df.iterrows():
+#     path_full_i = row_i.path_full
 
-# out_dict = 
-# get_job_paths_info(path_i)
+#     if " (" in path_full_i:
+#         print(
+#             path_full_i,
+#             sep="")
 
-# +
-# assert False
+#         # #################################################
+#         found_wrong_level = False
+#         path_level_list = []
+#         for i in path_full_i.split("/"):
+#             if not found_wrong_level:
+#                 path_level_list.append(i)
+#             if " (" in i:
+#                 found_wrong_level = True
+#         path_upto_error = "/".join(path_level_list)
 
-# +
-# get_gdrive_job_path
-
-# +
-# from local_methods import get_gdrive_job_path
-
-# +
-# # def get_job_paths_info(path_i):
-# #     """
-# #     """
-# #| - get_job_paths_info
-# out_dict = dict()
-
-# # #####################################################
-# start_ind_to_remove = None
-# rev_num_i = None
-# att_num_i = None
-# path_job_root_i = None
-# path_job_root_w_att_rev = None
-# is_rev_dir_i_i = None
-# is_attempt_dir_i = None
-
-# path_job_root_w_att = None
-# gdrive_path = None
-# # #####################################################
+#         my_file = Path(path_full_i)
+#         if my_file.is_dir():
+#             size_i = os.path.getsize(path_full_i)
+#         else:
+#             continue
 
 
-# # #########################################################
-# #  Getting the compenv
-# compenvs = ["slac", "sherlock", "nersc", ]
-# compenv_out = None
-# got_compenv_from_path = False
-# for compenv_i in compenvs:
-#     compenv_in_path = compenv_i in path_i
-#     if compenv_in_path:
-#         compenv_out = compenv_i
-#         got_compenv_from_path = True
-# if compenv_out is None:
-#     compenv_out = os.environ["COMPENV"]
+#         # If it's a small file size then it probably just has the init files and we're good to delete the dir
+#         # Seems that all files are 512 bytes in size (I think it's bytes)
+#         if size_i < 550:
+#             my_file = Path(path_upto_error)
+#             if my_file.is_dir():
+#                 print("Removing dir:", path_upto_error)
+#                 # shutil.rmtree(path_upto_error)
+#         else:
+#             print(100 * "Issue | ")
+#             print(path_full_i)
+#             print(path_full_i)
+#             print(path_full_i)
+#             print(path_full_i)
+#             print(path_full_i)
 
-
-# # #########################################################
-# path_split_i = path_i.split("/")
-# # print("path_split_i:", path_split_i)  # TEMP
-# for i_cnt, dir_i in enumerate(path_split_i):
-
-#     out_dict_i = is_rev_dir(dir_i)
-#     is_rev_dir_i = out_dict_i["is_rev_dir"]
-#     rev_num_i = out_dict_i["rev_num"]
-#     if is_rev_dir_i:
-#         dir_im1 = path_split_i[i_cnt - 1]
-
-#         out_dict_i = is_attempt_dir(dir_im1)
-#         is_attempt_dir_i = out_dict_i["is_attempt_dir"]
-#         att_num_i = out_dict_i["att_num"]
-#         if is_attempt_dir_i:
-#             start_ind_to_remove = i_cnt - 1
-
-# if start_ind_to_remove:
-#     print("PISDJFIJDSIJFIJDSIJFIDJSIFJIJ")
-#     path_job_root_i = path_split_i[:start_ind_to_remove]
-#     path_job_root_i = "/".join(path_job_root_i)
-
-#     path_job_root_w_att_rev = path_split_i[:start_ind_to_remove + 2]
-#     path_job_root_w_att_rev = "/".join(path_job_root_w_att_rev)
-
-#     path_job_root_w_att = path_split_i[:start_ind_to_remove + 1]
-#     path_job_root_w_att = "/".join(path_job_root_w_att)
-
-
-#     #  print("path_job_root_w_att_rev:", path_job_root_w_att_rev)
-#     #  print("path_job_root_i:", path_job_root_i)
-
-#     # print(compenv_out)
-#     # if compenv_out is not None:
-#     if got_compenv_from_path:
-#         # compenv_out = os.environ["COMPENV"]
-#         gdrive_path = path_job_root_w_att_rev
-#     else:
-#         gdrive_path = get_gdrive_job_path(path_job_root_w_att_rev)
-
-
-# else:
-#     pass
-
-
-
-# out_dict["compenv"] = compenv_out
-# out_dict["path_job_root"] = path_job_root_i
-# out_dict["path_job_root_w_att_rev"] = path_job_root_w_att_rev
-# out_dict["att_num"] = att_num_i
-# out_dict["rev_num"] = rev_num_i
-# out_dict["is_rev_dir"] = is_rev_dir_i
-# out_dict["is_attempt_dir"] = is_attempt_dir_i
-# out_dict["path_job_root_w_att"] = path_job_root_w_att
-# out_dict["gdrive_path"] = gdrive_path
-
-# # return(out_dict)
-# #__|
+#         print("")
 
 # +
-# path_job_root_w_att_rev
+# Removing files with ' (' in name (GDrive duplicates)
 
-# +
-# df
+# for subdir, dirs, files in os.walk(jobs_root_dir):
+#     for file_i in files:
+#         if " (" in file_i:
+#             file_path_i = os.path.join(subdir, file_i)
 
-# +
-# # df.gdrive_path.tolist()
+#             print(
+#                 "Removing:",
+#                 file_path_i)
+#             # os.remove(file_path_i)
 
-# df_i = df[
-#     (df.compenv == "sherlock") & \
-#     (df.bulk_id == "v59s9lxdxr") & \
-#     (df.facet == "131") & \
-#     (df.ads == "oh") & \
-#     (df.att_num == 3)
-#     ]
-
-# df_i.gdrive_path.tolist()
+# # os.path.join(subdir, file_i)
 
 # +
 # assert False
-
-# +
-# # out_dict = 
-
-# # get_job_paths_info(path_i)
-
-# path_i
-
-# compenvs = ["slac", "sherlock", "nersc", ]
-# compenv_out = None
-# for compenv_i in compenvs:
-#     compenv_in_path = compenv_i in path_i
-#     if compenv_in_path:
-#         compenv_out = compenv_i
-# if compenv_out is None:
-#     compenv_out = os.environ["COMPENV"]
-
-# print(compenv_out)
-
-# +
-# assert False
-
-# +
-# # for subdir, dirs, files in os.walk(jobs_root_dir):
-
-# # data_dict_i = dict()
-# # data_dict_i["path_full"] = subdir
-
-# last_dir = jobs_root_dir.split("/")[-1]
-# # path_i = 
-# os.path.join(last_dir, subdir[len(jobs_root_dir) + 1:])
-
-# +
-# last_dir
-
-# jobs_root_dir
-
-# +
-#     out_dict = 
-# path_i
-# get_job_paths_info(path_i) 
-
-# +
-# # path_rel_to_proj = 
-# # get_path_rel_to_proj(subdir)
-
-# # subdir = full_path
-
-# PROJ_dir = os.environ["PROJ_irox_oer"]
-
-# search_term = PROJ_dir.split("/")[-1]
-# ind_tmp = subdir.find(search_term)
-# if ind_tmp == -1:
-#     search_term = "PROJ_irox_oer"
-#     ind_tmp = subdir.find(search_term)
-
-# path_rel_to_proj = subdir[ind_tmp:]
-# path_rel_to_proj = "/".join(path_rel_to_proj.split("/")[1:])
-
-# path_rel_to_proj
-
-# # return(path_rel_to_proj)
-
-# +
-# print(PROJ_dir)
-# print(subdir)
-
-# PROJ_dir.split("/")[-1]
 
 # +
 def get_facet_bulk_id(row_i):
-    # row_i = df.iloc[0]
-
+    """
+    """
     new_column_values_dict = {
         "bulk_id": None,
         "facet": None,
@@ -384,21 +274,40 @@ def get_facet_bulk_id(row_i):
     path_job_root = row_i.path_job_root
     # #####################################################
 
-
+    # print(path_job_root)
 
     # #####################################################
     # #####################################################
     # Check if the job is a *O calc (different than other adsorbates)
     if "run_o_covered" in path_job_root or "run_o_covered" in jobs_root_dir:
+
         path_split = path_job_root.split("/")
 
-        facet_i = path_split[-1]
-        bulk_id_i = path_split[-2]
         ads_i = "o"
-        # active_site_i = None
-        active_site_i = np.nan
+        if "active_site__" in path_job_root:
 
-        
+            facet_i = path_split[-2]
+            bulk_id_i = path_split[-3]
+
+            active_site_parsed = False
+            for i in path_split:
+                if "active_site__" in i:
+                    active_site_path_seg = i.split("_")
+                    active_site_i = active_site_path_seg[-1]
+                    active_site_i = int(active_site_i)
+                    active_site_parsed = True
+            if not active_site_parsed:
+                print("PROBLEM | Couldn't parse active site for following dir:")
+                print(path_job_root)
+
+        else:
+            # path_split = path_job_root.split("/")
+
+            facet_i = path_split[-1]
+            bulk_id_i = path_split[-2]
+            # active_site_i = None
+            active_site_i = np.nan
+
     # #####################################################
     # #####################################################
     elif "run_bare_oh_covered" in path_job_root or "run_bare_oh_covered" in jobs_root_dir:
@@ -428,7 +337,15 @@ def get_facet_bulk_id(row_i):
         # ads_i = "bare"
 
         # Check that the parsed facet makes sense
-        all_facet_chars_are_numeric = all([i.isnumeric() for i in facet_i])
+        char_list_new = []
+        for char_i in facet_i:
+            if char_i != "-":
+                char_list_new.append(char_i)
+        facet_new_i = "".join(char_list_new)
+
+        # all_facet_chars_are_numeric = all([i.isnumeric() for i in facet_i])
+        # all_facet_chars_are_numeric = all([i.isnumeric() for i in facet_i])
+        all_facet_chars_are_numeric = all([i.isnumeric() for i in facet_new_i])
         mess_i = "All characters of parsed facet must be numeric"
         assert all_facet_chars_are_numeric, mess_i
 
@@ -460,7 +377,14 @@ def get_facet_bulk_id(row_i):
         bulk_id_i = path_split[-4]
 
         # Check that the parsed facet makes sense
-        all_facet_chars_are_numeric = all([i.isnumeric() for i in facet_i])
+        char_list_new = []
+        for char_i in facet_i:
+            if char_i != "-":
+                char_list_new.append(char_i)
+        facet_new_i = "".join(char_list_new)
+
+        # all_facet_chars_are_numeric = all([i.isnumeric() for i in facet_i])
+        all_facet_chars_are_numeric = all([i.isnumeric() for i in facet_new_i])
         mess_i = "All characters of parsed facet must be numeric"
         assert all_facet_chars_are_numeric, mess_i
 
@@ -470,7 +394,7 @@ def get_facet_bulk_id(row_i):
     else:
         print("Couldn't figure out what to do here")
         print(path_job_root)
- 
+
         facet_i = None
         bulk_id_i = None
         ads_i = None
@@ -495,22 +419,6 @@ df = df.apply(
     axis=1)
 
 # +
-# df.to_csv("out_data/df_dirs.csv")
-
-# +
-# df.gdrive_path.tolist()
-
-df_i = df[
-    (df.compenv == "sherlock") & \
-    (df.bulk_id == "v59s9lxdxr") & \
-    (df.facet == "131") & \
-    (df.ads == "oh") & \
-    (df.att_num == 3)
-    ]
-
-df_i.gdrive_path.tolist()
-
-# +
 # assert False
 
 # +
@@ -518,20 +426,6 @@ df.att_num = df.att_num.astype(int)
 df.rev_num = df.rev_num.astype(int)
 
 # df["compenv"] = compenv
-
-# +
-groups = []
-grouped = df.groupby(["path_job_root_w_att", ])
-for name, group in grouped:
-    num_revs = group.shape[0]
-
-    group["num_revs"] = num_revs
-    groups.append(group)
-
-if len(groups) == 0:
-    pass
-else:
-    df = pd.concat(groups, axis=0)
 # -
 
 # # Reorder columns
@@ -543,6 +437,8 @@ new_col_order = [
     "bulk_id",
     "facet",
     "ads",
+
+    "submitted",
 
     "att_num",
     "rev_num",
@@ -556,15 +452,17 @@ new_col_order = [
     ]
 
 df = reorder_df_columns(new_col_order, df)
-# -
 
-df
+# +
+# df
+
+# +
+# assert False
+# -
 
 # # Saving data and uploading to Dropbox
 
 # Pickling data ###########################################
-import os; import pickle
-# directory = "out_data"
 directory = os.path.join(
     os.environ["PROJ_irox_oer"],
     "dft_workflow/job_processing",
@@ -575,12 +473,6 @@ file_path_i = os.path.join(directory, file_name_i)
 with open(file_path_i, "wb") as fle:
     pickle.dump(df, fle)
 # #########################################################
-
-# +
-# file_path_i
-
-# +
-# compenv
 
 # +
 db_path = os.path.join(
@@ -600,23 +492,166 @@ if compenv != "wsl":
 # #########################################################
 print(20 * "# # ")
 print("All done!")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
 print("parse_job_dirs.ipynb")
 print(20 * "# # ")
 # assert False
 # #########################################################
-
-# +
-# df_i = df[
-#     (df.compenv == "sherlock") & \
-#     (df.bulk_id == "v59s9lxdxr") & \
-#     (df.facet == "131") & \
-#     (df.ads == "oh") & \
-#     (df.att_num == 3)
-#     ]
-# df_i.gdrive_path.tolist()
 
 # + active=""
 #
 #
 #
 #
+
+# + jupyter={"source_hidden": true}
+# df.bulk_id
+
+# df[df.bulk_id == "64cg6j9any"]
+
+# + jupyter={"source_hidden": true}
+# groups = []
+# grouped = df.groupby(["path_job_root_w_att", ])
+# for name, group in grouped:
+#     num_revs = group.shape[0]
+
+#     group["num_revs"] = num_revs
+#     groups.append(group)
+
+# if len(groups) == 0:
+#     pass
+# else:
+#     df = pd.concat(groups, axis=0)
+
+# + jupyter={"source_hidden": true}
+# jobs_root_dir = "/home/raulf2012/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/__test__/dft_workflow/run_slabs/run_oh_covered/"
+
+# + jupyter={"source_hidden": true}
+# path_job_root = "dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/81meck64ba/110/active_site__63"
+
+# if "run_o_covered" in path_job_root or "run_o_covered" in jobs_root_dir:
+
+#     path_split = path_job_root.split("/")
+
+#     ads_i = "o"
+#     if "active_site__" in path_job_root:
+
+#         facet_i = path_split[-2]
+#         bulk_id_i = path_split[-3]
+
+#         active_site_parsed = False
+#         for i in path_split:
+#             if "active_site__" in i:
+#                 active_site_path_seg = i.split("_")
+#                 active_site_i = active_site_path_seg[-1]
+#                 active_site_i = int(active_site_i)
+#                 active_site_parsed = True
+#         if not active_site_parsed:
+#             print("PROBLEM | Couldn't parse active site for following dir:")
+#             print(path_job_root)
+
+#     else:
+#         # path_split = path_job_root.split("/")
+
+#         facet_i = path_split[-1]
+#         bulk_id_i = path_split[-2]
+#         # active_site_i = None
+#         active_site_i = np.nan
+# + active=""
+#
+#
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# path_full_i = "/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/ck638t75z3/020/bare (1)/active_site__59/01_attempt/_01"
+
+# # find_ind = path_full_i.find(" (")
+# # path_full_i[:find_ind + 4]
+
+# found_wrong_level = False
+# path_level_list = []
+# for i in path_full_i.split("/"):
+#     if not found_wrong_level:
+#         path_level_list.append(i)
+#     if " (" in i:
+#         found_wrong_level = True
+# path_upto_error = "/".join(path_level_list)
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/bpc2nk6qz1/101/oh/active_site__37
+
+
+# + jupyter={"source_hidden": true}
+# path_i
+
+# + jupyter={"source_hidden": true}
+# df
+
+# + jupyter={"source_hidden": true}
+# ['dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/mwmg9p7s6o/11-20/bare/active_site__27/01_attempt',
+#  'dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/slac/mwmg9p7s6o/11-20/bare/active_site__27/01_attempt']
+
+# + jupyter={"source_hidden": true}
+# for i, row_i in df.iterrows():
+#     tmp = 42
+
+#     frag_i = "7h7yns937p/101/02_attempt"
+#     if frag_i in row_i.path_full:
+#         tmp = 42
+#         print(i)
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# print(20 * "TEMP | ")
+
+# data_dict_list = []
+# for subdir, dirs, files in os.walk(jobs_root_dir):
+#     data_dict_i = dict()
+
+#     data_dict_i["path_full"] = subdir
+
+#     last_dir = jobs_root_dir.split("/")[-1]
+#     path_i = os.path.join(last_dir, subdir[len(jobs_root_dir) + 1:])
+#     # path_i = subdir[len(jobs_root_dir) + 1:]
+
+#     print(subdir)
+
+#     if "dft_jobs" not in subdir:
+#         continue
+#     if ".old" in subdir:
+#         continue
+#     if path_i == "":
+#         continue
+
+# + jupyter={"source_hidden": true}
+# print("TEMP")
+# jobs_root_dir = "/media/raulf2012/research_backup/PROJ_irox_oer_gdrive/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/mwmg9p7s6o/11-20"
+
+# + jupyter={"source_hidden": true}
+# df = df[
+#     (df["compenv"] == "slac") &
+#     # (df["slab_id"] == "mwmg9p7s6o") &
+#     (df["bulk_id"] == "mwmg9p7s6o") &
+#     (df["ads"] == "bare") &
+#     (df["facet"] == "11-20") &
+#     (df["active_site"] == 27.) &
+#     [True for i in range(len(df))]
+#     ]
+
+# #     bare	48	
+# df.path_job_root_w_att.tolist()
+
+# # df
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# assert False

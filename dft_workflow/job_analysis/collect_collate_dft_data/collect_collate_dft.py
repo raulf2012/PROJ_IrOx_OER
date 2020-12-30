@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_IrOx_Active_Learning_OER]
 #     language: python
@@ -18,10 +18,11 @@
 
 # # Import Modules
 
-# +
+# + jupyter={"source_hidden": true}
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
 
 import pickle
 
@@ -37,43 +38,132 @@ from IPython.display import display
 # #########################################################
 from methods import get_df_jobs_anal
 from methods import get_df_jobs_data
+from methods import get_df_slabs_to_run
+from methods import get_df_jobs_oh_anal
 
 # #########################################################
 from local_methods import calc_ads_e
+from local_methods import get_oer_triplet
+from local_methods import get_group_w_all_ads, are_any_ads_done
 # -
 
-# # Script Inputs
-
-verbose = False
-# verbose = True
+from methods import isnotebook    
+isnotebook_i = isnotebook()
+if isnotebook_i:
+    from tqdm.notebook import tqdm
+    verbose = True
+else:
+    from tqdm import tqdm
+    verbose = False
 
 # # Read Data
 
 # +
-df_jobs_anal = get_df_jobs_anal()
+# df_slabs_to_run
 
+# +
+# #########################################################
+df_jobs_anal = get_df_jobs_anal()
+df_jobs_anal_i = df_jobs_anal
+
+# #########################################################
 df_jobs_data = get_df_jobs_data()
+
+# #########################################################
+df_slabs_to_run = get_df_slabs_to_run()
+df_slabs_to_run = df_slabs_to_run.set_index(
+    ["compenv", "slab_id", "att_num"], drop=False)
+
+# #########################################################
+df_jobs_oh_anal = get_df_jobs_oh_anal()
+df_jobs_oh_anal = df_jobs_oh_anal.set_index(["compenv", "slab_id", "active_site"])
+
+# +
+# df_jobs_oh_anal
+# get_df_jobs_anal()
+
+# get_df_jobs_oh_anal()
+
+# +
+# assert False
+
+# +
+from misc_modules.pandas_methods import drop_columns
+
+cols_to_keep = [
+    'job_id_max',
+    # 'timed_out',
+    # 'completed',
+    # 'brmix_issue',
+    # 'job_understandable',
+    # 'decision',
+    # 'dft_params_new',
+    'job_completely_done',
+    ]
+
+df_jobs_anal_i = drop_columns(
+    df=df_jobs_anal_i,
+    columns=cols_to_keep,
+    keep_or_drop="keep",
+    )
+
 
 # + active=""
 #
 #
 # -
 
-# # Filtering dataframe for testing
+# ### Grafting `pot_e` and `as_is_nan` to dataframe
 
 # +
-# print("TEMP")
+def method(row_i):
+    # #####################################################
+    new_column_values_dict = {
+        "pot_e": None,
+        "as_is_nan": None,
+        }
+    # #####################################################
+    compenv_i = row_i.name[0]
+    slab_id_i = row_i.name[1]
+    ads_i = row_i.name[2]
+    active_site_i = row_i.name[3]
+    att_num_i = row_i.name[4]
+    # #####################################################
+    job_id_max_i = row_i.job_id_max
+    job_completely_done_i = row_i.job_completely_done
+    # #####################################################
 
-# df_index = df_jobs_anal.index.to_frame()
+    as_is_nan = False
+    if active_site_i == "NaN":
+        as_is_nan = True
 
-# df_jobs_anal = df_jobs_anal.loc[
-#     df_index[df_index.compenv == "slac"].index
-#     ]
+    # #####################################################
+    row_data_i = df_jobs_data.loc[job_id_max_i]
+    # #####################################################
+    pot_e_i = row_data_i.pot_e
+    rerun_from_oh_i = row_data_i.rerun_from_oh
+    # #####################################################
+
+
+    # #####################################################
+    new_column_values_dict["pot_e"] = pot_e_i
+    new_column_values_dict["as_is_nan"] = as_is_nan
+    new_column_values_dict["rerun_from_oh"] = rerun_from_oh_i
+    # #####################################################
+    for key, value in new_column_values_dict.items():
+        row_i[key] = value
+    # #####################################################
+    return(row_i)
+
+df_jobs_anal_i = df_jobs_anal_i.apply(
+    method,
+    axis=1,
+    )
 
 # +
 # #########################################################
 # Only completed jobs will be considered
-df_jobs_anal_i = df_jobs_anal[df_jobs_anal.job_completely_done == True]
+df_jobs_anal_i = df_jobs_anal_i[df_jobs_anal_i.job_completely_done == True]
 
 # #########################################################
 # Remove the *O slabs for now
@@ -89,25 +179,35 @@ df_jobs_anal_no_o = df_jobs_anal_i.loc[idx[:, :, ads_list_no_o, :, :], :]
 
 # +
 # #########################################################
-verbose_local = False
-# #########################################################
-
 data_dict_list = []
+# #########################################################
 groupby_cols = ["compenv", "slab_id", "active_site", ]
 grouped = df_jobs_anal_no_o.groupby(groupby_cols)
 for name_i, group in grouped:
+
 # for i in range(1):
+#     # name_i = ('sherlock', 'vuvunira_55', 73.0)
+#     # name_i = ('slac', 'waloguhe_35', 65.0)
+#     name_i = ("slac", "kalisule_45", 68.0)
+#     group = grouped.get_group(name_i)
 
-    # group = grouped.get_group(
-    #     ('slac', 'fagumoha_68', 63.0)
-    #     )
+    # #####################################################
+    ads_e_o_i = None
+    ads_e_oh_i = None
+    job_id_o_i = None
+    job_id_oh_i  = None
+    job_id_bare_i = None
+    all_jobs_in_group_done = None
+    any_bare_done = None
+    any_oh_done = None
+    any_o_done = None
+    any_o_done_with_active_sites = None
+    # #####################################################
 
-    if verbose_local:
-        print(40 * "*")
-        print(name_i)
 
+
+    # #####################################################
     data_dict_i = dict()
-
     # #####################################################
     name_dict_i = dict(zip(groupby_cols, name_i))
     # #####################################################
@@ -116,138 +216,120 @@ for name_i, group in grouped:
     active_site_i = name_i[2]
     # #####################################################
 
-    # Selecting the relevent *O slab rows and combining with group
-    idx = pd.IndexSlice
-    df_o_slabs = df_jobs_anal_i.loc[idx[compenv_i, slab_id_i, "o", :, :], :]
 
-    group_i = pd.concat([
-        df_o_slabs,
-        group
-        ])
 
-    data_dict_list_j = []
-    for name_j, row_j in group_i.iterrows():
-        data_dict_j = dict()
+    out_dict = get_group_w_all_ads(
+        name=name_i,
+        group=group,
+        df_jobs_anal_i=df_jobs_anal_i,
+        )
+    group_i = out_dict["group_i"]
+    any_o_done_with_active_sites = out_dict["any_o_done_with_active_sites"]
 
-        # #################################################
-        name_dict_j = dict(zip(list(group_i.index.names), name_j))
-        # #################################################
-        job_id_max_j = row_j.job_id_max
-        # #################################################
 
-        # #################################################
-        row_data_j = df_jobs_data.loc[job_id_max_j]
-        # #################################################
-        pot_e_j = row_data_j.pot_e
-        # #################################################
+    all_jobs_in_group_done = group_i.job_completely_done.all()
 
-        # #################################################
-        data_dict_j.update(name_dict_j)
-        data_dict_j["pot_e"] = pot_e_j
-        data_dict_j["job_id_max"] = job_id_max_j
-        # #################################################
-        data_dict_list_j.append(data_dict_j)
-        # #################################################
 
-    df_tmp = pd.DataFrame(data_dict_list_j)
-    df_tmp = df_tmp.set_index(
-        ["compenv", "slab_id", "ads", "active_site", ],
-        drop=False)
+    out_dict = are_any_ads_done(
+        group=group_i,
+        )
+    any_o_done = out_dict["any_o_done"]
+    any_oh_done = out_dict["any_oh_done"]
+    any_bare_done = out_dict["any_bare_done"]
+
+
+    # TEMP
+    for i in group_i.pot_e.tolist():
+        if type(i) != float:
+            print("8asdihydfsd908f: ", name_i)
+
+
+    oer_trip_i = get_oer_triplet(
+        name=name_i,
+        group=group_i,
+        df_jobs_oh_anal=df_jobs_oh_anal,
+        )
+
+
+
 
     # #####################################################
-    df_ads_o = df_tmp[df_tmp.ads == "o"]
-    df_ads_oh = df_tmp[df_tmp.ads == "oh"]
-    df_ads_bare = df_tmp[df_tmp.ads == "bare"]
-
-    if (df_ads_o.shape[0] > 1) or (df_ads_oh.shape[0] > 1) or (df_ads_bare.shape[0] > 1):
-        if verbose_local:
-            print("There is more than 1 row per state here, need a better way to select")
-    # #####################################################
-
-
-    # If there isn't a bare * calculation then skip for now
-    if df_ads_bare.shape[0] == 0:
-        if verbose_local:
-            print("No bare slab available")
-        continue
-
-    df_ads_oh = df_ads_oh[df_ads_oh.pot_e == df_ads_oh.pot_e.min()]
-    df_ads_o = df_ads_o[df_ads_o.pot_e == df_ads_o.pot_e.min()]
-    df_ads_bare = df_ads_bare[df_ads_bare.pot_e == df_ads_bare.pot_e.min()]
-
-    job_id_bare_i = df_ads_bare.iloc[0].job_id_max
-
-    df_ads_i = pd.concat([
-        df_ads_o,
-        df_ads_oh,
-        df_ads_bare])
-    df_ads_i = calc_ads_e(df_ads_i)
-
-
-
-    # #########################################################
-    row_oh_i = df_ads_i[df_ads_i.ads == "oh"]
-    if row_oh_i.shape[0] == 1:
-        row_oh_i = row_oh_i.iloc[0]
-        # #####################################################
-        ads_e_oh_i = row_oh_i.ads_e
-        job_id_oh_i = row_oh_i.job_id_max
-        # #####################################################
-    else:
-        ads_e_oh_i = None
-        job_id_oh_i = None
-
-    # #########################################################
-    row_o_i = df_ads_i[df_ads_i.ads == "o"]
-    if row_o_i.shape[0] == 1:
-        row_o_i = row_o_i.iloc[0]
-        # #####################################################
-        ads_e_o_i = row_o_i.ads_e
+    # Checking if *O is avail and get job id
+    o_avail = "o" in oer_trip_i.index.to_frame()["ads"].tolist()
+    if o_avail:
+        idx = pd.IndexSlice
+        row_o_i = oer_trip_i.loc[idx[:, :, "o", :, :], :].iloc[0]
         job_id_o_i = row_o_i.job_id_max
-        # #####################################################
     else:
         ads_e_o_i = None
         job_id_o_i = None
 
+    # #####################################################
+    # Checking if *OH is avail and get job id
+    oh_avail = "oh" in oer_trip_i.index.to_frame()["ads"].tolist()
+    if oh_avail:
+        idx = pd.IndexSlice
+        row_oh_i = oer_trip_i.loc[idx[:, :, "oh", :, :], :].iloc[0]
+        job_id_oh_i = row_oh_i.job_id_max
+    else:
+        ads_e_oh_i = None
+        job_id_oh_i = None
 
 
-    if verbose_local:
-        print(80 * "#")
+    # #####################################################
+    # Can only compute adsorption energies if bare (*) is avail
+    bare_avail = "bare" in oer_trip_i.index.to_frame()["ads"].tolist()
+    if bare_avail:
+        idx = pd.IndexSlice
+        row_bare_i = oer_trip_i.loc[idx[:, :, "bare", :, :], :].iloc[0]
+        job_id_bare_i = row_bare_i.job_id_max
 
+
+        df_ads_i = calc_ads_e(oer_trip_i.reset_index())
+        df_ads_i = df_ads_i.set_index("ads", drop=False)
+
+        ads_e_o_i = df_ads_i.loc["o"]["ads_e"]
+
+        if "oh" in df_ads_i.index:
+            ads_e_oh_i = df_ads_i.loc["oh"]["ads_e"]
+            job_id_oh_i = df_ads_i.loc["oh"]["job_id_max"]
+        else:
+            ads_e_oh_i = None
+            job_id_oh_i = None
+
+    else:
+        job_id_bare_i = None
 
 
 
     # #####################################################
     data_dict_i.update(name_dict_i)
+    # #####################################################
     data_dict_i["g_o"] = ads_e_o_i
     data_dict_i["g_oh"] = ads_e_oh_i
     data_dict_i["job_id_o"] = job_id_o_i
     data_dict_i["job_id_oh"] = job_id_oh_i 
     data_dict_i["job_id_bare"] = job_id_bare_i
+    data_dict_i["all_done"] = all_jobs_in_group_done
+    data_dict_i["any_bare_done"] = any_bare_done
+    data_dict_i["any_oh_done"] = any_oh_done
+    data_dict_i["any_o_done"] = any_o_done
+    data_dict_i["any_o_w_as_done"] = any_o_done_with_active_sites
     # #####################################################
     data_dict_list.append(data_dict_i)
     # #####################################################
 
 
-    # display(df_tmp_1)
-    # if df_ads_i.shape[0] == 3:
-    #     break
-
-
-    if verbose_local:
-        print("")
-
 # #########################################################
 df_ads = pd.DataFrame(data_dict_list)
+# #########################################################
+# -
 
-# df_ads.iloc[0:3]
+df_ads
 
-# +
-df_ads_i = df_ads[~df_ads.g_oh.isnull()]
-
-# print(df_ads_i.shape)
-
-df_ads_i
+# + active=""
+#
+#
 
 # +
 # assert False
@@ -274,7 +356,8 @@ df_ads_tmp.head()
 # #########################################################
 print(20 * "# # ")
 print("All done!")
-print("analyse_jobs.ipynb")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
+print("collect_collate_dft.ipynb")
 print(20 * "# # ")
 # #########################################################
 
@@ -282,8 +365,3 @@ print(20 * "# # ")
 #
 #
 #
-
-# + jupyter={"source_hidden": true}
-# df_ads
-
-# assert False

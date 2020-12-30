@@ -18,7 +18,7 @@
 
 # # Import Modules
 
-# + jupyter={"source_hidden": true}
+# +
 import os
 print(os.getcwd())
 import sys
@@ -32,35 +32,20 @@ from IPython.display import display
 # #########################################################
 from methods import (
     get_df_jobs_anal,
+    get_df_jobs_data,
     )
 # -
 
 # # Read Data
 
+# +
 df_jobs_anal = get_df_jobs_anal()
+
+df_jobs_data = get_df_jobs_data()
 
 # + active=""
 #
 #
-
-# +
-# vinamepa_43
-
-# df_index_i = df_jobs_anal.index.to_frame()
-
-# "vinamepa_43" in df_index_i.slab_id.tolist()
-
-# +
-# df_jobs_anal.iloc[0:1]
-
-# +
-# idx = pd.IndexSlice
-# df_jobs_anal.loc[idx[:, "vinamepa_43", :, :, :], :]
-
-# df_jobs_anal.loc[("vinamepa_43", )]
-
-# +
-# assert False
 
 # +
 df_jobs_anal_done = df_jobs_anal[df_jobs_anal.job_completely_done == True]
@@ -73,6 +58,12 @@ data_dict_list = []
 # #########################################################
 grouped = df_jobs_anal_i.groupby(["compenv", "slab_id", "active_site", ])
 for name, group in grouped:
+# if True:
+
+    # print("TEMP")
+    # name = ('sherlock', 'vuvunira_55', 75.0)
+    # group = grouped.get_group(name)
+
     data_dict_i = dict()
 
     # #####################################################
@@ -86,7 +77,7 @@ for name, group in grouped:
         idx[compenv_i, slab_id_i, "o", "NaN", :],
         ]
 
-    # #########################################################
+    # #####################################################
     group_wo = pd.concat([
         df_jobs_anal_o,
         group,
@@ -94,11 +85,11 @@ for name, group in grouped:
 
     # display(group_wo)
 
-    # #########################################################
+    # #####################################################
     df_jobs_anal_index = group_wo.index.tolist()
 
 
-    # #########################################################
+    # #####################################################
     df_index_i = group_wo.index.to_frame()
 
     ads_list = df_index_i.ads.tolist()
@@ -115,6 +106,21 @@ for name, group in grouped:
         all_ads_present = True
 
 
+    # #####################################################
+    # Finding whether *O rerun from *OH exists
+    var = "o"
+    group_o = group_wo.query('ads == @var')
+
+    df_data_o = df_jobs_data.loc[
+        group_o.job_id_max
+        ]
+
+    tmp = df_data_o[df_data_o.rerun_from_oh == True]
+
+    # print(name, tmp.shape[0])
+
+
+    # #####################################################
 
 
     # #####################################################
@@ -133,12 +139,11 @@ for name, group in grouped:
 # #########################################################
 df_oer_groups = pd.DataFrame(data_dict_list)
 df_oer_groups = df_oer_groups.set_index(["compenv", "slab_id", "active_site"], drop=False)
-
-# +
-# num_oh_completed = ads_list.count("oh")
-
-# ["oh", "o", "oh"].count("ohd")
 # -
+
+df_oer_groups
+
+assert False
 
 # # Save data to pickle
 
@@ -182,3 +187,63 @@ df_oer_groups_tmp.head()
 # with open(path_i, "rb") as fle:
 #     df_oer_groups = pickle.load(fle)
 # # #########################################################
+
+# + jupyter={"source_hidden": true}
+# vinamepa_43
+
+# df_index_i = df_jobs_anal.index.to_frame()
+
+# "vinamepa_43" in df_index_i.slab_id.tolist()
+
+# + jupyter={"source_hidden": true}
+# df_jobs_anal.iloc[0:1]
+
+# + jupyter={"source_hidden": true}
+# idx = pd.IndexSlice
+# df_jobs_anal.loc[idx[:, "vinamepa_43", :, :, :], :]
+
+# df_jobs_anal.loc[("vinamepa_43", )]
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# print(10 * "TEMP ")
+
+# df_index_i = df_jobs_anal.index.to_frame()
+# df_index_i = df_index_i[
+#     (df_index_i.compenv == "sherlock") & \
+#     (df_index_i.slab_id == "kenukami_73") & \
+#     (df_index_i.active_site == 84.) & \
+#     [True for i in range(len(df_index_i))]
+#     ]
+
+# df_jobs_anal = df_jobs_anal.loc[
+#     df_index_i.index
+#     ]
+
+# + jupyter={"source_hidden": true}
+# num_oh_completed = ads_list.count("oh")
+
+# ["oh", "o", "oh"].count("ohd")
+
+# + jupyter={"source_hidden": true}
+# # df_jobs_data_i = df_jobs_data.loc[
+# #     group_wo.job_id_max
+# #     ]
+# # df_jobs_data_i
+
+# # group_wo
+
+# var = "o"
+# group_o = group_wo.query('ads == @var')
+
+# # group_o
+
+# df_data_o = df_jobs_data.loc[
+#     group_o.job_id_max
+#     ]
+
+# tmp = df_data_o[df_data_o.rerun_from_oh == True]
+
+# tmp

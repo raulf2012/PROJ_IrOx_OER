@@ -123,12 +123,6 @@ def get_magmom_diff_data(
     else:
         out_dict = out_dict__no_flipped
 
-    # #########################################################
-    # delta_magmoms = out_dict["delta_magmoms"]
-    # tot_abs_magmom_diff = out_dict__yes_flipped["tot_abs_magmom_diff"]
-    # ads_indices_not_used = out_dict["ads_indices_not_used"]
-    # atoms_ave = out_dict["atoms_ave"]
-    # delta_magmoms_unsorted = out_dict["delta_magmoms_unsorted"]
 
     return(out_dict)
     #__|

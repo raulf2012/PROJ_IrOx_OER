@@ -59,6 +59,7 @@ def job_decision(
     error_type=None,
     timed_out=None,
     completed=None,
+    submitted=None,
     job_understandable=None,
     ediff_conv_reached=None,
     incar_params=None,
@@ -86,8 +87,24 @@ def job_decision(
     # decision_i = "nothing"
     decision_i = []
 
+
+    data_root_path = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "dft_workflow/dft_scripts/out_data")
+    data_path = os.path.join(data_root_path, "conservative_mixing_params.json")
+    with open(data_path, "r") as fle:
+        dft_calc_sett_mix = json.load(fle)
+
+
     # #####################################################
     #| - Closed decision logic
+
+    #| - If job not submitted yet, do nothing
+    if submitted is False:
+        decision_i = ["nothing", "Not submitted"]
+        out_dict = dict(decision=decision_i, dft_params=dict())
+        return(out_dict)
+    #__|
 
     #| - If the job is not understandable then don't continue
     if not job_understandable:
@@ -134,24 +151,31 @@ def job_decision(
         (True is True):
         decision_i.append("resubmit")
         # decision_i = "resubmit"
-
     #__|
 
     # #####################################################
     #| - If most of scf cycles are unconverged and the final ediff convergence is not achieved then tweak parameters
+
+    # This is essentially the same as the if statement below it except it doesn't have the frac_true requirement
+    # I had a job that finished  a bunch of SCF cycles and then hit a brmix isssue
+    if not ediff_conv_reached and brmix_issue:
+        decision_i.append("tweak_params")
+
+        # data_root_path = os.path.join(
+        #     os.environ["PROJ_irox_oer"],
+        #     "dft_workflow/dft_scripts/out_data")
+        # data_path = os.path.join(data_root_path, "conservative_mixing_params.json")
+        # with open(data_path, "r") as fle:
+        #     dft_calc_sett_mix = json.load(fle)
+
+        dft_params_new.update(dft_calc_sett_mix)
+
+
     if frac_true < 0.2 and not ediff_conv_reached:
         decision_i.append("tweak_params")
 
         #| - If it's the BRMIX issue then reduce the mixing paramters
         if brmix_issue:
-
-            data_root_path = os.path.join(
-                os.environ["PROJ_irox_oer"],
-                "dft_workflow/dft_scripts/out_data")
-            data_path = os.path.join(data_root_path, "conservative_mixing_params.json")
-            with open(data_path, "r") as fle:
-                dft_calc_sett_mix = json.load(fle)
-
             dft_params_new.update(dft_calc_sett_mix)
             # dft_params_new.update(dict(ispin=0))
         #__|
@@ -168,12 +192,6 @@ def job_decision(
                 prec_new = "Accurate"
                 dft_params_new.update(dict(prec=prec_new))
 
-
-            #  dft_params_new.update(
-            #      dict(
-            #          algo=algo_new,
-            #          prec=prec_new,
-            #          ))
 
     #__|
 
@@ -196,6 +214,15 @@ def job_decision(
     if error and error_type == "mpirun has exited":
         decision_i.append("resubmit")
     #__|
+
+    # print(error)
+    # print(error_type)
+
+    if len(decision_i) == 0 and len(dft_params_new) == 0:
+        if error and error_type == "calculation blown up":
+            decision_i.append("resubmit")
+            dft_params_new.update(dft_calc_sett_mix)
+
 
     if error and error_type == "Segmentation fault":
         decision_i.append("resubmit")
@@ -557,6 +584,7 @@ def parse_job_dirs(root_dir=None):
         if "dft_jobs" not in subdir: continue
         if ".old" in subdir: continue
         if path_i == "": continue
+        if " (" in subdir: continue
         # #####################################################
         # print(path_i)
 
@@ -579,6 +607,7 @@ def parse_job_dirs(root_dir=None):
 
     # #####################################################
     is_submitted_list = []
+    is_empty_list = []
     for index_i, row_i in df.iterrows():
         path_full = row_i.path_full
 
@@ -586,11 +615,17 @@ def parse_job_dirs(root_dir=None):
         my_file = Path(os.path.join(path_full, ".SUBMITTED"))
         if my_file.is_file():
             is_submitted = True
-
         is_submitted_list.append(is_submitted)
 
-    df["is_submitted"] = is_submitted_list
+        is_empty = False
+        dir_list = os.listdir(path_full)
+        if len(dir_list) == 0:
+            is_empty = True
+        is_empty_list.append(is_empty)
 
+    # #####################################################
+    df["is_submitted"] = is_submitted_list
+    df["is_empty"] = is_empty_list
 
     return(df)
     #__|
@@ -756,19 +791,34 @@ def get_gdrive_job_path(path_job_root_w_att_rev):
         'dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/vh9gx4n2xg/001/01_attempt/_01'
     """
     #| - get_gdrive_job_path
-    found_dft_jobs = False
-    path_list = []; path_list_after = []
-    for i in path_job_root_w_att_rev.split("/"):
-        if not found_dft_jobs:
-            path_list.append(i)
-        else:
-            path_list_after.append(i)
-        if i == "dft_jobs":
-            found_dft_jobs = True
+    from proj_data import compenvs
 
-    gdrive_path = os.path.join("/".join(path_list), compenv, "/".join(path_list_after))
+    compenv_already_in_path = False
+    for compenv_i in compenvs:
+        if compenv_i in path_job_root_w_att_rev:
+            compenv_already_in_path = True
 
-    return(gdrive_path)
+    if not compenv_already_in_path:
+        found_dft_jobs = False
+        path_list = []; path_list_after = []
+        for i in path_job_root_w_att_rev.split("/"):
+            if not found_dft_jobs:
+                path_list.append(i)
+            else:
+                path_list_after.append(i)
+            if i == "dft_jobs":
+                found_dft_jobs = True
+        gdrive_path = os.path.join("/".join(path_list), compenv, "/".join(path_list_after))
+        out_path = gdrive_path
+    else:
+        out_path = path_job_root_w_att_rev
+
+    if "slac/slac" in out_path:
+        print("out_path:", out_path)
+    elif "sherlock/sherlock" in out_path:
+        print("out_path:", out_path)
+
+    return(out_path)
     #__|
 
 #__|

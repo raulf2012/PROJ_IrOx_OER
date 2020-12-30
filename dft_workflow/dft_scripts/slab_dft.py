@@ -37,9 +37,7 @@ if not os.path.exists(directory):
 #__|
 
 # | - Read Atoms Object
-if os.path.isfile("init.cif"):
-    atoms = io.read('init.cif')
-elif os.path.isfile("init.traj"):
+if os.path.isfile("init.traj"):
     atoms = io.read('init.traj')
 #__|
 

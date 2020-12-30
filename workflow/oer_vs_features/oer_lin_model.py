@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -17,285 +17,378 @@
 # # Constructing linear model for OER adsorption energies
 # ---
 #
-# TODO:
-#   * Add bulk formation energy as descriptor
 
-# # Import Modules
+# ### Import Modules
 
-# + jupyter={}
+# +
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
+
+import copy
 
 import numpy as np
-from sklearn.linear_model import LinearRegression
 import pandas as pd
-
-# pd.set_option("display.max_columns", None)
+pd.set_option("display.max_columns", None)
 # pd.set_option('display.max_rows', None)
 # pd.options.display.max_colwidth = 100
 
-import plotly.graph_objs as go
-
-# #########################################################
-from methods import (
-    get_df_eff_ox,
-    get_df_ads,
-    get_df_features,
-    get_df_jobs,
-    )
-
 # #########################################################
 from layout import layout
+
+# #########################################################
+from local_methods import create_linear_model_plot
+from local_methods import isolate_target_col
 # -
 
-# # Script Inputs
+from methods import isnotebook    
+isnotebook_i = isnotebook()
+if isnotebook_i:
+    from tqdm.notebook import tqdm
+    verbose = True
+    show_plot = True
+else:
+    from tqdm import tqdm
+    verbose = False
+    show_plot = False
 
-verbose = True
-# verbose = False
-
-# # Read Data
+# ### Read Data
 
 # +
-df_eff_ox = get_df_eff_ox()
+from methods import get_df_features_targets
+df_features_targets = get_df_features_targets()
 
-df_ads = get_df_ads()
+from methods import get_df_slab
+df_slab = get_df_slab()
 
-df_features = get_df_features()
+# #########################################################
+df_i = df_features_targets
 
-df_jobs = get_df_jobs()
+# Getting phase > 1 slab ids
+df_slab_i = df_slab[df_slab.phase > 1]
+phase_2_slab_ids = df_slab_i.slab_id.tolist()
+
+# +
+print(
+    "Number of rows in df_features_targets:",
+    df_i.shape[0],
+    )
+
+# 150
 # -
 
-feature_cols = df_features.columns.tolist()
+# # Dropping phase 1 slabs
+
+# +
+df_index = df_i.index.to_frame()
+df_index_i = df_index[
+    df_index.slab_id.isin(phase_2_slab_ids)
+    ]
+
+print("Dropping phase 1 slabs")
+df_i = df_i.loc[
+    df_index_i.index
+    ]
+
+# +
+# Keeping track of shape, dropping phase 1 points
+# 95
+# 118
+# 126
+# 132
+# 163
+# 176
+# 183
+# 199
+# 214
+# 233
+# 254
+# 267
+# 280
+# 300
+
+df_i.shape
+
+# +
+from proj_data import layout_shared
+
+layout_master = layout_shared.update(layout)
+# -
+
+# # -------------------------
+
+# # All single feature models
+
+# ## G_O models
+
+# +
+ads_i = "o"
+feature_ads_i = "oh"
+
+# if True:
+#     feature_col_i = "active_o_metal_dist"
+
+# if True:
+if False:
+    print(
+        list(df_i["features_stan"][ads_i].columns)
+        )
+
+
+    for feature_col_i in df_i["features_stan"][ads_i].columns:
+        print(40 * "=")
+        print(feature_col_i)
+        print("")
+
+        df_j = isolate_target_col(
+            df_i,
+            target_col="g_o",
+            )
+
+        out_dict = create_linear_model_plot(
+            df=df_j,
+            feature_columns=[feature_col_i, ],
+            ads=ads_i,
+            feature_ads=feature_ads_i,
+            layout=layout_master,
+            verbose=verbose,
+            )
+        fig = out_dict["fig"]
+        fig.show()
+# -
+
+# ## G_OH models
+
+# +
+ads_i = "oh"
+feature_ads_i = "o"
+
+# if True:
+if False:
+
+    # for feature_col_i in df_i.features_stan.columns:
+    for feature_col_i in df_i["features_stan"][ads_i].columns:
+
+        print(40 * "=")
+        print(feature_col_i)
+        print("")
+
+        df_j = isolate_target_col(
+            df_i,
+            target_col="g_" + ads_i,
+            )
+
+        out_dict = create_linear_model_plot(
+            df=df_j,
+            feature_columns=[feature_col_i, ],
+            ads=ads_i,
+            feature_ads=feature_ads_i,
+            layout=layout_master,
+            verbose=verbose,
+            )
+        fig = out_dict["fig"]
+        fig.show()
 
 # + active=""
 #
 #
+#
+#
+# -
+
+# # -------------------------
+
+# # G_O Model
 
 # +
-data_dict_list = []
-for i_cnt, row_i in df_ads.iterrows():
-    data_dict_i = dict()
+ads_i = "o"
+feature_ads_i = "oh"
 
-    # #####################################################
-    compenv_i = row_i.compenv
-    slab_id_i = row_i.slab_id
-    active_site_i = row_i.active_site
-    g_o_i = row_i.g_o
-    job_id_o_i = row_i.job_id_o
-    # active_site_i = row_i.active_site
-    # #####################################################
+df_j = isolate_target_col(
+    df_i,
+    target_col="g_o",
+    )
 
-    # #########################################################
-    row_jobs_i = df_jobs.loc[job_id_o_i]
-    # #########################################################
-    att_num_i = row_jobs_i.att_num
-    # #########################################################
+feature_cols_all = list(df_j["features_stan"][ads_i].columns)
 
-    # #####################################################
-    data_dict_i["compenv"] = compenv_i
-    data_dict_i["slab_id"] = slab_id_i
-    data_dict_i["ads"] = "o"
-    data_dict_i["active_site"] = active_site_i
-    data_dict_i["att_num"] = att_num_i
-    data_dict_i["g_o"] = g_o_i
-    data_dict_i["job_id_o"] = job_id_o_i
-    data_dict_i["active_site"] = active_site_i
-    # #####################################################
-    data_dict_list.append(data_dict_i)
-    # #####################################################
+format_dict_i = {
+    "color": "stoich",
+    }
+
+out_dict = create_linear_model_plot(
+    df=df_j,
+    layout=layout_master,
+    ads=ads_i,
+    feature_ads=feature_ads_i,
+    format_dict=format_dict_i,
+
+    # feature_columns=["eff_oxid_state", "octa_vol", "dH_bulk", ],
+    # feature_columns=["eff_oxid_state", "octa_vol", "dH_bulk", "bulk_oxid_state", ],
+    feature_columns=feature_cols_all,
+    verbose=verbose,
+    )
+
+fig = out_dict["fig"]
+
+fig.write_json(
+    os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/oer_vs_features",
+        "out_plot/oer_lin_model__G_O_plot.json"))
+# -
+if show_plot:
+    fig.show()
+
+# + active=""
+#
+#
+#
+#
+# -
+
+# # G_OH Model
+
+# +
+ads_i = "oh"
+feature_ads_i = "oh"
+
+df_j = isolate_target_col(
+    df_i,
+    target_col="g_oh",
+    )
+
+feature_cols_all = list(df_j["features_stan"][ads_i].columns)
+
+out_dict = create_linear_model_plot(
+    df=df_j,
+    layout=layout_master,
+    feature_ads=feature_ads_i,
+    ads=ads_i,
+    format_dict=format_dict_i,
+
+    # feature_columns=["eff_oxid_state", "octa_vol", "dH_bulk", ],
+    # feature_columns=["eff_oxid_state", "octa_vol", "dH_bulk", "bulk_oxid_state", ],
+    # feature_columns=["eff_oxid_state", "octa_vol", "dH_bulk", "bulk_oxid_state", "ir_o_mean", ],
+    feature_columns=feature_cols_all,
+    verbose=verbose,
+    )
+fig = out_dict["fig"]
+
+fig.write_json(
+    os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/oer_vs_features",
+        "out_plot/oer_lin_model__G_OH_plot.json"))
+# -
+
+if show_plot:
+    fig.show()
+
+# + active=""
+#
+#
+#
+# -
+
+# ### Get index off of graph with str frag
+
+# +
+df_ind = df_features_targets.index.to_frame()
+
+# frag_i = "walogu"
+# frag_i = "kese"
+frag_i = "vota"
+for index_i, row_i in df_ind.iterrows():
+    tmp = 42
+    name_i = row_i.compenv + "__" + row_i.slab_id
+    if frag_i in name_i:
+        print(index_i)
+# -
 
 # #########################################################
-df = pd.DataFrame(data_dict_list)
-df = df.dropna()
-df = df.set_index(["compenv", "slab_id", "ads", "active_site", "att_num"], drop=False)
-# -
+print(20 * "# # ")
+print("All done!")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
+print("oer_lin_model.ipynb")
+print(20 * "# # ")
+# #########################################################
 
-# compenv	slab_id	ads	active_site	att_num	g_o	job_id_o
-df.iloc[0:1]
+# + active=""
+#
+#
+#
 
-# # Combine features dataframe with adsorption energy
+# + jupyter={"source_hidden": true}
+# color__stoich
 
-# +
-df_tmp = pd.concat([df, df_features], axis=1)
+# + jupyter={"source_hidden": true}
+# # stoich_i
 
-df_tmp = df_tmp.dropna()
+# #     stoich_i = 
+# row_data_i["stoich"][""]
+# 
 
-df_tmp = df_tmp.drop(columns=["compenv", "slab_id", "ads", "active_site", "att_num", ])
+# + jupyter={"source_hidden": true}
+# row_data_i
 
-# +
-# assert False
-# -
+# + jupyter={"source_hidden": true}
+# from proj_data import stoich_color_dict
 
-for feature_i in feature_cols:
-    mean_val = df_tmp[feature_i].mean()
+# # #########################################################
+# data_dict_list = []
+# # #########################################################
+# for index_i, row_i in df_features_targets.iterrows():
+#     # #####################################################
+#     data_dict_i = dict()
+#     # #####################################################
+#     index_dict_i = dict(zip(list(df_features_targets.index.names), index_i))
+#     # #####################################################
+#     row_data_i = row_i["data"]
+#     # #####################################################
+#     stoich_i = row_data_i["stoich"][""]
+#     norm_sum_norm_abs_magmom_diff_i = \
+#         row_data_i["norm_sum_norm_abs_magmom_diff"][""]
+#     # #####################################################
 
-    std_val = df_tmp[feature_i].std()
-
-    df_tmp[feature_i + "_stan"] = (df_tmp[feature_i] - mean_val) / std_val
-
-
-# +
-# for name_i, row_i in df_tmp.iterrows():
-
-#     # #########################################################
-#     compenv_i = name_i[0]
-#     slab_id_i = name_i[1]
-#     ads_i = name_i[2]
-#     active_site_i = name_i[3]
-#     att_num_i = name_i[4]
-#     # #########################################################
-
-#     job_id_o_i = row_i.job_id_o
-
-#     name_i = job_id_o_i + "__" + str(int(active_site_i)).zfill(3)
-
-# +
-def method(row_i):
-    # #########################################################
-    name_i = row_i.name
-    # #########################################################
-    compenv_i = name_i[0]
-    slab_id_i = name_i[1]
-    ads_i = name_i[2]
-    active_site_i = name_i[3]
-    att_num_i = name_i[4]
-    # #########################################################
-    
-    job_id_o_i = row_i.job_id_o
-
-    name_i = job_id_o_i + "__" + str(int(active_site_i)).zfill(3)
-    
-    return(name_i)
-
-# df_i = df_tmp
-df_tmp["name_str"] = df_tmp.apply(
-    method,
-    axis=1)
-# df_tmp = df_i
-# -
-
-feature_cols_stan = [i + "_stan" for i in feature_cols]
-feature_cols_stan
-
-# +
-# X = df_tmp[feature_cols].to_numpy().reshape(-1, len(feature_cols))
-X = df_tmp[feature_cols_stan].to_numpy().reshape(-1, len(feature_cols))
-y = df_tmp.g_o
-
-model = LinearRegression()
-model.fit(X, y)
-
-y_predict = model.predict(X)
-# -
-
-# # Plotting
-
-data = []
-
-# +
-# x_parity = y_parity = np.linspace(0, 5.5, num=100, )
-x_parity = y_parity = np.linspace(0., 8., num=100, )
-
-trace_i = go.Scatter(
-    x=x_parity,
-    y=y_parity,
-    line=go.scatter.Line(color="black", width=2.),
-    mode="lines")
-data.append(trace_i)
-# -
-
-trace_i = go.Scatter(
-    y=y,
-    x=y_predict,
-    mode="markers",
-    marker=go.scatter.Marker(
-        size=12,
-        ),
-    # mode="markers+text",
-    # name="Markers and Text",
-    text=df_tmp.name_str,
-    textposition="bottom center",
-    )
-data.append(trace_i)
-
-# +
-# # go.Scatter?
-
-# plotly.graph_objects.scatter.Marker
-# # go.scatter.Marker?
-
-# +
-layout.xaxis.title.text = "Predicted ΔG<sub>*O</sub>"
-
-layout.yaxis.title.text = "Simulated ΔG<sub>*O</sub>"
+#     if stoich_i == "AB2":
+#         color__stoich_i = stoich_color_dict["AB2"]
+#     elif stoich_i == "AB3":
+#         color__stoich_i = stoich_color_dict["AB3"]
+#     else:
+#         color__stoich_i = stoich_color_dict["None"]
 
 
-layout.xaxis.title.font.size = 25
-layout.yaxis.title.font.size = 25
 
-layout.yaxis.tickfont.size = 20
-layout.xaxis.tickfont.size = 20
-
-layout.xaxis.range = [2.5, 5.5]
-
-layout.showlegend = False
-
-# layout.xaxis.scaleanchor = "y"
-
-# # go.layout.XAxis?
-
-# +
-dd = 0.2
-layout.xaxis.range = [
-    np.min(y_predict) - dd,
-    np.max(y_predict) + dd,
-    ]
+#     # #####################################################
+#     data_dict_i["color__stoich"] = color__stoich_i
+#     data_dict_i["color__norm_sum_norm_abs_magmom_diff_i"] = \
+#         norm_sum_norm_abs_magmom_diff_i
+#     # #####################################################
+#     data_dict_i.update(index_dict_i)
+#     # #####################################################
+#     data_dict_list.append(data_dict_i)
+#     # #####################################################
 
 
-layout.yaxis.range = [
-    np.min(y) - dd,
-    np.max(y) + dd,
-    ]
+# # #########################################################
+# df_format = pd.DataFrame(data_dict_list)
+# # #########################################################
 
-# +
-# np.min(y)
-# np.max(y)
+# df_format
 
-# +
-fig = go.Figure(data=data, layout=layout)
+# + jupyter={"source_hidden": true}
+# Script Inputs
 
-from plotting.my_plotly import my_plotly_plot
+# verbose = True
+# verbose = False
 
-my_plotly_plot(
-    figure=fig,
-    plot_name="parity_plot",
-    write_html=True)
+# + jupyter={"source_hidden": true}
+# df_slab[df_slab["slab_id"] == "batipoha_75"]
 
-fig.show()
+# df_slab[df_slab["slab_id"] == "bidoripi_03"]
 
-# +
-print("model.score(X, y):", model.score(X, y))
-print("")
+# df_slab[df_slab["slab_id"] == "mj7wbfb5nt"]
 
-# print(feature_cols)
-# print(model.coef_)
-
-for i, j in zip(feature_cols, model.coef_):
-    print(i, ": ", j, sep="")
-
-# +
-fragments = [
-    "faw",
-    ]
-
-for name_i, row_i in df_tmp.iterrows():
-    # tmp = 42
-    name_str_i = row_i.name_str
-    for frag_i in fragments:
-
-        if frag_i in name_str_i:
-            print(name_str_i)
-            # print("IYUIHUuids")
-
-# name_str_i
+# "mj7wbfb5nt" in df_slab["slab_id"].tolist()
+# "mj7wbfb5nt" in df_slab["bulk_id"].tolist()

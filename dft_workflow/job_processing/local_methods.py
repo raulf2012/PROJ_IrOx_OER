@@ -5,6 +5,7 @@
 import os
 import sys
 
+import copy
 import time
 import pickle
 import subprocess
@@ -59,6 +60,8 @@ def parse_job_err(path, compenv=None):
     if compenv is None:
         compenv = os.environ["COMPENV"]
 
+    # print("123jk8999df9s9")
+
 
     # | - Parsing SLAC job
     if compenv == "slac":
@@ -96,6 +99,16 @@ def parse_job_err(path, compenv=None):
                     status_dict["error"] = True
                     status_dict["error_type"] = "weird SLAC cluster error, core failed (type 2)"
                 #__|
+
+                #| - Checking for mysterious sudden termination (Signal received. Exiting ...)
+                phrase_i = "Signal received. Exiting ..."
+                if phrase_i in line:
+                    status_dict["error"] = True
+                    status_dict["error_type"] = "Weird mysterious sudden termination"
+
+                # print("TEMP | aesrtrdxytcfiuyvi7es5zdtif7gyiuo5seyardiugyobihb")
+                #__|
+
 
 
             #| - Checking for weird cluster error
@@ -146,6 +159,8 @@ def parse_job_err(path, compenv=None):
     #__|
 
 
+    # print("KJSDFJ(SDi787rt676tfg76t78ty897t7)")
+
     # | - Parsing out file
 
     #| - old parser here, keeping for now
@@ -153,8 +168,12 @@ def parse_job_err(path, compenv=None):
         job_out_file_path = os.path.join(path, "job.out")
         my_file = Path(job_out_file_path)
         if my_file.is_file():
-            with open(job_out_file_path, 'r') as f:
+            # print("Going to attempt to open the file here")
+            with open(job_out_file_path, "r") as f:
                 lines = f.readlines()
+                # print("If you see this then the file was read ok")
+
+            # print("len(lines):", len(lines))
 
             for line in lines:
                 err_i = "VERY BAD NEWS! internal error in subroutine SGRCON:"
@@ -163,6 +182,8 @@ def parse_job_err(path, compenv=None):
                     break
     #__|
 
+
+    # print("98998887876767")
 
     my_file_0 = Path(os.path.join(path, "job.out"))
     my_file_1 = Path(os.path.join(path, "job.out.short"))
@@ -173,18 +194,31 @@ def parse_job_err(path, compenv=None):
     else:
         job_out_file = None
 
-    if job_out_file is not None:
-        with open(job_out_file, 'r') as f:
-            lines = f.readlines()
+    # print("098765454543432")
 
-        #| - Checking for BRMIX error
-        for line in lines:
-            err_i = "BRMIX: very serious problems"
-            if err_i in line:
-                status_dict["brmix_issue"] = True
-                status_dict["error"] = True
-                # break
-        #__|
+
+    if job_out_file is not None:
+        # print("Going to attempt to open the file here")
+
+        with open(job_out_file, "r") as f:
+            for line in f:
+                err_i = "BRMIX: very serious problems"
+                if err_i in line:
+                    status_dict["brmix_issue"] = True
+                    status_dict["error"] = True
+
+
+        # with open(job_out_file, 'r') as f:
+        #     lines = f.readlines()
+        #     print("DONE!!!!")
+        # print("len(lines):", len(lines))
+        # #| - Checking for BRMIX error
+        # for line in lines:
+        #     err_i = "BRMIX: very serious problems"
+        #     if err_i in line:
+        #         status_dict["brmix_issue"] = True
+        #         status_dict["error"] = True
+        # #__|
 
     #__|
 
@@ -229,6 +263,21 @@ def is_job_submitted(path):
     my_file = Path(submitted_file_path)
     if my_file.is_file():
         status_dict["submitted"] = True
+    return(status_dict)
+    #__|
+
+def is_job_started(path):
+    """
+    """
+    #| - is_job_submitted
+    status_dict = {
+        "job_started": False,
+        }
+
+    file_path = os.path.join(path, "job.out")
+    my_file = Path(file_path)
+    if my_file.is_file():
+        status_dict["job_started"] = True
     return(status_dict)
     #__|
 
@@ -593,6 +642,8 @@ def rclone_sync_job_dir(
     # #########################################################
     gdrive_path = get_gdrive_job_path(path_job_root_w_att_rev)
 
+    # print(gdrive_path)
+
     # #########################################################
     rclone_gdrive_stanford = os.environ["rclone_gdrive_stanford"]
     PROJ_irox_oer_gdrive = os.environ["PROJ_irox_oer_gdrive"]
@@ -620,14 +671,17 @@ def rclone_sync_job_dir(
             exc_str_i = " --exclude " + file_i
             exclude_str += exc_str_i
 
-    if verbose:
-        rclone_flags = "--transfers=40 --checkers=40 --verbose --tpslimit=10 --verbose "
+    # rclone_flags = "--transfers=40 --checkers=40 --verbose --tpslimit=10 --max-size=100M "
+    # rclone_flags = "--transfers=40 --checkers=40 --verbose --tpslimit=10 "
+    # rclone_flags = "--transfers=40 --checkers=40 --tpslimit=10 "
+    rclone_flags = "--transfers=80 --checkers=80 --tpslimit=80 "
 
-    else:
-        rclone_flags = "--transfers=40 --checkers=40 --verbose --tpslimit=10 "
+    if verbose:
+        rclone_flags += "--verbose "
+
 
     # Adding max size filter
-    rclone_flags += "--max-size 1G "
+    rclone_flags += "--max-size 100M "
 
     local_path = os.path.join(
         os.environ["PROJ_irox_oer"],
@@ -635,9 +689,10 @@ def rclone_sync_job_dir(
 
     rclone_comm_i = "rclone copy " + rclone_flags + local_path + " " + rclone_gdrive_stanford + ":" + gdrive_path_full + " " + exclude_str
 
-    print(40 * "*")
-    print(rclone_comm_i)
-    print(40 * "*")
+    # print(40 * "*")
+    # print(rclone_comm_i)
+    print(path_rel_to_proj)
+    # print(40 * "*")
 
     # #########################################################
     rclone_comm_list_i = [i for i in rclone_comm_i.split(" ") if i != ""]
@@ -649,3 +704,136 @@ def rclone_sync_job_dir(
     #__|
 
 #__|
+
+
+
+def local_dir_matches_remote(
+    path_i=None,
+    gdrive_path_i=None,
+    ):
+    """
+    """
+    #| - local_dir_matches_remote
+    # #########################################################
+    # Getting rclone files list
+    gdrive_root = "norskov_research_storage/00_projects/PROJ_irox_oer"
+
+    rclone_name = os.environ["rclone_gdrive_stanford"]
+
+    bash_comm = "rclone lsf " + rclone_name + ":"
+
+    bash_comm_i = bash_comm + os.path.join(gdrive_root, gdrive_path_i)
+
+    bash_out = subprocess.check_output(bash_comm_i.split(" "))
+    files_dir_list = bash_out.decode('UTF-8').splitlines()
+
+    files_dir_list_new = []
+    for i in files_dir_list:
+        if i[-1] == "/":
+            i_new = i[0:-1]
+        else:
+            i_new = i
+        files_dir_list_new.append(i_new)
+
+    files_dir_list_new = np.sort(files_dir_list_new)
+
+    # #########################################################
+    # Local files  list
+    files_list_local = os.listdir(path_i)
+    files_list_local = np.sort(files_list_local)
+
+
+
+
+
+
+
+
+    # #####################################################
+    # files_list_local = ["A", "B", "C", "D", ]
+    # local_matches_remote = ["A", "B", "C", "d", ]
+
+    files_list_local_cpy = list(copy.deepcopy(files_list_local))
+    #  local_matches_remote_cpy = copy.deepcopy(local_matches_remote)
+    files_dir_list_new_cpy = list(copy.deepcopy(files_dir_list_new))
+
+    shared_entries = list(
+        set(files_list_local_cpy) & set(files_dir_list_new_cpy))
+
+    # print("shared_entries:", shared_entries)
+
+    for i in shared_entries:
+        files_list_local_cpy.remove(i)
+        files_dir_list_new_cpy.remove(i)
+
+    # print("Files only on local:", files_list_local_cpy)
+    # print("Files only in remote:", files_dir_list_new_cpy)
+
+    # Files only on local: ['CHG', 'CHGCAR', 'WAVECAR']
+    # Files only in remote: ['contcar_out.traj']
+
+    # Files that are expected to be only on the remote
+    expected_remote_files = ["CHG", "CHGCAR", "WAVECAR", ".dft_clean", "__misc__", "$SLURM_SUBMIT_DIR"]
+    for i in expected_remote_files:
+        if i in files_list_local_cpy:
+            files_list_local_cpy.remove(i)
+
+    # Files that are expected to exist only locally
+    expected_local_files = ["contcar_out.traj", "dft-params.json"]
+    for i in expected_local_files:
+        if i in files_dir_list_new_cpy:
+            files_dir_list_new_cpy.remove(i)
+
+    # Remove .swp files from lists
+    for i in files_dir_list_new_cpy:
+        if ".swp" in i:
+            files_dir_list_new_cpy.remove(i)
+    for i in files_list_local_cpy:
+        if ".swp" in i:
+            files_list_local_cpy.remove(i)
+    # #####################################################
+
+    local_dir_matches_remote = False
+
+    if len(files_list_local_cpy) == 0 and len(files_dir_list_new_cpy) == 0:
+        local_dir_matches_remote = True
+
+    # Sometimes the job.out gets synced to remote before job finishes and then locally it's tranformed into job.out.short
+    if len(files_dir_list_new_cpy) == 1 and files_dir_list_new_cpy[0] == "job.out":
+        # print(40 * "THIS IS NEW | ")
+        local_dir_matches_remote = True
+
+
+    if not local_dir_matches_remote:
+        print("Files only on local:", files_list_local_cpy)
+        print("Files only in remote:", files_dir_list_new_cpy)
+
+    return(local_dir_matches_remote)
+    #__|
+
+def get_num_revs_for_group(
+    group=None,
+    ):
+    """
+    """
+    #| - get_num_revs_for_group
+    # group = grouped.get_group(name_i)
+
+    rev_nums = group.rev_num.tolist()
+
+    # The rev_nums should be unique anyways, but just checking
+    unique_rev_nums = list(set(rev_nums))
+
+    mess_i = "iksdjdfisdidfj45oigfdfghjk"
+    assert len(unique_rev_nums) == len(rev_nums), mess_i
+
+    unique_rev_nums = np.sort(unique_rev_nums)
+
+    all_consecutive = all(np.diff(unique_rev_nums) == 1)
+    mess_i = "Not all consecutive, all diffs should be 1"
+    assert all_consecutive, mess_i
+
+    num_revs = np.max(unique_rev_nums)
+
+    return(num_revs)
+    #__|

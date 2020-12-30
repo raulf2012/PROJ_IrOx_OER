@@ -137,7 +137,7 @@ def process_rdf(
     directory = "out_data"
     if not os.path.exists(directory):
         os.makedirs(directory)
-
+    assert False, "Fix os.makedirs"
     directory = "out_plot/rdf_figures"
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -471,6 +471,7 @@ def get_unique_active_sites(
     fig["layout"]["yaxis"]["type"] = "category"
 
     directory = "out_plot/rdf_heat_maps_1"
+    assert False, "Fix os.makedirs"
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -739,6 +740,7 @@ def get_unique_active_sites_temp(
     # Saving df_rdf_dict
     # Pickling data ###########################################
     directory = "out_data/df_rdf_dict"
+    assert False, "Fix os.makedirs"
     if not os.path.exists(directory): os.makedirs(directory)
     with open(os.path.join(directory, custom_name_pre + ".pickle"), "wb") as fle:
         pickle.dump(df_rdf_dict, fle)
@@ -767,6 +769,7 @@ def get_unique_active_sites_temp(
 
     # Pickling data ###########################################
     directory = "out_data/df_rdf_ij"
+    assert False, "Fix os.makedirs"
     if not os.path.exists(directory): os.makedirs(directory)
     with open(os.path.join(directory, custom_name_pre + ".pickle"), "wb") as fle:
         pickle.dump(df_rdf_ij, fle)
@@ -798,10 +801,11 @@ def get_unique_active_sites_temp(
 
     # #########################################################
     #| - Creating Figure
-    print("TEMP isjdfjsd8sfs8d")
-    print("create_heatmap_plot:", create_heatmap_plot)
+    # print("TEMP isjdfjsd8sfs8d")
+    # print("create_heatmap_plot:", create_heatmap_plot)
     if create_heatmap_plot:
-        print("SIDJFIDISJFIDSIFI")
+        # print("SIDJFIDISJFIDSIFI")
+
         import plotly.express as px
         import plotly.graph_objects as go
 
@@ -821,6 +825,7 @@ def get_unique_active_sites_temp(
         # fig.show()
 
         directory = "out_plot/rdf_heat_maps_1"
+        assert False, "Fix os.makedirs"
         if not os.path.exists(directory):
             os.makedirs(directory)
 

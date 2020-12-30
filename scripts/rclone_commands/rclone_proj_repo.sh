@@ -13,7 +13,8 @@ $wd/PROJ_IrOx_OER \
 --exclude "out_data*/**" \
 --exclude "out_plot/**" \
 --exclude "out_plot*/**" \
---verbose \
+-q &
+# --verbose \
 #__|
 
 
@@ -26,7 +27,8 @@ PROJ_irox_oer_rc=01_norskov/00_git_repos/PROJ_IrOx_OER
 rclone copy  \
 $rclone_dropbox:$PROJ_irox_oer_rc/workflow/creating_slabs/out_data/df_slab_final.pickle \
 $wd/PROJ_IrOx_OER/workflow/creating_slabs/out_data \
--v
+-q &
+# -v &
 
 
 # #########################################################
@@ -34,21 +36,24 @@ $wd/PROJ_IrOx_OER/workflow/creating_slabs/out_data \
 rclone copy  \
 $rclone_dropbox:$PROJ_irox_oer_rc/dft_workflow/dft_scripts/out_data/dft_calc_settings.json \
 $wd/PROJ_IrOx_OER/dft_workflow/dft_scripts/out_data \
--v &
+-q &
+# -v &
 
 rclone copy  \
 $rclone_dropbox:$PROJ_irox_oer_rc/dft_workflow/dft_scripts/out_data/easy_dft_calc_settings.json \
 $wd/PROJ_IrOx_OER/dft_workflow/dft_scripts/out_data \
--v &
+-q &
+# -v &
 #__|
 
 
 # #########################################################
 # DFT jobs dataframe, needed to not run jobs from other clusters
-rclone copy  \
+rclone copy \
 $rclone_dropbox:$PROJ_irox_oer_rc/dft_workflow/job_processing/out_data/ \
 $wd/PROJ_IrOx_OER/dft_workflow/job_processing/out_data/ \
--v &
+-q &
+# -v &
 
 
 
@@ -57,85 +62,35 @@ $wd/PROJ_IrOx_OER/dft_workflow/job_processing/out_data/ \
 rclone copy  \
 $rclone_dropbox:$PROJ_irox_oer_rc/dft_workflow/job_analysis/atoms_indices_order/out_data/ \
 $wd/PROJ_IrOx_OER/dft_workflow/job_analysis/atoms_indices_order/out_data/ \
--v &
-
+-q &
+# -v &
 
 # #########################################################
 # df_active_sites
 rclone copy  \
 $rclone_dropbox:$PROJ_irox_oer_rc/workflow/enumerate_adsorption/out_data/df_active_sites.pickle \
 $wd/PROJ_IrOx_OER/workflow/enumerate_adsorption/out_data/ \
--v &
+-q &
+# -v &
 
 # #########################################################
 # df_slabs_oh
 rclone copy  \
 $rclone_dropbox:$PROJ_irox_oer_rc/dft_workflow/job_analysis/create_oh_slabs/out_data/df_slabs_oh.pickle \
 $wd/PROJ_IrOx_OER/dft_workflow/job_analysis/create_oh_slabs/out_data/ \
--v &
+-q &
+# -v &
 
-# workflow/enumerate_adsorption/out_data/df_active_sites.pickle
+# #########################################################
+# DFT jobs sync script
+rclone copy  \
+$rclone_dropbox:$PROJ_irox_oer_rc/dft_workflow/bin/out_data/bash_sync_out.sh \
+$wd/PROJ_IrOx_OER/dft_workflow/bin/out_data/ \
+-q &
+# -v &
 
-# path_i = os.path.join(
-#     os.environ["PROJ_irox_oer"],
-#     "workflow/enumerate_adsorption",
-#     "out_data/df_active_sites.pickle")
-
-# /nfs/slac/g/suncatfs/flores12/PROJ_IrOx_OER/
-# dft_workflow/job_analysis/atoms_indices_order/out_data/df_atoms_sorted_ind.pickle
-
-
-echo "Sync done!"
-
-
-
-#| - __old__
-
-
-# --exclude "*voro_temp*" \
-# --exclude "00_abx_al_runs/out_data/**" \
-# --exclude "01_abx_al_runs_new/out_data/**" \
 
 
 # #########################################################
-#| - dft_workflow/job_processing/out_data
+echo "Sync done!"
 
-# # #########################################################
-# # DFT jobs dataframe, needed to not run jobs from other clusters
-# rclone copy  \
-# $rclone_dropbox:$PROJ_irox_oer_rc/dft_workflow/job_processing/out_data/df_jobs_combined.pickle \
-# $wd/PROJ_IrOx_OER/dft_workflow/job_processing/out_data/ \
-# -v &
-#
-# # #########################################################
-# # TEMP
-# rclone copy  \
-# $rclone_dropbox:$PROJ_irox_oer_rc/dft_workflow/job_processing/out_data/df_jobs_paths.pickle \
-# $wd/PROJ_IrOx_OER/dft_workflow/job_processing/out_data/ \
-# -v &
-#
-# # #########################################################
-# # DFT jobs data dataframe
-# rclone copy  \
-# $rclone_dropbox:$PROJ_irox_oer_rc/dft_workflow/job_processing/out_data/df_jobs_data.pickle \
-# $wd/PROJ_IrOx_OER/dft_workflow/job_processing/out_data/ \
-# -v &
-#
-# # #########################################################
-# # DFT data dataframe
-# rclone copy  \
-# $rclone_dropbox:$PROJ_irox_oer_rc/workflow/process_bulk_dft/out_data/df_dft.pickle \
-# $wd/PROJ_IrOx_OER/workflow/process_bulk_dft/out_data/ \
-# -v &
-#
-# # #########################################################
-# # DFT jobs data dataframe
-# rclone copy  \
-# $rclone_dropbox:$PROJ_irox_oer_rc/dft_workflow/job_processing/out_data/job_id_mapping.csv \
-# $wd/PROJ_IrOx_OER/dft_workflow/job_processing/out_data/ \
-# -v &
-
-#__|
-
-
-#__|

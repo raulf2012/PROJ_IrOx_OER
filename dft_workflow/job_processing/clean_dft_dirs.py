@@ -33,10 +33,11 @@ import os
 print(os.getcwd())
 import sys
 
-import pickle
+import copy
 import shutil
 from pathlib import Path
 import subprocess
+import pickle
 
 import numpy as np
 import pandas as pd
@@ -58,8 +59,13 @@ from local_methods import (
     cwd, process_large_job_out,
     rclone_sync_job_dir,
     parse_job_state,
+    local_dir_matches_remote,
     )
 # -
+
+from methods import (
+    get_other_job_ids_in_set,
+    )
 
 # # Script Inputs
 
@@ -71,9 +77,6 @@ job_out_size_limit = 5  # MB
 # +
 compenv = os.environ.get("COMPENV", None)
 
-# if compenv == "wsl":
-#     compenv = "slac"
-
 proj_dir = os.environ.get("PROJ_irox_oer", None)
 # -
 
@@ -82,7 +85,11 @@ proj_dir = os.environ.get("PROJ_irox_oer", None)
 # +
 # #########################################################
 df_jobs = get_df_jobs(exclude_wsl_paths=False)
-df_i = df_jobs[df_jobs.compenv == compenv]
+
+if compenv != "wsl":
+    df_i = df_jobs[df_jobs.compenv == compenv]
+else:
+    df_i = df_jobs
 
 # #########################################################
 df_jobs_paths = get_df_jobs_paths()
@@ -100,74 +107,80 @@ if verbose:
 
 # # Iterate through rows
 
-# +
-# TEMP
-# print("TEMP TEMP TEMP ju7y6iuesdfghuhertyui")
+if compenv != "wsl":
 
-# #########################################################
-# df_i = df_i.loc[["dunivesu_80"]]
-# df_i = df_i.loc[["mitanapo_92"]] 
-# df_i = df_i.loc[["tawawobu_24"]] 
+    iterator = tqdm(df_i.index.tolist(), desc="1st loop")
+    for index_i in iterator:
+        # #####################################################
+        row_i = df_i.loc[index_i]
+        # #####################################################
+        slab_id_i = row_i.slab_id
+        ads_i = row_i.ads
+        att_num_i = row_i.att_num
+        compenv_i = row_i.compenv
+        active_site_i = row_i.active_site
+        # #####################################################
 
-# df_i = df_i.loc[["kepigiwu_49"]] 
+        if active_site_i == "NaN":
+            tmp = 42
+        elif np.isnan(active_site_i):
+            active_site_i = "NaN"
 
-# +
-# print("TEMP")
-# assert False
+        # #####################################################
+        df_jobs_paths_i = df_jobs_paths[df_jobs_paths.compenv == compenv_i]
+        row_jobs_paths_i = df_jobs_paths_i.loc[index_i]
+        # #####################################################
+        path_job_root_w_att_rev = row_jobs_paths_i.path_job_root_w_att_rev
+        path_full = row_jobs_paths_i.path_full
+        path_rel_to_proj = row_jobs_paths_i.path_rel_to_proj
+        gdrive_path_i = row_jobs_paths_i.gdrive_path
+        # #####################################################
 
-# +
-# jobs_processed = []
+        # #####################################################
+        in_index = df_jobs_anal.index.isin(
+            [(compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)]).any()
+        if in_index:
+            row_anal_i = df_jobs_anal.loc[
+                compenv_i, slab_id_i, ads_i, active_site_i, att_num_i]
+            # #################################################
+            job_completely_done_i = row_anal_i.job_completely_done
+            # #################################################
+        else:
+            job_completely_done_i = None
 
-iterator = tqdm(df_i.index.tolist(), desc="1st loop")
-for index_i in iterator:
-    # #####################################################
-    row_i = df_i.loc[index_i]
-    # #####################################################
-    slab_id_i = row_i.slab_id
-    ads_i = row_i.ads
-    att_num_i = row_i.att_num
-    compenv_i = row_i.compenv
-    active_site_i = row_i.active_site
-    # #####################################################
+        # if job_completely_done_i:
+        #     print("job done:", path_full)
 
-    if active_site_i == "NaN":
-        tmp = 42
-    elif np.isnan(active_site_i):
-        active_site_i = "NaN"
-    
+        # #####################################################
+        if compenv != "wsl":
 
-    # #####################################################
-    df_jobs_paths_i = df_jobs_paths[df_jobs_paths.compenv == compenv_i]
-    row_jobs_paths_i = df_jobs_paths_i.loc[index_i]
-    # #####################################################
-    path_job_root_w_att_rev = row_jobs_paths_i.path_job_root_w_att_rev
-    path_full = row_jobs_paths_i.path_full
-    path_rel_to_proj = row_jobs_paths_i.path_rel_to_proj
-    # #####################################################
+            from proj_data import compenvs
+            compenv_in_path = None
+            for compenv_j in compenvs:
+                if compenv_j in path_rel_to_proj:
+                    compenv_in_path = compenv_j
 
-    # #####################################################
-    in_index = df_jobs_anal.index.isin(
-        [(compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)]).any()
-    if in_index:
-        row_anal_i = df_jobs_anal.loc[
-            compenv_i, slab_id_i, ads_i, active_site_i, att_num_i]
-        # #################################################
-        job_completely_done_i = row_anal_i.job_completely_done
-        # #################################################
-    else:
-        job_completely_done_i = None
+            if compenv_in_path is not None:
+                new_path_list = []
+                for i in path_rel_to_proj.split("/"):
+                    if i != compenv_in_path:
+                        new_path_list.append(i)
+                path_rel_to_proj_new = "/".join(new_path_list)
+                path_rel_to_proj = path_rel_to_proj_new
 
-    # if job_completely_done_i:
-    #     print("job done:", path_full)
 
-    # #####################################################
-    path_i = os.path.join(
-        os.environ["PROJ_irox_oer"],
-        path_rel_to_proj)
-    print(path_i)
+            path_i = os.path.join(
+                os.environ["PROJ_irox_oer"],
+                path_rel_to_proj)
+        else:
+            path_i = os.path.join(
+                os.environ["PROJ_irox_oer_gdrive"],
+                gdrive_path_i)
 
-    # Don't run methods if not in remote cluster
-    if compenv != "wsl":
+
+
+        # print("path_i:", path_i)
+
         my_file = Path(path_i)
         if my_file.is_dir():
 
@@ -180,6 +193,7 @@ for index_i in iterator:
 
             # #########################################
             if job_state_i != "RUNNING":
+                # print("Doing large job processing")
                 process_large_job_out(
                     path_i, job_out_size_limit=job_out_size_limit)
 
@@ -190,95 +204,175 @@ for index_i in iterator:
                 verbose=False,
                 )
 
-# +
-# assert False
-# -
+# # Remove left over large job.out files
+# For some reason some are left over
+
+if compenv == "wsl":
+    iterator = tqdm(df_i.index.tolist(), desc="1st loop")
+    for index_i in iterator:
+        # #####################################################
+        row_i = df_i.loc[index_i]
+        # #####################################################
+        slab_id_i = row_i.slab_id
+        ads_i = row_i.ads
+        att_num_i = row_i.att_num
+        compenv_i = row_i.compenv
+        active_site_i = row_i.active_site
+        # #####################################################
+
+        # #####################################################
+        df_jobs_paths_i = df_jobs_paths[df_jobs_paths.compenv == compenv_i]
+        row_jobs_paths_i = df_jobs_paths_i.loc[index_i]
+        # #####################################################
+        gdrive_path_i = row_jobs_paths_i.gdrive_path
+        # #####################################################
+
+        path_i = os.path.join(
+            os.environ["PROJ_irox_oer_gdrive"],
+            gdrive_path_i)
+        if Path(path_i).is_dir():
+
+            # #############################################
+            path_job_short = os.path.join(path_i, "job.out.short")
+            if Path(path_job_short).is_file():
+                path_job = os.path.join(path_i, "job.out")
+                if Path(path_job).is_file():
+                    print("Removing job.out", path_i)
+                    os.remove(path_job)
+
+            # #############################################
+            path_job = os.path.join(path_i, "job.out")
+            if Path(path_job).is_file():
+                if not Path(path_job_short).is_file():
+                    file_size = os.path.getsize(path_job)
+                    file_size_mb = file_size / 1000 / 1000
+                    
+                    if file_size_mb > job_out_size_limit:
+                        print("Large job.out, but no job.out.short", path_i)
+                        process_large_job_out(
+                            path_i, job_out_size_limit=job_out_size_limit)
 
 # # Remove systems that are completely done
 
-# +
-# iterator = tqdm(df_i.index.tolist(), desc="1st loop")
-# for index_i in iterator:
-#     # #####################################################
-#     row_i = df_i.loc[index_i]
-#     # #####################################################
-#     slab_id_i = row_i.slab_id
-#     ads_i = row_i.ads
-#     att_num_i = row_i.att_num
-#     compenv_i = row_i.compenv
-#     active_site_i = row_i.active_site
-#     # #####################################################
+print(5 * "\n")
+print(80 * "*")
+print(80 * "*")
+print(80 * "*")
+print(80 * "*")
+print("Removing job folders/data that are no longer needed")
+print("Removing job folders/data that are no longer needed")
+print("Removing job folders/data that are no longer needed")
+print("Removing job folders/data that are no longer needed")
+print("Removing job folders/data that are no longer needed")
+print("Removing job folders/data that are no longer needed")
+print(2 * "\n")
 
-#     if active_site_i == "NaN":
-#         tmp = 42
-#     elif np.isnan(active_site_i):
-#         active_site_i = "NaN"
+iterator = tqdm(df_i.index.tolist(), desc="1st loop")
+for job_id_i in iterator:
+    # #####################################################
+    row_i = df_i.loc[job_id_i]
+    # #####################################################
+    slab_id_i = row_i.slab_id
+    ads_i = row_i.ads
+    att_num_i = row_i.att_num
+    compenv_i = row_i.compenv
+    active_site_i = row_i.active_site
+    # #####################################################
 
-#     # #####################################################
-#     df_jobs_paths_i = df_jobs_paths[df_jobs_paths.compenv == compenv_i]
-#     row_jobs_paths_i = df_jobs_paths_i.loc[index_i]
-#     # #####################################################
-#     path_job_root_w_att_rev = row_jobs_paths_i.path_job_root_w_att_rev
-#     path_full = row_jobs_paths_i.path_full
-#     path_rel_to_proj = row_jobs_paths_i.path_rel_to_proj
-#     # #####################################################
+    if active_site_i == "NaN":
+        tmp = 42
+    elif np.isnan(active_site_i):
+        active_site_i = "NaN"
 
-#     # #####################################################
-#     in_index = df_jobs_anal.index.isin(
-#         [(compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)]).any()
-#     if in_index:
-#         row_anal_i = df_jobs_anal.loc[
-#             compenv_i, slab_id_i, ads_i, active_site_i, att_num_i]
-#         # #################################################
-#         job_completely_done_i = row_anal_i.job_completely_done
-#         # #################################################
-#     else:
-#         continue
+    # #####################################################
+    df_jobs_paths_i = df_jobs_paths[df_jobs_paths.compenv == compenv_i]
+    row_jobs_paths_i = df_jobs_paths_i.loc[job_id_i]
+    # #####################################################
+    path_job_root_w_att_rev = row_jobs_paths_i.path_job_root_w_att_rev
+    path_full = row_jobs_paths_i.path_full
+    path_rel_to_proj = row_jobs_paths_i.path_rel_to_proj
+    gdrive_path_i = row_jobs_paths_i.gdrive_path
+    # #####################################################
+
+    # #####################################################
+    in_index = df_jobs_anal.index.isin(
+        [(compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)]).any()
+    if in_index:
+        row_anal_i = df_jobs_anal.loc[
+            compenv_i, slab_id_i, ads_i, active_site_i, att_num_i]
+        # #################################################
+        job_completely_done_i = row_anal_i.job_completely_done
+        # #################################################
+    else:
+        continue
 
 
 
 
-#     path_i = os.path.join(os.environ["PROJ_irox_oer"], path_rel_to_proj)
+    path_i = os.path.join(os.environ["PROJ_irox_oer"], path_rel_to_proj)
 
-#     # #####################################################
-#     if job_completely_done_i:
 
-#         # #####################################################
-#         # Check that the directory exists
-#         my_file = Path(path_i)
-#         dir_exists = False
-#         if my_file.is_dir():
-#             dir_exists = True
 
-#         # #####################################################
-#         # Check if .dft_clean file is present
-#         dft_clean_file_path = os.path.join(path_i, ".dft_clean")
-#         my_file = Path(dft_clean_file_path)
-#         dft_clean_already_exists = False
-#         if my_file.is_file():
-#             dft_clean_already_exists = True
+    delete_job = False
 
-#         # #####################################################
-#         if dir_exists:
-#             # Creating .dft_clean file
-#             if not dft_clean_already_exists:
-#                 with open(dft_clean_file_path, "w") as file:
-#                     file.write("")
+    if not job_completely_done_i:
+        df_job_set_i = get_other_job_ids_in_set(job_id_i, df_jobs=df_jobs)
 
-#         # #####################################################
-#         # Remove directory
-#         if dir_exists and dft_clean_already_exists:
-#             print("Removing: ", path_i, sep="")
-#             shutil.rmtree(path_i)
+        num_revs_list = df_job_set_i.num_revs.unique()
+        assert len(num_revs_list) == 1, "kisfiisdjf"
+        num_revs = num_revs_list[0]
+
+        df_jobs_to_delete = df_job_set_i[df_job_set_i.rev_num < num_revs - 1]
+
+        if job_id_i in df_jobs_to_delete.index.tolist():
+            delete_job = True
+
+    # #####################################################
+    if job_completely_done_i:
+        delete_job = True
+
+    if delete_job:
+
+        # #####################################################
+        # Check that the directory exists
+        my_file = Path(path_i)
+        dir_exists = False
+        if my_file.is_dir():
+            dir_exists = True
+
+        # #####################################################
+        # Check if .dft_clean file is present
+        dft_clean_file_path = os.path.join(path_i, ".dft_clean")
+        my_file = Path(dft_clean_file_path)
+        dft_clean_already_exists = False
+        if my_file.is_file():
+            dft_clean_already_exists = True
+
+        # #####################################################
+        if dir_exists:
+            # Creating .dft_clean file
+            if not dft_clean_already_exists:
+                if compenv != "wsl":
+                    with open(dft_clean_file_path, "w") as file:
+                        file.write("")
+
+        # #####################################################
+        # Remove directory
+        if dir_exists and dft_clean_already_exists and compenv != "wsl":
+            local_dir_matches_remote_i = local_dir_matches_remote(
+                path_i=path_i,
+                gdrive_path_i=gdrive_path_i,
+                )
+            print(40 * "*")
+            print(path_i)
+            if local_dir_matches_remote_i:
+                print("Removing:")
+                shutil.rmtree(path_i)
+            else:
+                print("Gdrive doesn't match local")
+            print("")
 
 # + active=""
 #
 #
 #
-
-# + jupyter={"source_hidden": true}
-# # row_anal_i = df_jobs_anal.loc[
-# #     compenv_i, slab_id_i, ads_i, active_site_i, att_num_i]
-
-# in_index = df_jobs_anal.index.isin(
-#     [(compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)]).any()

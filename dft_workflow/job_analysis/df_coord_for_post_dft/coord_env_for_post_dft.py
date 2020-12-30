@@ -22,8 +22,11 @@
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
 
 import pickle
+
+import numpy as np
 
 # #########################################################
 from methods import get_structure_coord_df, get_df_coord
@@ -36,28 +39,13 @@ from methods import (
 
 # # Script Inputs
 
-verbose = True
+# verbose = True
 verbose = False
 
 # # Read data
 
-# df_dft = get_df_dft()
-# df_slab = get_df_slab()
-# structure_coord_df = get_structure_coord_df()
-# df_jobs = get_df_jobs()
-# df_jobs_paths = get_df_jobs_paths()
-# df_jobs_data = get_df_jobs_data()
-# df_jobs_data_clusters = get_df_jobs_data_clusters()
 df_jobs_anal = get_df_jobs_anal()
 df_atoms_sorted_ind = get_df_atoms_sorted_ind()
-# df_slab_ids = get_df_slab_ids()
-# df_job_ids = get_df_job_ids()
-# df_slabs_to_run = get_df_slabs_to_run()
-# df_coord = get_df_coord()
-# df_active_sites = get_df_active_sites()
-# slab_id = get_slab_id()
-# job_id = get_job_id()
-# slab_thickness = get_slab_thickness()
 
 # + active=""
 #
@@ -65,31 +53,99 @@ df_atoms_sorted_ind = get_df_atoms_sorted_ind()
 #
 
 # +
+# print("TEMP")
+
 # TEMP
 # df_jobs_anal_i = df_jobs_anal_i.iloc[0:3]
 
-# +
-# directory = "out_data/df_coord_files"
+# df_jobs_anal = df_jobs_anal[df_jobs_anal.job_id_max == "kefehobo_84"]
+# -
 
 directory = os.path.join(
     os.environ["PROJ_irox_oer"],
     "dft_workflow/job_analysis/df_coord_for_post_dft",
     "out_data/df_coord_files")
-
-# /home/raulf2012/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/
-# dft_workflow/job_analysis/df_coord_for_post_dft
-
 if not os.path.exists(directory):
     os.makedirs(directory)
+
+df_jobs_anal_i = df_jobs_anal[df_jobs_anal.job_completely_done == True]
+
+# +
+# df_jobs_anal.loc[
+#     [('nersc', 'fosurufu_23', 'o', 43, 1)]
+#     ]
+
+df_index = df_jobs_anal_i.index.to_frame()
+
+df = df_index
+df = df[
+    (df["compenv"] == "nersc") &
+    (df["slab_id"] == "fosurufu_23") &
+    (df["ads"] == "o") &
+    [True for i in range(len(df))]
+    ]
+
+# df_jobs_anal[
+#     df.index
+#     ]
+
+df_jobs_anal_i.loc[df.index]
 # -
 
 # # Main Loop
 
-df_jobs_anal_i = df_jobs_anal[df_jobs_anal.job_completely_done == True]
+# +
+# import pandas as pd
 
-for name_i, row_i in df_jobs_anal_i.iterrows():
-    if verbose:
-        print(40 * "=")
+# print(180 * "TEMP | ")
+# idx = pd.IndexSlice
+# df_jobs_anal_i = df_jobs_anal_i.loc[idx["sherlock", "kipatalo_90", "o", "NaN", 2, :], :]
+# -
+
+df_jobs_anal_i
+
+# +
+index_to_process = []
+index_to_not_process = []
+for index_i in df_jobs_anal_i.index:
+    if index_i in df_atoms_sorted_ind.index:
+        index_to_process.append(index_i)
+    else:
+        index_to_not_process.append(index_i)
+
+df_jobs_anal_i_2 = df_jobs_anal_i.loc[index_to_process]
+
+if len(index_to_not_process) > 0:
+    print(
+        "These systems don't have the required files locally",
+        "Fix with rclone",
+        "",
+        sep="\n")
+    tmp = [print(i) for i in index_to_not_process]
+# -
+
+# #########################################################
+for name_i, row_i in df_jobs_anal_i_2.iterrows():
+    # print(name_i)
+
+    # if verbose:
+    #     print(40 * "=")
+
+    if name_i[3] != "NaN":
+        active_site_new = int(name_i[3])
+    else:
+        active_site_new = "NaN"
+
+    name_new_i = (
+        name_i[0],
+        name_i[1],
+        name_i[2],
+
+        active_site_new,
+        # int(name_i[3]),
+
+        name_i[4],
+        )
 
     # #####################################################
     compenv_i = name_i[0]
@@ -98,40 +154,63 @@ for name_i, row_i in df_jobs_anal_i.iterrows():
     active_site_i = name_i[3]
     att_num_i = name_i[4]
     # #####################################################
-    name_dict_i = dict(zip(list(df_jobs_anal_i.index.names), name_i))
+    # name_dict_i = dict(zip(list(df_jobs_anal_i.index.names), name_i))
+    name_dict_i = dict(zip(list(df_jobs_anal_i_2.index.names), name_i))
     # #####################################################
 
     # #####################################################
     row_atoms_sorted_i = df_atoms_sorted_ind.loc[name_i]
     # #####################################################
     atoms_sorted_good_i = row_atoms_sorted_i.atoms_sorted_good
+    failed_to_sort_i = row_atoms_sorted_i.failed_to_sort
     # #####################################################
 
+    if not failed_to_sort_i:
 
+        df_coord_i = get_df_coord(
+            mode="post-dft",  # 'bulk', 'slab', 'post-dft'
+            post_dft_name_tuple=name_i,
+            )
+        if df_coord_i is None:
+            if verbose:
+                print("No df_coord found, running")
+            # #################################################
+            # Get df_coord for post-dft, sorted slab
+            df_coord_i = get_structure_coord_df(
+                atoms_sorted_good_i,
+                porous_adjustment=True,
+                )
 
-    df_coord_i = get_df_coord(
-        mode="post-dft",  # 'bulk', 'slab', 'post-dft'
-        post_dft_name_tuple=name_i,
-        )
-    if df_coord_i is None:
-        # #################################################
-        # Get df_coord for post-dft, sorted slab
-        df_coord_i = get_structure_coord_df(atoms_sorted_good_i)
+            # Pickling data ###################################
+            file_name_i = "_".join([str(i) for i in list(name_new_i)]) + ".pickle"
+            file_path_i = os.path.join(directory, file_name_i)
+            print(file_path_i)
+            with open(file_path_i, "wb") as fle:
+                pickle.dump(df_coord_i, fle)
+            # #################################################
 
-        # Pickling data ###################################
-        file_name_i = "_".join([str(i) for i in list(name_i)]) + ".pickle"
-        file_path_i = os.path.join(directory, file_name_i)
-        print(file_path_i)
-        with open(file_path_i, "wb") as fle:
-            pickle.dump(df_coord_i, fle)
-        # #################################################
+        if "H" in df_coord_i.element.unique():
+        # if True:
+            df_coord_porous_adj_False_i = get_df_coord(
+                mode="post-dft",  # 'bulk', 'slab', 'post-dft'
+                post_dft_name_tuple=name_i,
+                porous_adjustment=False,
+                )
 
-# row_atoms_sorted_i = 
-df_atoms_sorted_ind
-# .loc[name_i]
+            if df_coord_porous_adj_False_i is None:
+                df_coord_porous_adj_False_i = get_structure_coord_df(
+                    atoms_sorted_good_i,
+                    porous_adjustment=False,
+                    )
 
-# +
-# assert False
+                # Pickling data ###################################
+                file_name_i = "_".join([str(i) for i in list(name_new_i)]) + "_porous_adj_False"
+                file_name_i += ".pickle"
+                file_path_i = os.path.join(directory, file_name_i)
+                print("*H containing, turning off porous adjustment:", "\n", file_path_i)
+                with open(file_path_i, "wb") as fle:
+                    pickle.dump(df_coord_porous_adj_False_i, fle)
+                #################################################
 
 # + active=""
 #
@@ -139,8 +218,10 @@ df_atoms_sorted_ind
 #
 # -
 
-for name_i, row_i in df_jobs_anal_i.iterrows():
+# # Running through df and reading df_coord to test
 
+# for name_i, row_i in df_jobs_anal_i.iterrows():
+for name_i, row_i in df_jobs_anal_i_2.iterrows():
     tmp = get_df_coord(
         slab_id=None,
         bulk_id=None,
@@ -152,23 +233,7 @@ for name_i, row_i in df_jobs_anal_i.iterrows():
 # #########################################################
 print(20 * "# # ")
 print("All done!")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
 print("analyse_jobs.ipynb")
 print(20 * "# # ")
 # #########################################################
-
-# + active=""
-#
-#
-#
-
-# + jupyter={"source_hidden": true}
-# data_dict_i.extend(name_dict_i)
-
-# + jupyter={"source_hidden": true}
-# data_dict_i
-
-# + jupyter={"source_hidden": true}
-# df_jobs_anal_i
-
-# + jupyter={"source_hidden": true}
-# df_coord_i

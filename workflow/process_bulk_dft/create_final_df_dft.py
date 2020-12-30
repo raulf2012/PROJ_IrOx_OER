@@ -22,11 +22,16 @@ import sys
 
 import pickle
 
+import pandas as pd
+
 # #########################################################
 from misc_modules.pandas_methods import drop_columns
+# -
+
+# # Read Data
 
 # +
-# #####################################################
+# #########################################################
 path_i = os.path.join(
     os.environ["PROJ_DATA"],
     "PROJ_IrOx_OER/active_learning_proj_data",
@@ -34,6 +39,20 @@ path_i = os.path.join(
 with open(path_i, "rb") as fle:
     df_dft = pickle.load(fle)
 
+# #########################################################
+path_i = os.path.join("out_data", "atoms_dict.pickle")
+with open(path_i, "rb") as fle:
+    atoms_dict = pickle.load(fle)
+
+# #########################################################
+dir_i = os.path.join(
+    os.environ["PROJ_irox_oer"],
+    "workflow/process_bulk_dft/standardize_bulks", "out_data")
+file_name_i = os.path.join(dir_i, "df_dft_stan.pickle")
+with open(file_name_i, "rb") as fle:
+    df_dft_stan = pickle.load(fle)
+
+# +
 # #####################################################
 df_dft = drop_columns(
     df=df_dft,
@@ -43,26 +62,54 @@ df_dft = drop_columns(
 df_dft = df_dft.sort_values("dH")
 # -
 
-path_i = os.path.join(
-    "out_data",
-    "atoms_dict.pickle")
-with open(path_i, "rb") as fle:
-    atoms_dict = pickle.load(fle)
-
 # Create new atoms column from `atoms_dict`
 
-# +
 df_dft["atoms"] = df_dft.index.map(atoms_dict)
 
-# df_dft
+# +
+# df_dft.drop(columns=["num_atoms", "", ])
+
+# +
+# df_dft_stan
+
+# list(pd.concat([
+#     df_dft,
+#     df_dft_stan,
+#     ], axis=1).columns)
+
+df_dft = pd.concat([
+    # df_dft,
+    df_dft.drop(columns=["num_atoms", ]),
+    df_dft_stan,
+    ], axis=1)
+
+# # pd.concat?
 
 # +
 from misc_modules.pandas_methods import reorder_df_columns
 
 df_dft = reorder_df_columns(
-    ['atoms', 'stoich', 'energy_pa', 'dH', 'volume', 'volume_pa', 'num_atoms', ],
+    [
+        "id_unique", "stoich", "energy_pa", "dH", "volume", "volume_pa",
+        "num_atoms", "num_atoms_stan", "num_atoms_stan_prim", "num_atoms_red__stan", "num_atoms_red__stan_prim",
+        "atoms", "atoms_stan", "atoms_stan_prim",
+        ],
     df_dft,
     )
+
+# +
+df_dft = df_dft.rename(columns={
+    "num_atoms": "na",
+    "num_atoms_stan_prim": "na_stan_prim",
+    "num_atoms_stan": "na_stan",
+    "num_atoms_red__stan": "na_red__stan",
+    "num_atoms_red__stan_prim": "na_red__stan_prim",
+    })
+
+df_dft.head()
+
+# +
+# assert False
 # -
 
 # Pickling data ###########################################
@@ -78,7 +125,7 @@ with open(os.path.join(directory, "df_dft.pickle"), "wb") as fle:
 #
 #
 
-# +
+# + jupyter={"source_hidden": true}
 # # #####################################################
 # path_i = os.path.join(
 #     os.environ["PROJ_irox_oer"],

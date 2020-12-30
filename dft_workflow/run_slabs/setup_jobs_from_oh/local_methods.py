@@ -6,7 +6,6 @@
 
 #| - Import Modules
 import os
-print(os.getcwd())
 import sys
 
 import copy
@@ -27,6 +26,7 @@ from methods import get_df_coord
 
 #__|
 
+
 def get_bare_o_from_oh(
     compenv=None,
     slab_id=None,
@@ -38,10 +38,12 @@ def get_bare_o_from_oh(
     """
     #| - get_bare_o_from_oh
 
+    # #####################################################
     compenv_i = compenv
     slab_id_i = slab_id
     active_site_i = active_site
     att_num_i = att_num
+    # #####################################################
 
     name_i = (compenv_i, slab_id_i, "oh", active_site_i, att_num_i, )
     df_coord_i = get_df_coord(
@@ -50,6 +52,7 @@ def get_bare_o_from_oh(
         mode="post-dft",  # 'bulk', 'slab', 'post-dft'
         slab=None,
         post_dft_name_tuple=name_i,
+        porous_adjustment=True,
         )
 
     row_coord_i = df_coord_i[df_coord_i.element == "H"]
@@ -63,8 +66,36 @@ def get_bare_o_from_oh(
 
     nn_info_i = row_coord_i.nn_info
 
-    mess_i = "Should only be 1 *O atom attached to *H here"
-    assert(len(nn_info_i)) == 1, mess_i
+    # mess_i = "Should only be 1 *O atom attached to *H here"
+    # assert(len(nn_info_i)) == 1, mess_i
+
+    #| - Reading df_coord with porous_adjustment turned off
+    if len(nn_info_i) != 1:
+        name_i = (compenv_i, slab_id_i, "oh", active_site_i, att_num_i, )
+        df_coord_i = get_df_coord(
+            slab_id=None,
+            bulk_id=None,
+            mode="post-dft",  # 'bulk', 'slab', 'post-dft'
+            slab=None,
+            post_dft_name_tuple=name_i,
+            porous_adjustment=False,
+            )
+
+        row_coord_i = df_coord_i[df_coord_i.element == "H"]
+
+        mess_i = "isdjfisdif"
+        assert row_coord_i.shape[0] == 1, mess_i
+
+        row_coord_i = row_coord_i.iloc[0]
+
+        h_index_i = row_coord_i.structure_index
+
+        nn_info_i = row_coord_i.nn_info
+
+        mess_i = "Should only be 1 *O atom attached to *H here"
+        assert(len(nn_info_i)) == 1, mess_i
+    #__|
+
 
     nn_info_j = nn_info_i[0]
 

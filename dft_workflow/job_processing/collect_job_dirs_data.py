@@ -24,6 +24,7 @@
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
 
 import csv
 import pickle
@@ -34,6 +35,9 @@ import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 
 # #########################################################
+from misc_modules.misc_methods import GetUniqueFriendlyID
+
+# #########################################################
 from methods import (
     get_df_slab_ids,
     get_slab_id,
@@ -42,17 +46,25 @@ from methods import (
     )
 
 # #########################################################
-from misc_modules.misc_methods import GetUniqueFriendlyID
+from local_methods import get_num_revs_for_group
 # -
 
-# # Script Inputs
-
-verbose = False
-# verbose = True
+from methods import isnotebook    
+isnotebook_i = isnotebook()
+if isnotebook_i:
+    from tqdm.notebook import tqdm
+    verbose = True
+else:
+    from tqdm import tqdm
+    verbose = False
 
 # # Read Data
 
+# +
 df_job_ids = get_df_job_ids()
+
+compenv_local = os.environ["COMPENV"]
+# -
 
 
 # # Parse `df_jobs_base` files
@@ -70,7 +82,8 @@ compenvs = [
     "wsl",
     ]
 
-df_list = []
+df_dict = dict()
+# df_list = []
 for compenv_i in compenvs:
     file_i = "df_jobs_base_" + compenv_i + ".pickle"
     my_file = Path(os.path.join(root_dir, file_i))
@@ -85,15 +98,44 @@ for compenv_i in compenvs:
 
         df_i["compenv_origin"] = compenv_i
 
-        df_list.append(df_i)
+        df_dict[compenv_i] = df_i
+        # df_list.append(df_i)
 
-df_comb = pd.concat(df_list, axis=0)
+# df_comb = pd.concat(df_list, axis=0)
+df_comb = pd.concat(list(df_dict.values()), axis=0)
 df_comb = df_comb.reset_index(drop=True)
 
 # Change type of `num_revs` to int
-df_comb.num_revs = df_comb.num_revs.astype("int")
+# df_comb.num_revs = df_comb.num_revs.astype("int")
 
 df_jobs = df_comb
+
+# +
+# list(df_dict.values())
+
+# +
+# assert False
+
+# +
+# 1898	slac	mwmg9p7s6o	hivovaru_77 11-20
+# 1901
+
+# +
+# df_jobs
+
+# +
+# df = df_jobs
+# df = df[
+#     (df["compenv"] == "slac") &
+#     # (df["slab_id"] == "mwmg9p7s6o") &
+#     (df["bulk_id"] == "mwmg9p7s6o") &
+#     (df["ads"] == "bare") &
+#     (df["facet"] == "11-20") &
+#     (df["active_site"] == 27.) &
+#     [True for i in range(len(df))]
+#     ]
+# #     bare	48	
+# df.path_job_root_w_att.tolist()
 
 # +
 from misc_modules.pandas_methods import reorder_df_columns
@@ -148,12 +190,9 @@ grouped = df_jobs.groupby([
     "compenv", "bulk_id", "slab_id", "facet",
     "ads", "active_site", "att_num", "rev_num", ])
 for name, group in grouped:
-    tmp = 42
 
     df_i = group
     if df_i.shape[0] > 1:
-        # break
-
         df_i_2 = df_i[df_i.compenv == df_i.compenv_origin]
 
         mess_i = "Hopefully this parses it down to one row"
@@ -170,6 +209,26 @@ for name, group in grouped:
 df_jobs = pd.DataFrame(series_list)
 # -
 
+df_i.path_full.tolist()
+
+# +
+# print("TEMP")
+# assert False
+
+# +
+# df_i_2
+# df_i.path_full.tolist()
+
+# +
+# group
+
+# +
+# df_jobs
+
+# +
+# assert False
+# -
+
 # # Creating job ids data
 
 # +
@@ -179,10 +238,12 @@ data_dict_list = []
 df_i = df_jobs[[
     "compenv", "bulk_id", "slab_id",
     "facet", "att_num", "rev_num", "ads", "active_site", ]]
-for index_i, row_i in df_i.iterrows():
+iterator = tqdm(df_i.index, desc="1st loop")
+for i_cnt, index_i in enumerate(iterator):
+    # #####################################################
     data_dict_i = dict()
-
-    data_dict_i.update(row_i.to_dict())
+    # #####################################################
+    row_i = df_i.loc[index_i]
     # #####################################################
     compenv = row_i.compenv
     bulk_id = row_i.bulk_id
@@ -194,23 +255,18 @@ for index_i, row_i in df_i.iterrows():
     active_site = row_i.active_site
     # #####################################################
 
-    if verbose:
-        print(40 * "=")
-        # print(compenv, bulk_id, slab_id, att_num, rev_num, ads, active_site)
+    data_dict_i.update(row_i.to_dict())
 
     job_id_i = get_job_id(
         compenv, bulk_id, slab_id, facet, att_num,
         rev_num, ads, active_site, df_job_ids=df_job_ids)
 
-
     if job_id_i is None:
-        print("Not good")
+        # print(index_i)
         job_id_i = GetUniqueFriendlyID(used_ids)
         used_ids.add(job_id_i)
 
     data_dict_i["job_id"] = job_id_i
-
-    # data_dict_i["facet"] = "temp (" + str(facet) + ")"
 
     data_dict_list.append(data_dict_i)
     job_ids_list.append(job_id_i)
@@ -223,13 +279,82 @@ path_i = os.path.join(
     os.environ["PROJ_irox_oer"],
     "dft_workflow/job_processing",
     "out_data/job_id_mapping.csv")
-    # "out_data/job_id_mapping_1.csv")
-df_job_ids_new.to_csv(
-    path_i,
-    index=False,
-    quoting=csv.QUOTE_NONNUMERIC,
-    na_rep="NULL",
-    )
+
+from pathlib import Path
+my_file = Path(os.environ["PROJ_irox_oer_gdrive"])
+if my_file.is_dir():
+
+
+    from methods import get_df_job_ids
+    df_job_ids_old = get_df_job_ids()
+    df_job_ids_old = df_job_ids_old.drop_duplicates()
+
+    # #########################################################
+    df_job_ids_old = df_job_ids_old.set_index([
+        "compenv", "bulk_id", "slab_id",
+        "facet", "att_num", "rev_num",
+        "ads", "active_site"], drop=False)
+
+    df_job_ids_new = df_job_ids_new.set_index([
+        "compenv", "bulk_id", "slab_id",
+        "facet", "att_num", "rev_num",
+        "ads", "active_site"], drop=False)
+
+
+    # #########################################################
+    drop_from_new_job_ids = []
+    for index_i in df_job_ids_new.index:
+        already_present = index_i in df_job_ids_old.index
+
+        if already_present:
+
+            row_old_i = df_job_ids_old.loc[index_i]
+            job_id_old_i = row_old_i.job_id
+
+            row_new_i = df_job_ids_new.loc[index_i]
+            job_id_new_i = row_new_i.job_id
+
+            job_ids_match = job_id_new_i == job_id_old_i
+
+        if already_present and job_ids_match:
+            drop_from_new_job_ids.append(index_i)
+
+    df_job_ids_new = df_job_ids_new.drop(labels=drop_from_new_job_ids)
+
+
+    # #########################################################
+    df_job_ids_comb = pd.concat([
+        df_job_ids_old,
+        df_job_ids_new,
+        ], axis=0)
+
+    df_job_ids_comb = df_job_ids_comb.reset_index(drop=True)
+
+    df_job_ids_comb = df_job_ids_comb.drop_duplicates()
+
+    df_job_ids_comb.to_csv(
+        path_i,
+        index=False,
+        quoting=csv.QUOTE_NONNUMERIC,
+        na_rep="NULL",
+        )
+
+    # df_job_ids_new.to_csv(
+    #     path_i,
+    #     index=False,
+    #     quoting=csv.QUOTE_NONNUMERIC,
+    #     na_rep="NULL",
+    #     )
+else:
+    if compenv_local == "wsl":
+        for i in range(50): print(
+            "The PROJ_irox_oer_gdrive location is not here/accesible",
+            "\n",
+            "os.environ['PROJ_irox_oer_gdrive']:", os.environ["PROJ_irox_oer_gdrive"],
+            "\n",
+            "This will mess things up royally I think",
+            "\n",
+            sep="")
 
 df_jobs["job_id"] = job_ids_list
 
@@ -240,6 +365,23 @@ df_jobs = reorder_df_columns(["bulk_id", "slab_id", "job_id", "facet", "compenv"
 
 # Set index to `job_id`
 df_jobs = df_jobs.set_index("job_id", drop=False)
+
+# +
+group_cols = [
+    "bulk_id", "slab_id", "facet", "compenv",
+    "ads", "active_site", "att_num",
+    ]
+groups = []
+grouped = df_jobs.groupby(group_cols)
+for name_i, group_i in grouped:
+    num_revs_i = get_num_revs_for_group(group=group_i)
+    group_i["num_revs"] = num_revs_i
+    groups.append(group_i)
+
+if len(groups) == 0:
+    pass
+else:
+    df_jobs = pd.concat(groups, axis=0)
 
 
 # +
@@ -323,7 +465,12 @@ if verbose:
 # #########################################################
 print(20 * "# # ")
 print("All done!")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
 print("collect_job_dirs_data.ipynb")
 print(20 * "# # ")
-# assert False
 # #########################################################
+
+# + active=""
+#
+#
+#

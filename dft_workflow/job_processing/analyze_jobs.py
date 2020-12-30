@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -18,10 +18,11 @@
 
 # # Import Modules
 
-# + jupyter={"source_hidden": true}
+# +
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
 
 import pickle
 import dictdiffer
@@ -46,23 +47,27 @@ from methods import (
     cwd,
     )
 
-from dft_workflow_methods import is_job_understandable, job_decision
-from dft_workflow_methods import transfer_job_files_from_old_to_new
-from dft_workflow_methods import is_job_compl_done
+from dft_workflow_methods import (
+    is_job_understandable,
+    job_decision,
+    transfer_job_files_from_old_to_new,
+    is_job_compl_done,
+    )
 # -
+
+from methods import isnotebook    
+isnotebook_i = isnotebook()
+if isnotebook_i:
+    from tqdm.notebook import tqdm
+    verbose = True
+else:
+    from tqdm import tqdm
+    verbose = False
 
 # # Script Inputs
 
-# +
-verbose = False
-# verbose = True
-
 TEST_no_file_ops = True  # True if just testing around, False for production mode
 # TEST_no_file_ops = False
-
-# Slac queue to submit to
-slac_sub_queue = "suncat2"  # 'suncat', 'suncat2', 'suncat3'
-# -
 
 # # Read Data
 
@@ -123,6 +128,26 @@ if verbose:
         df_jobs.index.difference(df_jobs_data.index).tolist(), sep="")
 
 # +
+# print(40 * "TEMP | ")
+
+# # name_i = ("nafupemu_49", "o", 48., 1)
+# # name_i = ("relovalu_12", "o", "NaN", 1)
+# # name_i = ('sherlock', 'miforike_08', 1, 'o', 50.0)
+# name_i = ('miforike_08', 'o', 50.0, 1, )
+
+# df = df_jobs_i
+# df = df[
+#     (df["slab_id"] == name_i[0]) &
+#     (df["ads"] == name_i[1]) &
+#     (df["active_site"] == name_i[2]) &
+#     (df["att_num"] == name_i[3]) &
+#     [True for i in range(len(df))]
+#     ]
+# df_jobs_i = df
+
+# df_jobs_i
+
+# +
 data_dict_list = []
 group_cols = ["compenv", "slab_id", "att_num", "ads", "active_site"]
 grouped = df_jobs_i.groupby(group_cols)
@@ -148,7 +173,7 @@ for name, group in grouped:
     row_max_i = max_job.iloc[0]
     # #####################################################
     job_id_max_i = row_max_i.job_id
-    # path_short = row_max_i.path_short
+    submitted_i = row_max_i.submitted
     # #####################################################
 
     # #####################################################
@@ -193,7 +218,7 @@ for name, group in grouped:
     # #####################################################
     job_decision_i = job_decision(
         error=error, error_type=error_type,
-        timed_out=timed_out, completed=completed,
+        timed_out=timed_out, completed=completed, submitted=submitted_i,
         job_understandable=job_understandable, ediff_conv_reached=ediff_conv_reached,
         incar_params=incar_params, brmix_issue=brmix_issue,
         num_nonconv_scf=num_nonconv_scf, num_conv_scf=num_conv_scf,
@@ -208,14 +233,12 @@ for name, group in grouped:
     # #####################################################
     data_dict_i["ads"] = ads_i
     data_dict_i["active_site"] = active_site_i
-
     data_dict_i["job_understandable"] = job_understandable
     data_dict_i["compenv"] = compenv_i
     data_dict_i["slab_id"] = slab_id
     data_dict_i["att_num"] = att_num
     data_dict_i["job_id_max"] = job_id_max_i
     data_dict_i["path_rel_to_proj"] = path_rel_to_proj
-    # data_dict_i["path_short"] = path_short
     data_dict_i["timed_out"] = timed_out
     data_dict_i["completed"] = completed
     data_dict_i["brmix_issue"] = brmix_issue
@@ -224,16 +247,21 @@ for name, group in grouped:
     data_dict_i["job_completely_done"] = job_completely_done
     # #####################################################
     data_dict_list.append(data_dict_i)
+    # #####################################################
 
 
 # #########################################################
 df_jobs_anal = pd.DataFrame(data_dict_list)
-# df_jobs_anal = df_jobs_anal.set_index("job_id", drop=False)
-# df_jobs_anal = df_jobs_anal.sort_values(["compenv", "path_short"])
-
 df_jobs_anal = df_jobs_anal.sort_values(["compenv", "slab_id", "path_rel_to_proj"])
+# #########################################################
 # -
 
+
+row_data_max_i
+
+# +
+# assert False
+# -
 
 # # Ordering `df_jobs_anal` and setting index
 
@@ -271,6 +299,13 @@ df_jobs_anal = df_jobs_anal.set_index(index_keys)
 
 # # Saving data
 
+# +
+# df_jobs_anal
+
+# +
+# assert False
+# -
+
 # Pickling data ###########################################
 directory = os.path.join(
     os.environ["PROJ_irox_oer"],
@@ -282,143 +317,15 @@ with open(path_i, "wb") as fle:
     pickle.dump(df_jobs_anal, fle)
 # #########################################################
 
-# + active=""
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-
-# +
-# #########################################################
-mask_list = []
-for i in df_jobs_anal.decision.tolist():
-    if "nothing" in i:
-        mask_list.append(True)
-    else:
-        mask_list.append(False)
-
-df_nothing = df_jobs_anal[mask_list]
-
-# +
-mask_list = []
-for i in df_jobs_anal.decision.tolist():
-    if "All done" in i:
-        mask_list.append(False)
-    elif "RUNNING" in i:
-        mask_list.append(False)
-    else:
-        mask_list.append(True)
-
-# df_jobs_anal[mask_list]
-# -
 # #########################################################
 print(20 * "# # ")
 print("All done!")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
 print("analyse_jobs.ipynb")
 print(20 * "# # ")
-# assert False
 # #########################################################
 
 # + active=""
 #
 #
 #
-
-# + jupyter={"source_hidden": true}
-# df_jobs_anal[df_jobs_anal.job_completely_done == False]
-
-# + jupyter={"source_hidden": true}
-# df_jobs_anal
-
-# + jupyter={"source_hidden": true}
-# print("TEMP")
-
-# df_jobs_i = df_jobs_i.loc[[
-
-#     # "nebokipa_96",
-#     # "hotefihe_55",
-#     # "koduvaka_72",
-
-#     "kefadusu_22",
-
-#     ]]
-
-# + jupyter={"source_hidden": true}
-# # df_jobs_anal[
-# #     (df_jobs_anal.compenv == "sherlock") & \
-# #     (df_jobs_anal.slab_id == "putarude_21")
-# #     ]
-
-# df_jobs_anal_i = df_jobs_anal
-
-# var = "sherlock"
-# df_jobs_anal_i = df_jobs_anal_i.query('compenv == @var')
-
-# var = "putarude_21"
-# df_jobs_anal_i = df_jobs_anal_i.query('slab_id == @var')
-
-# df_jobs_anal_i
-
-# + jupyter={"source_hidden": true}
-# df_jobs_anal
-
-#         error=error, error_type=error_type,
-#         timed_out=timed_out, completed=completed,
-#         job_understandable=job_understandable, ediff_conv_reached=ediff_conv_reached,
-#         incar_params=incar_params, brmix_issue=brmix_issue,
-#         num_nonconv_scf=num_nonconv_scf, num_conv_scf=num_conv_scf,
-#         true_false_ratio=true_false_ratio, frac_true=frac_true, job_state=job_state,
-#         job_completely_done=job_completely_done, )
-
-# job_state
-
-# + jupyter={"source_hidden": true}
-# assert False
-
-# + jupyter={"source_hidden": true}
-# print("TEMP | Just for testing")
-
-# save_dict = dict(
-#     error=error, error_type=error_type,
-#     timed_out=timed_out, completed=completed,
-#     job_understandable=job_understandable, ediff_conv_reached=ediff_conv_reached,
-#     incar_params=incar_params, brmix_issue=brmix_issue,
-#     num_nonconv_scf=num_nonconv_scf, num_conv_scf=num_conv_scf,
-#     true_false_ratio=true_false_ratio, frac_true=frac_true, job_state=job_state,
-#     job_completely_done=job_completely_done,
-#     )
-
-# save_object = save_dict
-
-# # Pickling data ###########################################
-# import os; import pickle
-# directory = os.path.join(
-#     os.environ["HOME"],
-#     "__temp__")
-# if not os.path.exists(directory): os.makedirs(directory)
-# path_i = os.path.join(directory, "temp_data.pickle")
-# with open(path_i, "wb") as fle:
-#     pickle.dump(save_object, fle)
-# # #########################################################
-
-# # #########################################################
-# import pickle; import os
-# directory = os.path.join(
-#     os.environ["HOME"],
-#     "__temp__")
-# path_i = os.path.join(directory, "temp_data.pickle")
-# with open(path_i, "rb") as fle:
-#     data = pickle.load(fle)
-# # #########################################################

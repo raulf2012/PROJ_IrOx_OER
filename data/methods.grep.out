@@ -1,0 +1,55 @@
+def get_df_dft():
+def get_df_slab(mode="final"):
+def get_df_slab_simil():
+def get_structure_coord_df(
+    def method(row_i):
+def get_df_jobs(exclude_wsl_paths=True):
+    # def method(row_i):
+def get_df_jobs_paths():
+def get_df_jobs_data(
+def get_df_jobs_data_clusters():
+def get_df_jobs_anal():
+def get_df_atoms_sorted_ind():
+def get_df_ads():
+def get_df_slab_ids():
+def update_df_slab_ids():
+def get_df_job_ids():
+def get_df_slabs_to_run():
+def get_df_init_slabs():
+def get_df_slabs_oh():
+def get_df_xrd():
+def get_df_bulk_manual_class():
+def get_bulk_selection_data():
+def get_df_features_targets():
+def get_df_features():
+def get_df_eff_ox():
+def get_df_octa_vol():
+def get_df_coord(
+        def is_number(s):
+def get_df_active_sites():
+def get_df_magmoms():
+def read_magmom_comp_data():
+def get_df_jobs_oh_anal():
+def get_df_rerun_from_oh():
+def get_slab_id(bulk_id_i, facet_i, df_slab_ids):
+def get_job_id(
+def get_df_oer_groups():
+def get_other_job_ids_in_set(
+# def get_df_jobs_max_rev(
+def symmetrize_atoms(
+def remove_atoms(atoms=None, atoms_to_remove=None):
+def get_slab_thickness(atoms=None):
+def add_adsorbate_and_pass_magmoms(
+def remove_atom_keep_magmoms(
+def plot_atoms(
+def remove_protruding_bottom_Os(
+def CountFrequency(my_list):
+def cwd(path):
+def sigalrm_handler(signum, frame):
+def convert_str_facet_to_list(facet):
+def are_dicts_the_same(dict_i, dict_j):
+def unit_vector(vector):
+def angle_between(v1, v2):
+def get_systems_to_stop_run_indices(
+def compare_facets_for_being_the_same(
+def temp_job_test():

@@ -243,14 +243,14 @@ shared_axis_dict = dict(
 xaxis_layout = go.layout.XAxis(shared_axis_dict)
 xaxis_layout.update(go.layout.XAxis(
     title=dict(
-        text="Oxidation State",
+        # text="Oxidation State",
         ),
     ))
 
 yaxis_layout = go.layout.YAxis(shared_axis_dict)
 yaxis_layout.update(go.layout.YAxis(
     title=dict(
-        text="G_O (eV)",
+        # text="G_O (eV)",
         ),
     ))
 

@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -15,10 +15,13 @@
 
 # # Import Modules
 
-# + jupyter={"source_hidden": true}
+# +
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
+
+sys.path.insert(0, "..")
 
 import copy
 import json
@@ -30,9 +33,6 @@ import pandas as pd
 from pandas import MultiIndex
 
 from ase import io
-
-# # from tqdm import tqdm
-from tqdm.notebook import tqdm
 
 # #########################################################
 from methods import (
@@ -51,14 +51,23 @@ from methods import (
 from dft_workflow_methods import get_job_spec_dft_params
 # -
 
+from methods import isnotebook    
+isnotebook_i = isnotebook()
+if isnotebook_i:
+    from tqdm.notebook import tqdm
+    verbose = True
+else:
+    from tqdm import tqdm
+    verbose = False
+
 # # Script Inputs
 
 # Slac queue to submit to
-slac_sub_queue_i = "suncat2"  # 'suncat', 'suncat2', 'suncat3'
+slac_sub_queue_i = "suncat3"  # 'suncat', 'suncat2', 'suncat3'
 
 # # Read Data
 
-# + jupyter={"source_hidden": true}
+# +
 # #########################################################
 df_slab = get_df_slab()
 df_slab = df_slab.set_index("slab_id")
@@ -77,153 +86,109 @@ df_active_sites = get_df_active_sites()
 
 # #########################################################
 df_slabs_to_run = get_df_slabs_to_run()
+df_slabs_to_run = df_slabs_to_run.set_index(["compenv", "slab_id", "att_num"], drop=False)
 
 # #########################################################
 df_atoms_sorted_ind = get_df_atoms_sorted_ind()
 
+# #########################################################
 df_slabs_oh = get_df_slabs_oh()
 # -
 
 # # Setup
 
 # +
-directory = "out_data/dft_jobs"
+directory = os.path.join(
+    os.environ["PROJ_irox_oer"],
+    "dft_workflow/run_slabs/run_oh_covered",
+    "out_data/dft_jobs")
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-directory = "__temp__"
+directory = os.path.join(
+    os.environ["PROJ_irox_oer"],
+    "dft_workflow/run_slabs/run_oh_covered",
+    "out_data/__temp__")
 if not os.path.exists(directory):
     os.makedirs(directory)
 
 compenv = os.environ["COMPENV"]
 # -
 
-# # Checking for multiple *O calcs, need to make code more robust later
+# # Filtering `df_jobs_anal`
 
 # +
-var = "o"
-df_jobs_anal_o = df_jobs_anal.query('ads == @var')
+from methods_run_slabs import get_systems_to_run_bare_and_oh
+
+indices_to_process = get_systems_to_run_bare_and_oh()
+df_jobs_anal_i = df_jobs_anal.loc[indices_to_process]
+
 
 # #########################################################
-indices_to_remove = []
-# #########################################################
-group_cols = ["compenv", "slab_id", "ads", ]
-grouped = df_jobs_anal_o.groupby(group_cols)
-for name, group in grouped:
+# Removing systems that were marked to be ignored
+from methods import get_systems_to_stop_run_indices
+indices_to_stop_running = get_systems_to_stop_run_indices(df_jobs_anal=df_jobs_anal)
 
-    num_rows = group.shape[0]
-    # print(num_rows)
-    if num_rows > 1:
-        print(name)
-        print("")
-        # print(num_rows)
-        print("COMBAK CHECK THIS")
-        print("This was made when there was only 1 *O calc, make sure it's not creating new *OH jobs after running more *O calcs")
-        # assert False
+indices_to_drop = []
+for index_i in df_jobs_anal_i.index:
+    if index_i in indices_to_stop_running:
+        indices_to_drop.append(index_i)
 
-        # group[group.att_num != 1]
-        group_index = group.index.to_frame()
-        group_index_i = group_index[group_index.att_num != 1]
+df_jobs_anal_i = df_jobs_anal_i.drop(index=indices_to_drop)
 
-        indices_to_remove.extend(
-            group_index_i.index.tolist()
-            )
-
-# +
-df_jobs_anal_completed = df_jobs_anal[df_jobs_anal.job_completely_done == True]
-
-df_jobs_anal_completed = df_jobs_anal_completed.drop(labels=indices_to_remove)
-
-print("df_jobs_anal_completed.shape:", df_jobs_anal_completed.shape)
-print("df_jobs_anal_completed.index.to_frame().shape:",
-      df_jobs_anal_completed.index.to_frame().shape)
-
-df_jobs_anal_completed = pd.concat([
-    df_jobs_anal_completed.index.to_frame(),
-    df_jobs_anal_completed,
-    ], axis=1)
-
-df_jobs_anal_completed = df_jobs_anal_completed[
-    ["compenv", "slab_id", "job_id_max", "att_num", ]]
-
-# For the purpose of picking preparing *OH jobs we only need completed 
-var = "o"
-df_jobs_anal_completed = df_jobs_anal_completed.query('ads == @var')
-
-# +
-# #########################################################
-compenv__slab_id__att_num__tuple = tuple(zip(
-    df_jobs_anal_completed.compenv,
-    df_jobs_anal_completed.slab_id,
-    df_jobs_anal_completed.att_num,
-    ))
-
-df_jobs_anal_completed["compenv__slab_id__att_num"] = compenv__slab_id__att_num__tuple
-df_jobs_anal_completed = df_jobs_anal_completed.set_index("compenv__slab_id__att_num", drop=False)
 
 # #########################################################
-compenv__slab_id__att_num__tuple = tuple(zip(
-    df_slabs_to_run.compenv,
-    df_slabs_to_run.slab_id,
-    df_slabs_to_run.att_num,
-    ))
+# Drop redundent indices (adsorbate and active site)
+df_jobs_anal_i = df_jobs_anal_i.set_index(
+    df_jobs_anal_i.index.droplevel(level=[2, 3, ])
+    )
 
-df_slabs_to_run["compenv__slab_id__att_num"] = compenv__slab_id__att_num__tuple
-df_slabs_to_run = df_slabs_to_run.set_index("compenv__slab_id__att_num", drop=False)
 
 # #########################################################
-shared_indices = df_jobs_anal_completed.index.intersection(df_slabs_to_run.index)
+idx = np.intersect1d(
+    df_jobs_anal_i.index,
+    df_slabs_to_run.index,
+    )
+shared_indices = idx
+
 df_i = pd.concat([
     df_slabs_to_run.loc[shared_indices].status,
-    df_jobs_anal_completed.loc[shared_indices],
+    df_jobs_anal_i.loc[shared_indices],
     ], axis=1)
+df_i = df_i[df_i.status == "ok"]
+
+# df_i.head()
 
 # +
-df_i = df_i[
-    (df_i.status == "ok")
-    # (df_i.status != "bad")
-    ]
+indices_not_in = []
+for i in df_jobs_anal_i.index:
+    if i not in df_slabs_to_run.index:
+        indices_not_in.append(i)
 
-ind = MultiIndex.from_tuples(
-    df_i.index, sortorder=None,
-    names=["compenv", "slab_id", "att_num", ])
-df_i = df_i.set_index(ind)
+print(
+    "Number of systems that haven't been manually approved:",
+    len(indices_not_in),
+    )
 
-# #########################################################
-df_i = df_i.sort_index()
+# +
+# assert False
 
 # +
 # #########################################################
-print("TEMP TEMP TEMP")
-print("Remove this to do other *OH systems on NERSC")
-
-# df_i = df_i[
-#     (df_i.compenv == "nersc") & \
-#     (df_i.slab_id == "vuraruna_65") & \
-#     [True for i in range(len(df_i))]
-#     ]
-
-# compenv: nersc | slab_id: kalisule_45 | att_num: 1
-df_i = df_i[
-    (df_i.compenv == "nersc") & \
-    (df_i.slab_id == "kalisule_45") & \
-    [True for i in range(len(df_i))]
-    ]
-# #########################################################
-
-# +
 data_dict_list = []
+# #########################################################
 for name_i, row_i in df_i.iterrows():
-
+    # #####################################################
     compenv_i = name_i[0]
     slab_id_i = name_i[1]
     att_num_i = name_i[2]
+    # #####################################################
 
-    print(40 * "=")
-    print("compenv:", compenv_i, "|", "slab_id:", slab_id_i, "|", "att_num:", att_num_i)
+    # if verbose:
+    #     print(40 * "=")
+    #     print("compenv:", compenv_i, "|", "slab_id:", slab_id_i, "|", "att_num:", att_num_i)
 
     # #####################################################
-    compenv_i = row_i.compenv
     job_id_max_i = row_i.job_id_max
     # #####################################################
 
@@ -232,7 +197,6 @@ for name_i, row_i in df_i.iterrows():
     row_jobs_i = df_jobs_i[df_jobs_i.job_id == job_id_max_i]
     row_jobs_i = row_jobs_i.iloc[0]
     # #####################################################
-    # att_num_i = row_jobs_i.att_num
     bulk_id_i = row_jobs_i.bulk_id
     facet_i = row_jobs_i.facet
     # #####################################################
@@ -253,12 +217,11 @@ for name_i, row_i in df_i.iterrows():
     num_active_sites_unique_i = row_active_site_i.num_active_sites_unique
     # #####################################################
 
-    # print("TEMP manually defining active sites")
-    # active_sites_unique_i = [62, 67, 68, 71, 73]
-    # active_sites_unique_i = [62, ]
+    # print(len(active_sites_unique_i))
+    # print("TEMP")
+    # active_sites_unique_i = [24, ]
 
     for active_site_j in active_sites_unique_i:
-
         df_slabs_oh_i = df_slabs_oh.loc[(compenv_i, slab_id_i, "o", active_site_j, att_num_i)]
         for att_num_oh_k, row_k in df_slabs_oh_i.iterrows():
             data_dict_i = dict()
@@ -266,132 +229,184 @@ for name_i, row_i in df_i.iterrows():
             slab_oh_k = row_k.slab_oh
             num_atoms_k = slab_oh_k.get_global_number_of_atoms()
 
-            # #####################################################
+            # #############################################
             # attempt = 1
             rev = 1
+
             path_i = os.path.join(
-                os.environ["PROJ_irox_oer_gdrive"],
-                "dft_workflow/run_slabs/run_oh_covered",
+
                 "out_data/dft_jobs",
-                compenv_i,
-                bulk_id_i, facet_i,
+                compenv_i, bulk_id_i, facet_i,
                 "oh",
                 "active_site__" + str(active_site_j).zfill(2),
                 str(att_num_oh_k).zfill(2) + "_attempt",  # Attempt
                 "_" + str(rev).zfill(2),  # Revision
                 )
 
-            # print("  active_site_j:", active_site_j)
-            # print("    att_num:", att_num_oh_k)
-            # print(active_site_j, att_num_oh_k)
-            # print("path_i:", path_i)
-            print(path_i)
+            path_full_i = os.path.join(
+                os.environ["PROJ_irox_oer_gdrive"],
+                "dft_workflow/run_slabs/run_oh_covered",
+                path_i)
 
-            if os.path.exists(path_i):
-                tmp = 42
-                # print("Already exists")
-                # print("DISJFIDSI")
+            # if verbose:
+            #     print(path_full_i )
 
-            if not os.path.exists(path_i):
-                os.makedirs(path_i)
-
-                # #################################################
-                # Copy dft script to job folder
-                # #################################################
-                copyfile(
-                    os.path.join(
-                        os.environ["PROJ_irox_oer"],
-                        "dft_workflow/dft_scripts/slab_dft.py"),
-                    os.path.join(
-                        path_i,
-                        "model.py"),
-                    )
+            path_exists = False
+            if os.path.exists(path_full_i):
+                path_exists = True
 
 
-                # #################################################
-                # Copy atoms object to job folder
-                slab_oh_k.write(
-                    os.path.join(path_i, "init.traj")
-                    )
+            # #############################################
+            data_dict_i = dict()
+            # #############################################
+            data_dict_i["compenv"] = compenv_i
+            data_dict_i["slab_id"] = slab_id_i
+            data_dict_i["att_num"] = att_num_oh_k
+            data_dict_i["active_site"] = active_site_j
+            data_dict_i["path_short"] = path_i
+            data_dict_i["path_full"] = path_full_i
+            data_dict_i["path_exists"] = path_exists
+            data_dict_i["slab_oh"] = slab_oh_k
+            # #############################################
+            data_dict_list.append(data_dict_i)
+            # #############################################
 
-                # #################################################
-                data_dict_i["compenv"] = compenv_i
-                data_dict_i["slab_id"] = slab_id_i
-                data_dict_i["bulk_id"] = bulk_id_i
-                data_dict_i["att_num"] = att_num_i
-                data_dict_i["rev_num"] = rev
-                data_dict_i["active_site"] = active_site_j
-                data_dict_i["facet"] = facet_i
-                data_dict_i["slab_oh"] = slab_oh_k
-                data_dict_i["num_atoms"] = num_atoms_k
-                data_dict_i["path_i"] = path_i
-                # #################################################
-                data_dict_list.append(data_dict_i)
-                # #################################################
+# #########################################################
+df_to_setup = pd.DataFrame(data_dict_list)
+df_to_setup = df_to_setup.set_index(
+    ["compenv", "slab_id", "att_num", "active_site", ], drop=False)
+
+df_to_setup_i = df_to_setup[df_to_setup.path_exists == False]
+
+# +
+# df_to_setup_i
+
+# +
+# print(222 * "TEMP | ")
+# assert False
+
+# +
+# #########################################################
+data_dict_list = []
+# #########################################################
+for name_i, row_i in df_to_setup_i.iterrows():
+    # #####################################################
+    data_dict_i = dict()
+    # #####################################################
+    compenv_i = name_i[0]
+    slab_id_i = name_i[1]
+    att_num_i = name_i[2]
+    active_site_i = name_i[3]
+    # #####################################################
+    path_full_i = row_i.path_full
+    path_short_i = row_i.path_short
+    slab_oh_i = row_i.slab_oh
+    # #####################################################
+
+    # print(name_i, "|", active_site_i, "|", path_full_i)
+    if verbose:
+        print(name_i, "|", active_site_i)
+        print(path_full_i)
+
+    os.makedirs(path_full_i)
+
+    # #####################################################
+    # Copy dft script to job folder
+    copyfile(
+        os.path.join(os.environ["PROJ_irox_oer"], "dft_workflow/dft_scripts/slab_dft.py"),
+        os.path.join(path_full_i, "model.py"),
+        )
+
+    # #####################################################
+    # Copy atoms object to job folder
+    slab_oh_i.write(
+        os.path.join(path_full_i, "init.traj")
+        )
+    slab_oh_i.write(
+        os.path.join(path_full_i, "init.cif")
+        )
+    num_atoms_i = slab_oh_i.get_global_number_of_atoms()
+
+    # #####################################################
+    data_dict_i["compenv"] = compenv_i
+    data_dict_i["slab_id"] = slab_id_i
+    data_dict_i["bulk_id"] = bulk_id_i
+    data_dict_i["att_num"] = att_num_i
+    data_dict_i["rev_num"] = rev
+    data_dict_i["active_site"] = active_site_j
+    data_dict_i["facet"] = facet_i
+    data_dict_i["slab_oh"] = slab_oh_i
+    data_dict_i["num_atoms"] = num_atoms_i
+    data_dict_i["path_short"] = path_short_i
+    data_dict_i["path_full"] = path_full_i
+    # #####################################################
+    data_dict_list.append(data_dict_i)
+    # #####################################################
 
 
 # #########################################################
 df_jobs_new = pd.DataFrame(data_dict_list)
 
-df_jobs_new["compenv__slab_id__att_num__active_site"] = list(zip(
-    df_jobs_new.compenv,
-    df_jobs_new.slab_id,
-    df_jobs_new.att_num,
-    df_jobs_new.active_site))
-
-df_jobs_new = df_jobs_new.set_index("compenv__slab_id__att_num__active_site", drop=False)
+# Create empty dataframe with columns if dataframe is empty
+if df_jobs_new.shape[0] == 0:
+    df_jobs_new = pd.DataFrame(
+        columns=["compenv", "slab_id", "att_num", "active_site", ])
 
 # +
+# #########################################################
 data_dict_list = []
+# #########################################################
 for i_cnt, row_i in df_jobs_new.iterrows():
-    data_dict_i = dict()
     # #####################################################
-    compenv__slab_id__att_num__active_site_i = row_i.name
-    compenv_i, slab_id_i, att_num_i, active_site_i = row_i.name
-
     compenv_i = row_i.compenv
     num_atoms = row_i.num_atoms
-    path_i = row_i.path_i
+    path_full_i = row_i.path_full
     # ####################################################
     dft_params_i = get_job_spec_dft_params(
-        # compenv=compenv,
         compenv=compenv_i,
         slac_sub_queue=slac_sub_queue_i,
         )
     dft_params_i["ispin"] = 2
 
+    # print(path_full_i)
+
     # #####################################################
-    with open(os.path.join(path_i, "dft-params.json"), "w+") as fle:
+    with open(os.path.join(path_full_i, "dft-params.json"), "w+") as fle:
         json.dump(dft_params_i, fle, indent=2, skipkeys=True)
 
-
+    # #####################################################
+    data_dict_i = dict()
     # #####################################################
     data_dict_i["compenv"] = compenv_i
     data_dict_i["slab_id"] = slab_id_i
     data_dict_i["att_num"] = att_num_i
     data_dict_i["active_site"] = active_site_i
-    data_dict_i["compenv__slab_id__att_num__active_site"] = \
-        compenv__slab_id__att_num__active_site_i
     data_dict_i["dft_params"] = dft_params_i
     # #####################################################
     data_dict_list.append(data_dict_i)
     # #####################################################
 
 
-
 # #########################################################
 df_dft_params = pd.DataFrame(data_dict_list)
 
-keys = ["compenv", "slab_id", "att_num", "active_site"]
-df_dft_params = df_dft_params.set_index(keys, drop=False)
+
+# Create empty dataframe with columns if dataframe is empty
+if df_dft_params.shape[0] == 0:
+    tmp = 42
+    # df_jobs_new = pd.DataFrame(
+    #     columns=["compenv", "slab_id", "att_num", "active_site", ])
+else:
+    keys = ["compenv", "slab_id", "att_num", "active_site"]
+    df_dft_params = df_dft_params.set_index(keys, drop=False)
 # -
 
 # #########################################################
 print(20 * "# # ")
 print("All done!")
-print("setup_dft.ipynb")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
+print("setup_dft_oh.ipynb")
 print(20 * "# # ")
-# assert False
 # #########################################################
 
 # + active=""
@@ -399,40 +414,71 @@ print(20 * "# # ")
 #
 
 # + jupyter={"source_hidden": true}
-# df_jobs_i = df_jobs[df_jobs.compenv == compenv_i]
-# row_jobs_i = df_jobs_i[df_jobs_i.job_id == job_id_max_i]
+# slab_ids_phase_2 = df_slab[df_slab.phase == 2].index.tolist()
 
-# # row_jobs_i = 
-# # df_jobs_i[df_jobs_i.job_id == job_id_max_i]
+# df_index_i = df_to_setup_i.index.to_frame()
 
-# # row_jobs_i = row_jobs_i.iloc[0]
-# # row_jobs_i
-
-# # job_id_max_i
-# # df_jobs_i
+# for i in df_index_i.slab_id.unique():
+#     if i not in slab_ids_phase_2:
+#         print("Not there")
 
 # + jupyter={"source_hidden": true}
-# df_jobs_i = 
-# df_jobs[df_jobs.compenv == compenv_i]
-# compenv_i
+# # df_dft_params = 
+# pd.DataFrame(data_dict_list)
+
+# # keys = ["compenv", "slab_id", "att_num", "active_site"]
+# # df_dft_params = df_dft_params.set_index(keys, drop=False)
 
 # + jupyter={"source_hidden": true}
-# # #########################################################
-# # Only selecting rows from current compenv, jobs will be continued on same cluster that O* was run in
-# if compenv == "wsl":
-#     compenv = "slac"
-
-# df_i = df_i.loc[compenv]
+# df_slabs_oh
 
 # + jupyter={"source_hidden": true}
-# print(compenv_i)
-# print("")
-
-# # dft_params_i = 
-# get_job_spec_dft_params(
-#     compenv=compenv_i,
-#     slac_sub_queue=slac_sub_queue_i,
-#     )
+# (compenv_i, slab_id_i, "o", active_site_j, att_num_i, )
 
 # + jupyter={"source_hidden": true}
-# df_dft_params
+# # df_slabs_oh_i
+
+# # df_slabs_oh_i = 
+# df_slabs_oh.loc[
+#     (compenv_i, slab_id_i, "o", active_site_j, att_num_i, )
+#     ]
+
+# + jupyter={"source_hidden": true}
+# active_sites_unique_i
+
+# + jupyter={"source_hidden": true}
+# df_to_setup_i.path_full.tolist()
+
+# df_to_setup_i
+
+# + jupyter={"source_hidden": true}
+# # df_jobs_anal[df_jobs_anal.job_id_max == job_id_j]
+
+# df_ind_i = df_jobs_anal.index.to_frame()
+
+# df = df_ind_i
+# df = df[
+#     (df["compenv"] == "sherlock") &
+#     (df["slab_id"] == "likeniri_51") &
+#     # (df[""] == "") &
+#     [True for i in range(len(df))]
+#     ]
+
+# df_jobs_anal.loc[
+#     df.index
+#     ]
+
+# + jupyter={"source_hidden": true}
+# print(20 * "TEMP | ")
+
+# df_i = df_i.loc[
+#     [("slac", "fodopilu_17", 1)]
+#     ]
+
+# + jupyter={"source_hidden": true}
+# indices_to_process
+
+# + jupyter={"source_hidden": true}
+# job_id_j = "job_id_j"
+
+# df_i[df_i.job_id_max == job_id_j]

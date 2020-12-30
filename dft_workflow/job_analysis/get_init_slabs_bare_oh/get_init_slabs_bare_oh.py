@@ -18,13 +18,17 @@
 
 # # Import Modules
 
-# + jupyter={"source_hidden": true}
+# +
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
+
+import pickle
 
 from IPython.display import display
 
+import numpy as np
 import pandas as pd
 pd.set_option("display.max_columns", None)
 pd.options.display.max_colwidth = 20
@@ -45,12 +49,9 @@ from methods import (
     )
 # -
 
-# import os
-import pickle
-
 # # Read Data
 
-# + jupyter={"source_hidden": true}
+# +
 df_dft = get_df_dft()
 
 df_job_ids = get_df_job_ids()
@@ -78,32 +79,6 @@ verbose = True
 verbose = False
 
 # +
-# df_slab
-
-# +
-# ('compenv', 'nersc')
-# ('slab_id', 'fosurufu_23')
-# ('ads', 'o')
-# ('active_site', 'NaN')
-# ('att_num', 1)
-
-# +
-# compenv_i = "nersc"
-# slab_id_i = "fosurufu_23"
-
-# df_jobs = df_jobs[
-#     (df_jobs.compenv == compenv_i) & \
-#     (df_jobs.slab_id == slab_id_i) & \
-#     (df_jobs.ads == "o") & \
-#     [True for i in range(len(df_jobs))]
-#     ]
-
-# +
-# assert False
-
-# +
-# df_jobs_i = df_jobs[df_jobs.ads == "bare"]
-
 # #########################################################
 data_dict_list = []
 # #########################################################
@@ -113,6 +88,11 @@ cols_to_drop = [
 # grouped = df_jobs_i.groupby(cols_to_drop)
 grouped = df_jobs.groupby(cols_to_drop)
 for name, group in grouped:
+
+    # if "suvonudo_66" in group.index.tolist():
+    #     print(name)
+    #     print(group)
+
     if verbose:
         print(40 * "=")
     data_dict_i = dict()
@@ -168,9 +148,10 @@ for name, group in grouped:
 
 df_init_slabs = pd.DataFrame(data_dict_list)
 df_init_slabs = df_init_slabs.set_index(["compenv", "slab_id", "ads", "active_site", "att_num", ])
-
-
 # -
+
+group
+
 
 # # Get number of atoms
 
@@ -178,9 +159,15 @@ df_init_slabs = df_init_slabs.set_index(["compenv", "slab_id", "ads", "active_si
 def method(row_i):
     # #####################################################
     init_atoms_i = row_i.init_atoms
+    job_id_min_i = row_i.job_id_min
     # #####################################################
+
+    if init_atoms_i is None:
+        print("Couldn't find init_atoms for this job_id")
+        print("job_id_min:", job_id_min_i)
+
     num_atoms_i = init_atoms_i.get_global_number_of_atoms()
-    # #####################################################
+
     return(num_atoms_i)
 
 df_init_slabs["num_atoms"] = df_init_slabs.apply(
@@ -210,6 +197,12 @@ df_init_slabs_tmp.head()
 # #########################################################
 print(20 * "# # ")
 print("All done!")
-print("analyse_jobs.ipynb")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
+print("get_init_slabs_bare_oh.ipynb")
 print(20 * "# # ")
 # #########################################################
+
+# + active=""
+#
+#
+#

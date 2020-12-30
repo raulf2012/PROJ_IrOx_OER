@@ -13,11 +13,37 @@
 #     name: conda-env-PROJ_irox_oer-py
 # ---
 
-# # Import Modules
-
 # + jupyter={"source_hidden": true}
 import os
-print(os.getcwd())
+import sys
+
+import copy
+import shutil
+from pathlib import Path
+from contextlib import contextmanager
+
+# import pickle; import os
+
+import pickle
+import  json
+
+import pandas as pd
+import numpy as np
+
+from ase import io
+from ase.visualize import view
+
+import plotly.graph_objects as go
+
+from pymatgen.io.ase import AseAtomsAdaptor
+from pymatgen.analysis import local_env
+
+# #########################################################
+from misc_modules.pandas_methods import drop_columns
+
+from methods import read_magmom_comp_data
+
+import os
 import sys
 
 from IPython.display import display
@@ -41,43 +67,21 @@ from methods import (
     get_df_slabs_oh,
     get_df_init_slabs,
     get_df_magmoms,
-    )
-from methods import (
+    get_df_ads,
+    get_df_atoms_sorted_ind,
+    get_df_rerun_from_oh,
+    get_df_slab_simil,
+    get_df_active_sites,
+    get_df_features_targets,
+
     get_other_job_ids_in_set,
+    read_magmom_comp_data,
+
+    get_df_coord,
+    get_df_slabs_to_run,
+    get_df_features,
     )
-
 # + jupyter={"source_hidden": true}
-import os
-import sys
-
-import copy
-import shutil
-from pathlib import Path
-from contextlib import contextmanager
-
-# import pickle; import os
-
-import pickle
-import  json
-
-import pandas as pd
-import numpy as np
-
-from ase import io
-
-import plotly.graph_objects as go
-
-from pymatgen.io.ase import AseAtomsAdaptor
-from pymatgen.analysis import local_env
-
-# #########################################################
-from misc_modules.pandas_methods import drop_columns
-# -
-
-# # Read data objects with methods
-
-from methods import get_df_ads
-
 df_dft = get_df_dft()
 df_job_ids = get_df_job_ids()
 df_jobs = get_df_jobs(exclude_wsl_paths=True)
@@ -91,8 +95,17 @@ df_slabs_oh = get_df_slabs_oh()
 df_init_slabs = get_df_init_slabs()
 df_magmoms = get_df_magmoms()
 df_ads = get_df_ads()
+df_atoms_sorted_ind = get_df_atoms_sorted_ind()
+df_rerun_from_oh = get_df_rerun_from_oh()
+magmom_data_dict = read_magmom_comp_data()
+df_slab_simil = get_df_slab_simil()
+df_active_sites = get_df_active_sites()
+df_features_targets = get_df_features_targets()
+df_slabs_to_run = get_df_slabs_to_run()
+df_features = get_df_features()
 
 
+# + jupyter={"source_hidden": true}
 def display_df(df, df_name, display_head=True, num_spaces=3):
     print(40 * "*")
     print(df_name)
@@ -103,7 +116,6 @@ def display_df(df, df_name, display_head=True, num_spaces=3):
         display(df.head())
 
     print(num_spaces * "\n")
-
 
 df_list = [
     ("df_dft", df_dft),
@@ -118,13 +130,15 @@ df_list = [
     ("df_slabs_oh", df_slabs_oh),
     ("df_magmoms", df_magmoms),
     ("df_ads", df_ads),
+    ("df_atoms_sorted_ind", df_atoms_sorted_ind),
+    ("df_rerun_from_oh", df_rerun_from_oh),
+    ("df_slab_simil", df_slab_simil),
+    ("df_active_sites", df_active_sites),
     ]
 
-# +
 # for name_i, df_i in df_list:
 #     display_df(df_i, name_i)
 
-# +
 # print("")
 # print("")
 
@@ -134,7 +148,6 @@ df_list = [
 #         name_i,
 #         display_head=False,
 #         num_spaces=0)
-
 # + active=""
 #
 #
@@ -150,105 +163,218 @@ df_list = [
 #
 #
 #
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
 # -
+
+print(3 * "\n")
 
 # # TEST TEST TEST TEST
 
 # +
-job_id = "ruvaneru_15"
+# slab_id_i = "pumusuma_66"
+slab_id_i = "romudini_21"
 
-df_jobs_paths.loc[job_id].gdrive_path
+# df_jobs.head()
+
+df_jobs[df_jobs.slab_id == slab_id_i]
 # -
 
-df_ads[
-    ~df_ads.g_oh.isna()
-    ]
+df_slab.loc["romudini_21"]
 
 assert False
 
 # +
-# "rawupuga_30" in df_job_ids.job_id.tolist()
+# df_dft
+# df_slab.shape
 
-# df_job_ids
+df_slab_2 = get_df_slab(mode="almost-final")
 
-df_jobs[
-    (df_jobs.compenv == "sherlock") & \
-    (df_jobs.slab_id == "kenukami_73") & \
-    (df_jobs.ads == "oh") & \
-    [True for i in range(len(df_jobs))]
-    ]
+df_slab_2.shape
+
+# +
+# (519, 8)
+# (533, 8)
+# (544, 8)
+
+# +
+# name_i = ('n36axdbw65', '023')
+# name_i = ('mkbj6e6e9p', '232')
+# name_i = ('v1xpx482ba', '20-21')
+# name_i = ('v1xpx482ba', '20-23')
+
+# name_i = ('n36axdbw65', '023')
+# <--------------------
+# name_i = ('mkbj6e6e9p', '232')
+# <--------------------
+# name_i = ('v1xpx482ba', '20-21')
+# <--------------------
+name_i = ('v1xpx482ba', '20-23')
+# <--------------------
 # -
+
+df = df_slab
+df = df[
+    (df["bulk_id"] == name_i[0]) &
+    (df["facet"] == name_i[1]) &
+    [True for i in range(len(df))]
+    ]
+df
+
+df = df_slab_2
+df = df[
+    (df["bulk_id"] == name_i[0]) &
+    (df["facet"] == name_i[1]) &
+    [True for i in range(len(df))]
+    ]
+df
 
 assert False
 
-# +
-# job_id = "gasusupo_45"
-job_id = "pewehobe_99"
-
-row_jobs = df_jobs.loc[job_id]
-row_paths = df_jobs_paths.loc[job_id]
-
-# row_paths.gdrive_path
-row_paths.path_full
+# slab_id_to_drop = "dupugulo_25"
+# slab_id_to_drop = "rehunuho_26"
+# slab_id_to_drop = "wovaseli_71"
+slab_id_to_drop = "pipotune_15"
 
 # +
-df_jobs_i = get_other_job_ids_in_set(job_id, df_jobs=df_jobs)
+# df_slab = df_slab.drop(slab_id_to_drop)
 
-# df_jobs_paths.loc[
-df_jobs_data.loc[
-    df_jobs_i.index    
-    ]
+df_slab_2 = df_slab_2.drop(slab_id_to_drop)
+
+# +
+# import os; import pickle
+# directory = os.path.join(
+#     os.environ["PROJ_irox_oer"],
+#     "workflow/creating_slabs",
+#     "out_data")
+# if not os.path.exists(directory): os.makedirs(directory)
+# with open(os.path.join(directory, "df_slab_final.pickle"), "wb") as fle:
+#     pickle.dump(df_slab, fle)
 # -
+
+import os; import pickle
+directory = os.path.join(
+    os.environ["PROJ_irox_oer"],
+    "workflow/creating_slabs",
+    "out_data")
+if not os.path.exists(directory): os.makedirs(directory)
+with open(os.path.join(directory, "df_slab.pickle"), "wb") as fle:
+    pickle.dump(df_slab_2, fle)
+
+assert False
+
+# + active=""
+#
+#
+
+# +
+# Getting rid of these rows
+
+# fevofivo_15	n36axdbw65	023
+
+# -
+
+df = df_slab_2
+df = df[
+    (df["bulk_id"] == "vl9on5zpm1") &
+    # (df[""] == "") &
+    # (df[""] == "") &
+    [True for i in range(len(df))]
+    ]
+df
 
 assert False
 
 # + jupyter={"source_hidden": true}
-# def get_other_job_ids_in_set():
-#     """
-#     """
-#     row_jobs = df_jobs.loc[job_id]
+# df_jobs_anal[df_jobs_anal.job_id_max == job_id_j]
 
-#     compenv_i = row_jobs.compenv
-#     bulk_id_i = row_jobs.bulk_id
-#     slab_id_i = row_jobs.slab_id
-#     ads_i = row_jobs.ads
-#     att_num_i = row_jobs.att_num
+df_ind_i = df_jobs_anal.index.to_frame()
 
-#     df_jobs_i = df_jobs[
-#         (df_jobs.compenv == compenv_i) & \
-#         (df_jobs.bulk_id == bulk_id_i) & \
-#         (df_jobs.slab_id == slab_id_i) & \
-#         (df_jobs.ads == ads_i) & \
-#         (df_jobs.att_num == att_num_i) & \
-#         [True for i in range(len(df_jobs))]
-#         ]
+df = df_ind_i
+df = df[
+    (df["compenv"] == "sherlock") &
+    (df["slab_id"] == "likeniri_51") &
+    # (df[""] == "") &
+    [True for i in range(len(df))]
+    ]
 
-#     return(df_jobs_i)
+df_jobs_anal.loc[
+    df.index
+    ]
 
 # + jupyter={"source_hidden": true}
-# # "b5cgvsb16w/111/oh/active_site__62/03_attempt/_05/out_data"
-
-# df_jobs[
-#     (df_jobs.bulk_id == "b5cgvsb16w") & \
-#     (df_jobs.ads == "oh") & \
-#     (df_jobs.active_site == 62.) & \
-#     (df_jobs.att_num == 3) & \
-#     [True for i in range(len(df_jobs))]
-#     ]
+df = df_jobs_data
+df = df[
+    (df["compenv"] == "sherlock") &
+    (df["slab_id"] == "likeniri_51") &
+    # (df[""] == "") &
+    [True for i in range(len(df))]
+    ]
+df.sort_values("rev_num")
 
 # + jupyter={"source_hidden": true}
-# job_id =  "wadifowe_41"
+assert False
 
-# df_jobs.loc[job_id]
+# + jupyter={"source_hidden": true}
+df_feat_ab2 = df_features_targets[
+    df_features_targets["data"]["stoich"] == "AB2"
+    ]
+df_feat_ab2 = df_feat_ab2.sort_values(("targets", "g_oh", ""), ascending=False)
 
-# # df_jobs_paths.loc[job_id].gdrive_path
+df_feat_ab3 = df_features_targets[
+    df_features_targets["data"]["stoich"] == "AB3"
+    ]
+df_feat_ab3 = df_feat_ab3.sort_values(("targets", "g_oh", ""), ascending=False)
+
+# + jupyter={"source_hidden": true}
+df_feat_ab2
+
+# + jupyter={"source_hidden": true}
+df_feat_ab3
+
+# + jupyter={"source_hidden": true}
+assert False
+
+# + jupyter={"source_hidden": true}
+df_features[
+    df_features["features"]["octa_vol"].isna()
+    ].shape
+
+# + jupyter={"source_hidden": true}
+# ('sherlock', 'telibose_95', 54.0, )
+
+df = df_jobs
+df = df[
+    (df["compenv"] == "sherlock") &
+    (df["slab_id"] == "telibose_95") &
+    (df["ads"] == "o") &
+    [True for i in range(len(df))]
+    ]
+df
+
+# + jupyter={"source_hidden": true}
+df_jobs_paths.loc["dipekilo_07"].gdrive_path
+
+# + jupyter={"source_hidden": true}
+assert False
+
+# + jupyter={"source_hidden": true}
+# 122 polymorphs are octahedral and unique
+# >>> Removing 12 systems manually because they are not good
+# -----
+# 110 polymorphs now
+
+
+# # ###############################################
+# 49 are layered materials
+# 61 are non-layered materials
+# -----
+# 61 polymorphs now
+
+
+# # ###############################################
+# 15 polymorphs are above the 0.3 eV/atom above hull cutoff
+# -----
+# 46 polymorphs now
+
+
+# # ###############################################
+# -----

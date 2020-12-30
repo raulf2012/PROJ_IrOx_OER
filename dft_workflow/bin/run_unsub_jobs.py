@@ -46,46 +46,71 @@ if compenv == "wsl":
         os.environ["PROJ_irox_oer_gdrive"],
         "dft_workflow/run_slabs/run_o_covered")    
 
-slac_sub_queue = "suncat2"  # 'suncat', 'suncat2', 'suncat3'
+slac_sub_queue = "suncat3"  # 'suncat', 'suncat2', 'suncat3'
 
 # +
-print("")
-print("")
+# sys.argv = [
+#     '/scratch/users/flores12/PROJ_IrOx_OER/dft_workflow/bin/run_unsub_jobs.py',
+#     'run',
+#     'frac_of_jobs_to_run=1.',
+#     'verbose=False',
+#     ]
 
-print("Usage:")
-print("  PROJ_irox_oer__comm_jobs_run_unsub_jobs run frac_of_jobs_to_run=0.2")
-print("")
 
-print("")
-print("sys.argv:", sys.argv)
-print("")
+arg_dict = dict()
+for i in sys.argv:
+    if "=" in i:
+        i_split = i.split("=")
+        arg_dict[i_split[0]] = i_split[1]
+
+# #########################################################
+# Verbosity
+verbose_i = arg_dict.get("verbose", True)
+if verbose_i == "False":
+    verbose = False
+elif verbose_i == "True":
+    verbose = True
+elif verbose_i is True:
+    verbose = True
+
+# #########################################################
+# Fraction of jobs to submit
+frac_of_jobs_to_run_i = arg_dict.get("frac_of_jobs_to_run", 0.)
+frac_of_jobs_to_run = float(frac_of_jobs_to_run_i)
+# -
+
+import os
+last_2_dirs = "/".join(root_dir.split("/")[-2:])
+if last_2_dirs == "dft_workflow/bin":
+    root_dir = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "dft_workflow")
+if verbose:
+    print("root_dir:", root_dir)
+
+# +
+if verbose:
+    print("")
+    print("")
+
+    print("Usage:")
+    print("  PROJ_irox_oer__comm_jobs_run_unsub_jobs run frac_of_jobs_to_run=0.2")
+    print("")
+
+    print("")
+    print("sys.argv:", sys.argv)
+    print("")
 
 # if sys.argv[-1] == "run":
 if "run" in sys.argv:
     run_jobs = True
-    print("running unsubmitted jobs")
+    if verbose:
+        print("running unsubmitted jobs")
 else:
-    print("Run script with 'run' flag")
-    print("run_unsub_jobs run")
     run_jobs = False
-
-frac_of_jobs_to_run = 1.
-for i in sys.argv:
-    # i = "frac_of_jobs_to_run=0.2"
-    if "frac_of_jobs_to_run" in i:
-        frac_of_jobs_to_run = i.split("=")[-1]
-        frac_of_jobs_to_run = float(frac_of_jobs_to_run)
-
-# frac_of_jobs_to_run = 0.3
-# -
-
-print("")
-print("frac_of_jobs_to_run:", frac_of_jobs_to_run)
-print("run_jobs:", run_jobs)
-print("")
-
-# +
-# assert False
+    if verbose:
+        print("Run script with 'run' flag")
+        print("run_unsub_jobs run")
 # -
 
 # # Parse directories
@@ -97,19 +122,22 @@ df = parse_job_dirs(root_dir=root_dir)
 
 # +
 df_not_sub = df[df.is_submitted == False]
+df_not_sub = df_not_sub[df_not_sub.is_empty == False]
+
 
 out_dict = get_job_spec_scheduler_params(compenv=compenv)
 wall_time_factor = out_dict["wall_time_factor"]
 
-print("")
-print("")
-print("Jobs to submit:")
-for path_i in df_not_sub.path_job_root_w_att_rev.tolist():
-    print(path_i)
+if verbose:
+    print("")
+    print("")
+    print("Jobs to submit:")
+    for path_i in df_not_sub.path_job_root_w_att_rev.tolist():
+        print(path_i)
 # -
 
 print("")
-print("Jobs to submit:", df_not_sub.shape[0])
+print("Number of jobs to submit:", df_not_sub.shape[0])
 print("")
 
 # +
@@ -146,7 +174,6 @@ for i_cnt, row_i in df_not_sub.iterrows():
             )
 
         print("")
-        print("")
 
 # + active=""
 #
@@ -158,3 +185,35 @@ for i_cnt, row_i in df_not_sub.iterrows():
 # print("")
 
 # tmp = [print(i) for i in df.path_rel_to_proj.tolist()]
+
+# + jupyter={"source_hidden": true}
+# import os
+
+# last_2_dirs = "/".join(root_dir.split("/")[-2:])
+# if last_2_dirs == "dft_workflow/bin":
+#     root_dir = os.path.join(
+#         os.environ["PROJ_irox_oer"],
+#         "dft_workflow")
+
+# if verbose:
+#     print("root_dir:", root_dir)
+
+# + jupyter={"source_hidden": true}
+# frac_of_jobs_to_run = 1.
+# for i in sys.argv:
+#     # i = "frac_of_jobs_to_run=0.2"
+#     if "frac_of_jobs_to_run" in i:
+#         frac_of_jobs_to_run = i.split("=")[-1]
+#         frac_of_jobs_to_run = float(frac_of_jobs_to_run)
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# print("")
+# print("frac_of_jobs_to_run:", frac_of_jobs_to_run)
+# print("run_jobs:", run_jobs)
+# print("")
+
+# + jupyter={"source_hidden": true}
+# assert False

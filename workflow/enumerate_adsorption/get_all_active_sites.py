@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -70,124 +70,94 @@ if df_active_sites_prev is None:
     df_active_sites_prev = pd.DataFrame()
 # -
 
-df_active_sites_prev
-
-assert False
-
 # # Create Directories
 
 directory = "out_data"
+assert False, "Fix os.makedirs"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-# # TEMP
+slab_ids_to_proc = []
+for slab_id_i, row_i in df_slab.iterrows():
+    if slab_id_i not in df_active_sites_prev.index:
+        slab_ids_to_proc.append(slab_id_i)
 
 # +
-# df_slab = df_slab.loc[[
-#     'tiguwuti_80',
-#     'sunifafa_34',
-#     'lokariwu_13',
-#     'fitirapa_27',
-#     'nisiwuhu_70',
-#     'dagaviba_06',
-#     'kovudoho_21',
-#     'tagilahu_40',
-#     ]]
+df_slab_i = df_slab.loc[
+    slab_ids_to_proc
+    ]
 
-# TEMP
-# df_slab = df_slab.sample(n=100)
-# df_slab = df_slab.sample(n=10)
-# df_slab = df_slab.sample(n=50)
-# -
-
-# TEMP
-print("COMBAK REMOVE THIS")
-df_slab = df_slab[df_slab.bulk_id == "8l919k6s7p"]
+df_slab_i = df_slab_i[df_slab_i.phase == 2]
 
 # +
+# #########################################################
 data_dict_list = []
-iterator = tqdm(df_slab.index, desc="1st loop")
+# #########################################################
+iterator = tqdm(df_slab_i.index, desc="1st loop")
 for i_cnt, slab_id in enumerate(iterator):
-    row_i = df_slab.loc[slab_id]
+    print(i_cnt, slab_id)
+    # #####################################################
     data_dict_i = dict()
-
+    # #####################################################
+    row_i = df_slab.loc[slab_id]
     # #####################################################
     slab = row_i.slab_final
-    # slab.write("out_data/temp.cif")  # TEMP
-
     slab_id = row_i.name
     bulk_id = row_i.bulk_id
     facet = row_i.facet
     num_atoms = row_i.num_atoms
     # #####################################################
 
-    if slab_id in df_active_sites_prev.index:
-        run_slab_i = False
-    else:
-        run_slab_i = True
+    # #################################################
+    df_coord_slab_i = get_df_coord(
+        slab_id=slab_id,
+        mode="slab",
+        slab=slab,
+        )
 
-    # TEMP
-    run_slab_i = True
+    # #################################################
+    active_sites = get_all_active_sites(
+        slab=slab,
+        slab_id=slab_id,
+        bulk_id=bulk_id,
+        df_coord_slab_i=df_coord_slab_i,
+        )
 
-    # print(run_slab_i)
-    if run_slab_i:
-        # #################################################
-        df_coord_slab_i = get_df_coord(
-            slab_id=slab_id,
-            mode="slab",
-            slab=slab,
-            )
-
-        # #################################################
-        active_sites = get_all_active_sites(
-            slab=slab,
-            slab_id=slab_id,
-            bulk_id=bulk_id,
-            df_coord_slab_i=df_coord_slab_i,
-            )
-
-        # #################################################
-        # active_sites_unique = get_unique_active_sites(
-        active_sites_unique = get_unique_active_sites_temp(
-            slab=slab,
-            active_sites=active_sites,
-            bulk_id=bulk_id,
-            slab_id=slab_id,
-            facet=facet,
-            metal_atom_symbol=metal_atom_symbol,
-            df_coord_slab_i=df_coord_slab_i,
-            create_heatmap_plot=True,
-            )
+    # #################################################
+    # active_sites_unique = get_unique_active_sites(
+    active_sites_unique = get_unique_active_sites_temp(
+        slab=slab,
+        active_sites=active_sites,
+        bulk_id=bulk_id,
+        slab_id=slab_id,
+        facet=facet,
+        metal_atom_symbol=metal_atom_symbol,
+        df_coord_slab_i=df_coord_slab_i,
+        create_heatmap_plot=True,
+        )
 
 
-        # #################################################
-        data_dict_i["active_sites"] = active_sites
-        data_dict_i["num_active_sites"] = len(active_sites)
+    # #################################################
+    data_dict_i["active_sites"] = active_sites
+    data_dict_i["num_active_sites"] = len(active_sites)
+    data_dict_i["active_sites_unique"] = active_sites_unique
+    data_dict_i["num_active_sites_unique"] = len(active_sites_unique)
+    data_dict_i["slab_id"] = slab_id
+    data_dict_i["bulk_id"] = bulk_id
+    data_dict_i["facet"] = facet
+    data_dict_i["num_atoms"] = num_atoms
+    # #####################################################
+    data_dict_list.append(data_dict_i)
 
-        data_dict_i["active_sites_unique"] = active_sites_unique
-        data_dict_i["num_active_sites_unique"] = len(active_sites_unique)
 
-        data_dict_i["slab_id"] = slab_id
-        data_dict_i["bulk_id"] = bulk_id
-        data_dict_i["facet"] = facet
-        data_dict_i["num_atoms"] = num_atoms
-
-        # #####################################################
-        data_dict_list.append(data_dict_i)
-
+# #########################################################
 df_active_sites = pd.DataFrame(data_dict_list)
 df_active_sites = df_active_sites.set_index("slab_id", drop=False)
 
-# +
-# df_active_sites
-
-# +
-# df_active_sites.set_index
-
-# df_active_sites = df_active_sites.set_index("slab_id", drop=False)
-
-# +
-# assert False
+df_active_sites = df_active_sites = pd.concat([
+    df_active_sites,
+    df_active_sites_prev,
+    ])
 # -
 
 # # Post-process active site dataframe
@@ -209,10 +179,12 @@ df_active_sites = reorder_df_columns(columns_list, df_active_sites)
 
 # # Combining previous `df_active_sites` and the rows processed during current run
 
-df_active_sites = df_active_sites = pd.concat([
-    df_active_sites,
-    df_active_sites_prev,
-    ])
+# +
+# df_active_sites = df_active_sites = pd.concat([
+#     df_active_sites,
+#     df_active_sites_prev,
+#     ])
+# -
 
 # # Summary of data objects
 
@@ -225,6 +197,7 @@ print(
 
 # Pickling data ###########################################
 directory = "out_data"
+assert False, "Fix os.makedirs"
 if not os.path.exists(directory): os.makedirs(directory)
 with open(os.path.join(directory, "df_active_sites.pickle"), "wb") as fle:
     pickle.dump(df_active_sites, fle)
@@ -258,19 +231,3 @@ for i_cnt, row_i in df_active_sites.iterrows():
     df_rdf_ij_dict[row_i.slab_id] = df_rdf_ij_i
 
 rdf_ij_list = [i for i in df_rdf_ij_i.values.flatten() if i != 0.]
-
-# + active=""
-#
-#
-#
-#
-#
-
-# + jupyter={"source_hidden": true}
-# num_atoms_in_slab == num_atoms_in_df
-
-# df_coord_slab_i.shape
-# slab.get_global_number_of_atoms()
-
-# + jupyter={"source_hidden": true}
-# df_active_sites_prev = df_active_sites_prev.set_index("slab_id")

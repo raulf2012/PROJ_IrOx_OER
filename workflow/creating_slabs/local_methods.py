@@ -6,8 +6,8 @@ import os
 import sys
 
 import copy
+import pickle
 from pathlib import Path
-
 import json
 
 import numpy as np
@@ -33,6 +33,55 @@ from proj_data import metal_atom_symbol
 #__|
 
 from methods import get_slab_thickness
+from methods import read_data_json
+
+# import os
+# from local_methods import (
+#     create_slab_from_bulk,
+#     create_final_slab_master,
+#     constrain_slab,
+#     )
+
+
+def create_slab(
+    atoms=None,
+    facet=None,
+    slab_thickness=15,
+    i_cnt=0,
+    ):
+    """
+    """
+    #| - create_slab
+    atoms_i = atoms
+    facet_i = facet
+
+    slab_0 = create_slab_from_bulk(atoms=atoms_i, facet=facet_i)
+    slab_1 = create_final_slab_master(atoms=slab_0, slab_thickness=slab_thickness)
+    slab_2 = constrain_slab(atoms=slab_1)
+
+
+
+    # df_coord_i = get_structure_coord_df(
+    #     slab_2,
+    #     porous_adjustment=True,
+    #     )
+    #
+    # from methods import remove_protruding_bottom_Os
+    # dz = 0.75
+    # angle_thresh = 30
+    # slab_3 = remove_protruding_bottom_Os(
+    #     atoms=slab_2,
+    #     dz=dz,
+    #     angle_thresh=angle_thresh,
+    #     df_coord=df_coord_i,
+    #     )
+
+
+    slab_final = slab_2
+
+
+    return(slab_final)
+    #__|
 
 def analyse_local_coord_env(
     atoms=None,
@@ -201,7 +250,12 @@ def create_slab_from_bulk(atoms=None, facet=None, layers=20):
 
     # #############################################
     # Write slab to file ##########################
-    directory = "out_data"
+    # directory = "out_data"
+    directory = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/creating_slabs",
+        "out_data")
+    # assert False, "Fix os.makedirs"
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -255,24 +309,81 @@ def calc_surface_area(atoms=None):
 def remove_all_atoms_above_cutoff(
     atoms=None,
     cutoff_thickness=17,
+    mode="all_atoms",  # `all_atoms` or `only_metal`
     ):
     """
     """
     #| - remove_all_atoms_above_cutoff
+    # #####################################################
+    metal_symbol = "Ir"
+    # #####################################################
+
     positions = atoms.positions
 
-    z_positions = positions[:,2]
-
+    z_positions = positions[:, 2]
     z_max = np.max(z_positions)
     z_min = np.min(z_positions)
 
-    atoms_new = atoms[z_positions < z_min + cutoff_thickness]
+    if mode == "all_atoms":
+        atoms_new = atoms[z_positions < z_min + cutoff_thickness]
+    elif mode == "only_metal":
+        #| - only_metal
+
+        # print(
+        #     "cutoff_thickness:",
+        #     cutoff_thickness
+        #     )
+        # positions = atoms.positions
+        #
+        # z_positions = positions[:,2]
+        #
+        # z_max = np.max(z_positions)
+        # z_min = np.min(z_positions)
+
+        # atoms_new = atoms[z_positions < z_min + cutoff_thickness]
+
+
+        atoms_new = copy.deepcopy(atoms)
+
+        indices_to_remove = []
+        for atom in atoms_new:
+            z_i = atom.position[2]
+            if atom.symbol == metal_symbol:
+                if z_i > z_min + cutoff_thickness:
+                    indices_to_remove.append(atom.index)
+
+            #     else:
+            #         tmp = 42
+            #         # indices_to_remove.append(False)
+            #         # indices_to_remove.append(atom.index)
+            # else:
+            #     tmp = 42
+            #     # indices_to_remove.append(atom.index)
+
+        # print("indices_to_remove:", indices_to_remove)
+
+        mask = []
+        for atom in atoms_new:
+            if atom.index in indices_to_remove:
+                mask.append(True)
+            else:
+                mask.append(False)
+
+        del atoms_new[mask]
+        #__|
 
     return(atoms_new)
     #__|
 
+
+
+
+# atoms = slab_0
+# slab_thickness = 15
+
 def create_final_slab_master(
     atoms=None,
+    slab_thickness=15,
     ):
     """Master method to create final IrOx slab.
     """
@@ -282,83 +393,57 @@ def create_final_slab_master(
 
     ###########################################################
     slab_thickness_i = get_slab_thickness(atoms=slab_0)
-    # print("slab_thickness_i:", slab_thickness_i)
     slab_thickness_out = slab_thickness_i
 
 
-    cutoff_thickness_i = 14
+    ###########################################################
+    cutoff_thickness_i = slab_thickness - 3
+    assert cutoff_thickness_i > 0, "IKDSFIISDJFIJSDIJFISDJIFJuhuuyhuuj"
     break_loop = False
+    i_cnt = 0
+    ###########################################################
     while not break_loop:
         #| - Getting slab pre-ready
+        i_cnt += 1
+
         slab = remove_all_atoms_above_cutoff(
-            atoms=slab_0,
-            cutoff_thickness=cutoff_thickness_i)
+            atoms=atoms,
+            cutoff_thickness=cutoff_thickness_i,
+            mode="only_metal",
+            )
+        num_atoms = slab.get_global_number_of_atoms()
 
         ###########################################################
         slab = remove_nonsaturated_surface_metal_atoms(atoms=slab, dz=4)
+        num_atoms = slab.get_global_number_of_atoms()
+        slab_temp = slab
+
         slab = remove_noncoord_oxygens(atoms=slab)
+        num_atoms = slab.get_global_number_of_atoms()
+
+        if num_atoms == 0:
+            print("There are 0 atoms in the slab now, probably thickness cutoff was too small")
+            print("There are 0 atoms in the slab now, probably thickness cutoff was too small")
+            print("There are 0 atoms in the slab now, probably thickness cutoff was too small")
+            print("There are 0 atoms in the slab now, probably thickness cutoff was too small")
+            print("There are 0 atoms in the slab now, probably thickness cutoff was too small")
+
 
         slab_thickness_i = get_slab_thickness(atoms=slab)
-        # print("slab_thickness_i:", slab_thickness_i)
 
-        if slab_thickness_i < 15:
+        if slab_thickness_i < slab_thickness:
             cutoff_thickness_i = cutoff_thickness_i + 1.
         else:
             break_loop = True
         #__|
 
-
-    #| - Main loop, chipping off surface atoms
-    # print("SIDJFISDIFJISDJFIJSDIJF")
-    # ###########################################################
-    # i_cnt = 2
-    # while slab_thickness_i > 15:
-    #     print("slab_thickness_i:", slab_thickness_i)
-    #
-    #     i_cnt += 1
-    #     # print(i_cnt)
-    #
-    #     # #####################################################
-    #     # Figuring out how many surface atoms to remove at one time
-    #     # Taken from R-IrO2 (100), which has 8 surface Ir atoms and a surface area of 58 A^2
-    #     surf_area_per_surface_metal = 58 / 8
-    #     surface_area_i = calc_surface_area(atoms=slab)
-    #     ideal_num_surface_atoms = surface_area_i / surf_area_per_surface_metal
-    #     num_atoms_to_remove = ideal_num_surface_atoms / 3
-    #     num_atoms_to_remove = int(np.round(num_atoms_to_remove))
-    #     # #####################################################
-    #
-    #     slab_new_0 = remove_highest_metal_atoms(
-    #         atoms=slab,
-    #         num_atoms_to_remove=num_atoms_to_remove,
-    #         metal_atomic_number=77)
-    #     if TEMP:
-    #         slab_new_0.write("out_data/temp_out/slab_1_" + str(i_cnt) + "_0" + ".cif")
-    #
-    #     slab_new_1 = remove_nonsaturated_surface_metal_atoms(
-    #         atoms=slab_new_0,
-    #         dz=4)
-    #     if TEMP:
-    #         slab_new_1.write("out_data/temp_out/slab_1_" + str(i_cnt) + "_1" + ".cif")
-    #
-    #     slab_new_2 = remove_noncoord_oxygens(atoms=slab_new_1)
-    #     if TEMP:
-    #         slab_new_2.write("out_data/temp_out/slab_1_" + str(i_cnt) + "_2" + ".cif")
-    #
-    #
-    #     slab_thickness_i = get_slab_thickness(atoms=slab_new_2)
-    #     # print("slab_thickness_i:", slab_thickness_i)
-    #
-    #     if TEMP:
-    #         slab_new_2.write("out_data/temp_out/slab_1_" + str(i_cnt) + ".cif")
-    #
-    #     slab = slab_new_2
-    #__|
-
     return(slab)
     #__|
 
-def create_save_dataframe(data_dict_list=None, df_slab_old=None):
+def create_save_dataframe(
+    data_dict_list=None,
+    df_slab_old=None,
+    ):
     """
     """
     #| - create_save_dataframe
@@ -381,7 +466,10 @@ def create_save_dataframe(data_dict_list=None, df_slab_old=None):
 
     # Pickling data #######################################
     import os; import pickle
-    directory = "out_data"
+    directory = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/creating_slabs",
+        "out_data")
     if not os.path.exists(directory): os.makedirs(directory)
     with open(os.path.join(directory, "df_slab.pickle"), "wb") as fle:
         pickle.dump(df_slab, fle)
@@ -464,24 +552,6 @@ def constrain_slab(
     return(slab_cpy)
     #__|
 
-def read_data_json():
-    """
-    """
-    #| - read_data_json
-    path_i = os.path.join(
-        "out_data", "data.json")
-    my_file = Path(path_i)
-    if my_file.is_file():
-        data_path = os.path.join(
-            "out_data/data.json")
-        with open(data_path, "r") as fle:
-            data = json.load(fle)
-    else:
-        data = dict()
-
-    return(data)
-    #__|
-
 def resize_z_slab(atoms=None, vacuum=15):
     """
     """
@@ -547,3 +617,152 @@ def repeat_xy(atoms=None, min_len_x=6, min_len_y=6):
     return(out_dict)
     #__|
 
+def update_sys_took_too_long(bulk_id, facet):
+    """
+    """
+    #| - update_sys_took_too_long
+    bulk_id_i = bulk_id
+    facet_i = facet
+
+    data = read_data_json()
+
+    systems_that_took_too_long = data.get("systems_that_took_too_long", [])
+    systems_that_took_too_long.append((bulk_id_i, facet_i))
+
+    data["systems_that_took_too_long"] = systems_that_took_too_long
+
+    data_path = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/creating_slabs",
+        "out_data/data.json")
+    with open(data_path, "w") as fle:
+        json.dump(data, fle, indent=2)
+    #__|
+
+def df_dft_for_slab_creation(
+    df_dft=None,
+    bulk_ids__octa_unique=None,
+    bulks_to_not_run=None,
+    df_bulk_manual_class=None,
+    frac_of_layered_to_include=None,
+    verbose=False,
+    ):
+    """
+    """
+    #| - df_dft_for_slab_creation
+
+    #| - Take only unique octahedral systems
+    df_dft_i = df_dft.loc[bulk_ids__octa_unique]
+
+    if verbose:
+        print("df_dft_i.shape:", df_dft_i.shape[0])
+
+    # Drop ids that were manually identified as bad
+    ids_i = df_dft_i.index.intersection(bulks_to_not_run)
+    df_dft_i = df_dft_i.drop(labels=ids_i)
+
+    if verbose:
+        print("df_dft_i.shape:", df_dft_i.shape[0])
+
+    #__|
+
+    #| - Check that all bulks are accounted for in df_bulk_manual_class
+    for bulk_id_i, row_i in df_dft_i.iterrows():
+        id_avail_i = bulk_id_i in df_bulk_manual_class.index
+        if not id_avail_i:
+            print("Bulk id nont in `df_bulk_manual_class`", bulk_id_i)
+            print("Need to add it in manually")
+    #__|
+
+    #| - Removing all layered bulks and adding in just a bit
+    df_bulk_manual_class_i = df_bulk_manual_class.loc[
+        df_dft_i.index
+        ]
+
+    non_layered_ids = df_bulk_manual_class_i[
+        df_bulk_manual_class_i.layered == False].index
+    num_non_layered = non_layered_ids.shape[0]
+
+    layered_ids = df_bulk_manual_class[
+        df_bulk_manual_class.layered == True].index
+
+    num_layered_to_inc = int(frac_of_layered_to_include * num_non_layered)
+    layered_ids_to_use = np.random.choice(
+        layered_ids, size=num_layered_to_inc, replace=False)
+
+    if verbose:
+        print("Number of layered bulks to include: ", len(layered_ids_to_use))
+        print("Number of non-layered bulks:", len(non_layered_ids))
+
+    all_ids = non_layered_ids.to_list() + list(layered_ids_to_use)
+
+    df_dft_i = df_dft_i.loc[df_dft_i.index.intersection(all_ids)]
+    #__|
+
+    #| - Impose `dH-dH_hull` cutoff of 0.3
+    # Actually I'll simply take the top 10 AB2 and AB3 structures
+
+    if verbose:
+        print("df_dft_i.shape:", df_dft_i.shape[0])
+
+    # #########################################################
+    df_dft_ab2 = df_dft_i[df_dft_i["stoich"] == "AB2"]
+
+    min_dH = df_dft_ab2.dH.min()
+    df_dft_ab2.loc[:, "dH_hull"] = df_dft_ab2.dH - min_dH
+
+    # #########################################################
+    df_dft_ab3 = df_dft_i[df_dft_i["stoich"] == "AB3"]
+
+    min_dH = df_dft_ab3.dH.min()
+    df_dft_ab3.loc[:, "dH_hull"] = df_dft_ab3.dH - min_dH
+
+    # #########################################################
+    df_dft_i = pd.concat([
+        df_dft_ab2,
+        df_dft_ab3,
+
+        # #####################################################
+        # df_dft_ab2.iloc[0:5],
+        # df_dft_ab3.iloc[0:5],
+
+        # df_dft_ab2.iloc[0:15],
+        # df_dft_ab3.iloc[0:15],
+
+        # df_dft_ab2.iloc[0:25],
+        # df_dft_ab3.iloc[0:25],
+        ])
+
+    # print("df_dft_i.shape:", df_dft_i.shape[0])
+
+    df_dft_i = df_dft_i[df_dft_i.dH_hull < 0.3]
+
+    # print("df_dft_i.shape:", df_dft_i.shape[0])
+    #__|
+
+
+    return(df_dft_i)
+    #__|
+
+def create_save_struct_coord_df(
+    slab_final=None,
+    slab_id=None,
+    ):
+    """
+    """
+    #| - create_save_struct_coord_df
+    slab_id_i = slab_id
+
+    df_coord_slab_final = get_structure_coord_df(slab_final)
+
+    file_name_i = slab_id_i + ".pickle"
+    file_path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/creating_slabs/out_data/df_coord_files",
+        file_name_i)
+    my_file = Path(file_path_i)
+    if not my_file.is_file():
+        # df_coord_slab_final = get_structure_coord_df(slab_final)
+        with open(file_path_i, "wb") as fle:
+            pickle.dump(df_coord_slab_final, fle)
+    #__|
