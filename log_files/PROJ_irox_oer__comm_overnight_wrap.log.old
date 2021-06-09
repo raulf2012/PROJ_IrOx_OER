@@ -1,16 +1,42 @@
-iter_num
-2
+
+--------------------
+CURRENT TIME AND DATE
+Mon Jun  7 15:02:26 PDT 2021
+--------------------
 
 
 
 
 
+
+#| - Fold start | Loop: 1
 Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1
 Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1
 Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1
 Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1
 Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1
 Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1
+
+
+
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/cluster_scripts/collect_df_from_clust.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 0.08 min
+collect_df_from_clust.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
 
 
 
@@ -20,60 +46,132 @@ Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Number: 1    Loop Num
 ############################################################################################################################################
 bash /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/scripts/rclone_commands/rclone_gdrive_dell.sh to_local
 ############################################################################################################################################
+#| - /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/scripts/rclone_commands/rclone_gdrive_dell.sh
+
+
+
+
 Skipping /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/scripts/rclone_commands/rclone_gdrive_dell.sh
 GDrive is running
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+rclone_gdrive_dell.sh
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Run time: 5 s
+Run time: 0 min
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#__|
 ############################################################################################################################################
 
 Sleeping... for: 5
+
+
+
+
+
+
+
+
 
 ############################################################################################################################################
 PROJ_irox_oer__comm_jobs_clean
 ############################################################################################################################################
+#| - PROJ_irox_oer__comm_jobs_clean
+
+
+
+
+
+
+
 
 ############################################################################################################################################
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_processing/clean_dft_dirs.py
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_processing/clean_dft_dirs.ipynb
 ############################################################################################################################################
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-HBox(children=(FloatProgress(value=0.0, description='1st loop', max=3833.0, style=ProgressStyle(description_width='initial')), HTML(value='')))
-Removing job.out /mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/slac/nscdbpmdct/100/oh/active_site__32/03_attempt/_01
-
-
-
-
-
-
-
-********************************************************************************
-********************************************************************************
-********************************************************************************
-********************************************************************************
-Removing job folders/data that are no longer needed
-Removing job folders/data that are no longer needed
-Removing job folders/data that are no longer needed
-Removing job folders/data that are no longer needed
-Removing job folders/data that are no longer needed
-Removing job folders/data that are no longer needed
-
-
-
-HBox(children=(FloatProgress(value=0.0, description='1st loop', max=3833.0, style=ProgressStyle(description_width='initial')), HTML(value='')))
-
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 1.211 min
+clean_dft_dirs.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 ############################################################################################################################################
+
+
+
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+PROJ_irox_oer__comm_jobs_clean
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Run time: 84 s
+Run time: 1 min
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#__|
 ############################################################################################################################################
 
 Sleeping... for: 5
+
+
+
+
+
+
+
+
 
 ############################################################################################################################################
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/bin/fix_gdrive_conflicts.ipynb
 ############################################################################################################################################
+#| - /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/bin/fix_gdrive_conflicts.ipynb
+
+
+
+
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 1.029 min
+fix_gdrive_conflicts.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+fix_gdrive_conflicts.ipynb
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Run time: 151 s
+Run time: 2 min
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#__|
 ############################################################################################################################################
 
 Sleeping... for: 5
 
+
+
+
+
+
+
+
+
 ############################################################################################################################################
 PROJ_irox_oer__comm_jobs_update all
 ############################################################################################################################################
+#| - PROJ_irox_oer__comm_jobs_update
+
+
+
+
 
 
 
@@ -83,7 +181,7 @@ python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_pro
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.591 min
+Run time: 1.03 min
 parse_job_dirs.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
@@ -95,7 +193,7 @@ python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_pro
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 1.094 min
+Run time: 2.01 min
 collect_job_dirs_data.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
@@ -106,23 +204,21 @@ python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_pro
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
 Starting the main loop on parse_job_data.py
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/9pb4c1927h/100/active_site__24/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/cq7smr6lvj/20-3/active_site__51/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/010/oh/active_site__60/00_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/010/oh/active_site__52/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/010/oh/active_site__60/03_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/210/oh/active_site__53/00_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/210/oh/active_site__60/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/mkmsvkcyc5/200/oh/active_site__20/02_attempt/_03
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/mkmsvkcyc5/010/active_site__20/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/mkmsvkcyc5/010/bare/active_site__20/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/xlziv2zr9g/010/01_attempt/_02
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/zgxg9o7kny/010/01_attempt/_02
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/zunqxh6g9j/100/oh/active_site__60/00_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/slac/mkmsvkcyc5/110/01_attempt/_09
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/nersc/cy94mecq6g/314/bare/active_site__79/01_attempt/_02
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/nersc/cy94mecq6g/314/bare/active_site__80/01_attempt/_02
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/nersc/mjctxrx3zf/110/bare/active_site__20/01_attempt/_02
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/nersc/xtbocq9o6p/131/01_attempt/_03
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/7h7yns937p/101/bare/active_site__70/01_attempt/_03
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cy94mecq6g/010/oh/active_site__16/00_attempt/_03
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cy94mecq6g/010/oh/active_site__16/01_attempt/_03
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cy94mecq6g/010/oh/active_site__16/02_attempt/_03
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cy94mecq6g/010/oh/active_site__16/03_attempt/_03
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/xu6ivyvfvf/131/oh/active_site__81/01_attempt/_02
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/slac/8fxi6rmp75/101/01_attempt/_06
+/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/b5cgvsb16w/111/bare/active_site__62/01_attempt/_08
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.741 min
+Run time: 0.55 min
 parse_job_data.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
@@ -134,7 +230,7 @@ python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_pro
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.344 min
+Run time: 0.524 min
 analyse_jobs.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
@@ -144,15 +240,23 @@ pass 'all' flag to run all notebooks
 
 
 
+
+
 ****************************************
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/collect_collate_dft_data/collect_collate_dft.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+oxy_ref, hyd_ref
+-7.45942759 -3.38574595
+
+corrections_dict: {'ooh': 0.3765, 'o': 0.044, 'oh': 0.2945, 'bare': 0.0}
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.516 min
+Run time: 0.968 min
 collect_collate_dft.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 
 
 
@@ -160,11 +264,14 @@ collect_collate_dft.ipynb
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/get_init_slabs_bare_oh/get_init_slabs_bare_oh.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+('sherlock', 'fogalonu_46', 'o', 16.0, 1)
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.215 min
+Run time: 0.219 min
 get_init_slabs_bare_oh.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 
 
 
@@ -174,9 +281,11 @@ python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_ana
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 1.416 min
+Run time: 2.568 min
 correct_atom_indices_order.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 
 
 
@@ -184,15 +293,13 @@ correct_atom_indices_order.ipynb
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/df_coord_for_post_dft/coord_env_for_post_dft.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/df_coord_for_post_dft/out_data/df_coord_files/slac_gotikiru_13_oh_66_3.pickle
-*H containing, turning off porous adjustment: 
- /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/df_coord_for_post_dft/out_data/df_coord_files/slac_gotikiru_13_oh_66_3_porous_adj_False.pickle
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/df_coord_for_post_dft/out_data/df_coord_files/slac_pelukake_23_bare_24_1.pickle
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.762 min
-analyse_jobs.ipynb
+Run time: 0.839 min
+coord_env_for_post_dft.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 
 
 
@@ -202,9 +309,11 @@ python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_ana
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.819 min
+Run time: 0.283 min
 create_oh_slabs.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 
 
 
@@ -212,593 +321,13 @@ create_oh_slabs.ipynb
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/analyze_oh_jobs/anal_oh_slabs.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-There are NaN in missing_Os col
-name: ('sherlock', 'gihiseru_17', 28.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'kamevuse_75', 49.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'kobehubu_94', 50.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'kobehubu_94', 52.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'kobehubu_94', 60.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'mokapipu_61', 56.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'mokapipu_61', 57.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'mokapipu_61', 60.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'mokapipu_61', 61.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'momaposi_60', 51.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'momaposi_60', 54.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'novoloko_50', 20.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'novoloko_50', 21.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'pisewoku_94', 62.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'suguwesi_98', 42.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'tagorape_33', 51.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'vipikema_98', 47.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'vipikema_98', 48.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'vipikema_98', 53.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'vipikema_98', 60.0)
-There are NaN in missing_Os col
-name: ('slac', 'fofohiha_18', 16.0)
-There are NaN in missing_Os col
-name: ('slac', 'foligage_07', 32.0)
-There are NaN in missing_Os col
-name: ('slac', 'gotikiru_13', 58.0)
-There are NaN in missing_Os col
-name: ('slac', 'gotikiru_13', 62.0)
-There are NaN in missing_Os col
-name: ('slac', 'gotikiru_13', 65.0)
-There are NaN in missing_Os col
-name: ('slac', 'gotikiru_13', 66.0)
-There are NaN in missing_Os col
-name: ('slac', 'gotitaki_66', 32.0)
-There are NaN in missing_Os col
-name: ('slac', 'saluvada_42', 48.0)
-There are NaN in missing_Os col
-name: ('slac', 'sehepewo_72', 16.0)
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.24 min
+Run time: 0.279 min
 anal_oh_slabs.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
 
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/creating_slabs/maintain_df_coord/fix_df_coord.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.105 min
-fix_df_coord.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/compare_magmoms/compare_magoms.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.564 min
-analyse_jobs.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/compare_magmoms/decide_jobs_magmoms.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.242 min
-analyse_jobs.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-############################################################################################################################################
-
-Sleeping... for: 5
-
-############################################################################################################################################
-bash setup_new_jobs.sh
-############################################################################################################################################
- 
- 
- 
- 
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/manually_analyze_slabs/manually_analyze_slabs.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs
-Number of *O slabs that need to be manually analyzed: 1
-Number of *O slabs that need to be manually analyzed: 1
-Number of *O slabs that need to be manually analyzed: 1
-Number of *O slabs that need to be manually analyzed: 1
-Number of *O slabs that need to be manually analyzed: 1
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.076 min
-manually_analyze_slabs.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
- 
- 
- 
- 
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs/setup_new_jobs.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs
-There are jobs being left idle, nothing to do, fix it
-['metebite_77', 'varuwoma_81', 'betokoda_28', 'lilubela_35', 'segokuno_65', 'burutofi_92', 'sadifubo_84', 'tivilita_27', 'hugiletu_14', 'rohiviwa_19', 'gabenuni_05', 'sedenaho_26', 'matuduse_81', 'tovusaho_70', 'sukonobi_74', 'fagoniro_42', 'finafowu_10', 'farisuke_39', 'wukosope_70', 'piwurago_85', 'redupenu_91', 'mawenono_54', 'magareme_65', 'lolumala_82', 'dokubupo_82', 'rofonewe_30', 'bulihari_79', 'harewira_09', 'pabepetu_87', 'givetifa_35', 'giluvuwu_47', 'nesigapu_25', 'remodadu_07', 'wogowori_35', 'surusaka_52', 'timabane_61', 'pelefide_42', 'tewevama_65', 'nasalame_46', 'kopowate_24', 'suwereke_80', 'mopibofe_54', 'lebapidi_05', 'taroweke_08', 'ruhipanu_68', 'sewunuru_36', 'tolereli_16', 'hiduhuri_15', 'horopuni_05', 'gebokeki_68', 'mufobowa_59', 'liruduve_22', 'lidugubo_62', 'timehiri_70', 'tolulodu_17', 'sisebira_42', 'bovawomo_54', 'sekipuwu_87', 'garepefo_03', 'subikeno_57', 'resekeke_66', 'hinolive_97', 'bumesuwi_76', 'tukihalu_46']
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.094 min
-setup_new_jobs.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
- 
- 
- 
- 
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs/run_bare_oh_covered/setup_dft_bare.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs
-Number of new bare (*) jobs setup: 0
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.102 min
-setup_dft_bare.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
- 
- 
- 
- 
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs/run_oh_covered/setup_dft_oh.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs
-Number of systems that haven't been manually approved: 1
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.131 min
-setup_dft_oh.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs/setup_jobs_from_oh/setup_new_jobs_from_oh.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs
-0 new jobs are being set up
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.15 min
-setup_new_jobs_from_oh.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-############################################################################################################################################
-
-Sleeping... for: 5
-
-############################################################################################################################################
-PROJ_irox_oer__comm_jobs_sync_unsub_jobs_too_clus
-############################################################################################################################################
-
-############################################################################################################################################
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/bin/sync_unsub_jobs_to_clus.ipynb
-############################################################################################################################################
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.327 min
-sync_unsub_jobs_to_clus.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-############################################################################################################################################
-############################################################################################################################################
-
-Sleeping... for: 5
-
-############################################################################################################################################
-bash /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/scripts/rclone_commands/rclone_gdrive_dell.sh to_local
-############################################################################################################################################
-Skipping /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/scripts/rclone_commands/rclone_gdrive_dell.sh
-GDrive is running
-############################################################################################################################################
-
-Sleeping... for: 5
-
-############################################################################################################################################
-PROJ_irox_oer__comm_features_update
-############################################################################################################################################
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_engineering/octahedra_volume/octa_volume.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.409 min
-octa_volume.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_engineering/oxid_state/oxid_state.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-For now only deal with active sites that have 1 Ir neighbor
-For now only deal with active sites that have 1 Ir neighbor
-For now only deal with active sites that have 1 Ir neighbor
-For now only deal with active sites that have 1 Ir neighbor
-For now only deal with active sites that have 1 Ir neighbor
-For now only deal with active sites that have 1 Ir neighbor
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 1.133 min
-oxid_state.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_engineering/collect_feature_data.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.562 min
-collect_feature_data.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_engineering/combine_features_targets.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-df_ads.shape[0]: 353
-Getting rid of NERSC jobs and phase 1 systems
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.751 min
-combine_features_targets.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-############################################################################################################################################
-
-Sleeping... for: 5
-
-############################################################################################################################################
-PROJ_irox_oer__comm_plotting_update
-############################################################################################################################################
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_analysis/oer_analysis.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.186 min
-oer_analysis.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_analysis/oer_scaling/oer_scaling.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-Polynomial Fit (1st order): 
-[1.155, 1.431]
-RMSE (1st order): 0.18934853981938735
-Polynomial Fit (2nd order): 
-[-0.021, 1.195, 1.418]
-RMSE (2nd order): 0.18923892997236533
-AB2 ΔG_O Mean: 2.003958692635144
-AB3 ΔG_O Mean: 2.839753321034498
-diff: 0.8357946283993543
-----------------------------------------
-AB2 ΔG_OH Mean: 0.5311246106081153
-AB3 ΔG_OH Mean: 1.1831103276551833
-diff: 0.651985717047068
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.078 min
-oer_scaling.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_vs_features/new_oer_vs_features.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-Number of rows in df_features_targets: 300
-Dropping phase 1 slabs
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.137 min
-new_oer_vs_features.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_vs_features/oer_lin_model.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-Number of rows in df_features_targets: 300
-Dropping phase 1 slabs
-('slac', 'votafefa_68', 35.0)
-('slac', 'votafefa_68', 38.0)
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.107 min
-oer_lin_model.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_vs_features/scatter_plot_matrix/scatter_plot_matrix.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-Dropping phase 1 slabs
-show_plot: False
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.13 min
-scatter_plot_matrix.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-############################################################################################################################################
-
-Sleeping... for: 5
-
-
-
-
-
-Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2
-Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2
-Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2
-Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2
-Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2
-Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2    Loop Number: 2
-
-
-
-
-
-
-############################################################################################################################################
-bash /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/scripts/rclone_commands/rclone_gdrive_dell.sh to_local
-############################################################################################################################################
-Skipping /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/scripts/rclone_commands/rclone_gdrive_dell.sh
-GDrive is running
-############################################################################################################################################
-
-Sleeping... for: 5
-
-############################################################################################################################################
-PROJ_irox_oer__comm_jobs_clean
-############################################################################################################################################
-
-############################################################################################################################################
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_processing/clean_dft_dirs.py
-############################################################################################################################################
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-HBox(children=(FloatProgress(value=0.0, description='1st loop', max=3834.0, style=ProgressStyle(description_width='initial')), HTML(value='')))
-Removing job.out /mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/slac/nscdbpmdct/100/oh/active_site__32/03_attempt/_01
-
-
-
-
-
-
-
-********************************************************************************
-********************************************************************************
-********************************************************************************
-********************************************************************************
-Removing job folders/data that are no longer needed
-Removing job folders/data that are no longer needed
-Removing job folders/data that are no longer needed
-Removing job folders/data that are no longer needed
-Removing job folders/data that are no longer needed
-Removing job folders/data that are no longer needed
-
-
-
-HBox(children=(FloatProgress(value=0.0, description='1st loop', max=3834.0, style=ProgressStyle(description_width='initial')), HTML(value='')))
-
-############################################################################################################################################
-############################################################################################################################################
-
-Sleeping... for: 5
-
-############################################################################################################################################
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/bin/fix_gdrive_conflicts.ipynb
-############################################################################################################################################
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-############################################################################################################################################
-
-Sleeping... for: 5
-
-############################################################################################################################################
-PROJ_irox_oer__comm_jobs_update all
-############################################################################################################################################
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_processing/parse_job_dirs.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.603 min
-parse_job_dirs.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_processing/collect_job_dirs_data.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 1.096 min
-collect_job_dirs_data.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_processing/parse_job_data.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-Starting the main loop on parse_job_data.py
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/9pb4c1927h/100/active_site__24/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/cq7smr6lvj/20-3/active_site__51/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/010/oh/active_site__60/00_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/010/oh/active_site__52/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/010/oh/active_site__60/03_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/210/oh/active_site__53/00_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/210/oh/active_site__60/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/mkmsvkcyc5/200/oh/active_site__20/02_attempt/_03
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/mkmsvkcyc5/010/active_site__20/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/mkmsvkcyc5/010/bare/active_site__20/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/xlziv2zr9g/010/01_attempt/_02
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/zgxg9o7kny/010/01_attempt/_02
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/zunqxh6g9j/100/oh/active_site__60/00_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/slac/nscdbpmdct/010/oh/active_site__32/03_attempt/_02
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.742 min
-parse_job_data.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_processing/analyze_jobs.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.366 min
-analyse_jobs.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-pass 'all' flag to run all notebooks
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/collect_collate_dft_data/collect_collate_dft.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.498 min
-collect_collate_dft.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/get_init_slabs_bare_oh/get_init_slabs_bare_oh.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.198 min
-get_init_slabs_bare_oh.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/atoms_indices_order/correct_atom_indices_order.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 1.367 min
-correct_atom_indices_order.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/df_coord_for_post_dft/coord_env_for_post_dft.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/df_coord_for_post_dft/out_data/df_coord_files/slac_gotitaki_66_oh_32_3.pickle
-*H containing, turning off porous adjustment: 
- /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/df_coord_for_post_dft/out_data/df_coord_files/slac_gotitaki_66_oh_32_3_porous_adj_False.pickle
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.688 min
-analyse_jobs.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/create_oh_slabs/create_oh_slabs.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.736 min
-create_oh_slabs.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-
-****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/analyze_oh_jobs/anal_oh_slabs.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-There are NaN in missing_Os col
-name: ('sherlock', 'kobehubu_94', 50.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'vipikema_98', 47.0)
-There are NaN in missing_Os col
-name: ('sherlock', 'vipikema_98', 48.0)
-There are NaN in missing_Os col
-name: ('slac', 'gotitaki_66', 32.0)
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.264 min
-anal_oh_slabs.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
 
 
@@ -814,34 +343,64 @@ fix_df_coord.ipynb
 
 
 
+
+
 ****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/compare_magmoms/compare_magoms.ipynb
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/compare_magmoms/compare_magoms.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.475 min
+Run time: 1.257 min
+compare_magmoms.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/compare_magmoms/decide_jobs_magmoms.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 0.276 min
 analyse_jobs.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
 
 
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/compare_magmoms/decide_jobs_magmoms.ipynb
-****************************************
-/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-All done!
-Run time: 0.261 min
-analyse_jobs.ipynb
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+PROJ_irox_oer__comm_jobs_update
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Run time: 821 s
+Run time: 13 min
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#__|
 ############################################################################################################################################
 
+
 Sleeping... for: 5
+
+
+
+
+
+
+
+
 
 ############################################################################################################################################
 bash setup_new_jobs.sh
 ############################################################################################################################################
+#| - setup_new_jobs.sh
+
+
+
+
  
  
  
@@ -852,7 +411,7 @@ bash setup_new_jobs.sh
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.079 min
+Run time: 0.097 min
 manually_analyze_slabs.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
  
@@ -864,11 +423,11 @@ manually_analyze_slabs.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs
 There are jobs being left idle, nothing to do, fix it
-['metebite_77', 'varuwoma_81', 'betokoda_28', 'lilubela_35', 'segokuno_65', 'burutofi_92', 'sadifubo_84', 'tivilita_27', 'hugiletu_14', 'rohiviwa_19', 'gabenuni_05', 'sedenaho_26', 'matuduse_81', 'tovusaho_70', 'sukonobi_74', 'fagoniro_42', 'finafowu_10', 'farisuke_39', 'wukosope_70', 'piwurago_85', 'redupenu_91', 'mawenono_54', 'magareme_65', 'lolumala_82', 'dokubupo_82', 'rofonewe_30', 'bulihari_79', 'harewira_09', 'pabepetu_87', 'givetifa_35', 'giluvuwu_47', 'nesigapu_25', 'remodadu_07', 'wogowori_35', 'surusaka_52', 'timabane_61', 'pelefide_42', 'tewevama_65', 'nasalame_46', 'kopowate_24', 'suwereke_80', 'mopibofe_54', 'lebapidi_05', 'taroweke_08', 'ruhipanu_68', 'sewunuru_36', 'tolereli_16', 'hiduhuri_15', 'horopuni_05', 'gebokeki_68', 'mufobowa_59', 'liruduve_22', 'lidugubo_62', 'timehiri_70', 'tolulodu_17', 'sisebira_42', 'bovawomo_54', 'sekipuwu_87', 'garepefo_03', 'subikeno_57', 'resekeke_66', 'hinolive_97', 'bumesuwi_76', 'tukihalu_46', 'fifikuwu_79']
+['vumowowo_30', 'tirebave_78', 'lohigoru_51', 'rupowusi_48', 'pulefevo_10', 'sosotibo_79', 'rowapufa_93', 'ditukoki_76', 'podokula_91', 'dimeseha_50', 'rakifemo_31', 'mufovinu_31', 'fubabaho_70', 'wobodeki_11', 'bewowave_59']
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.102 min
+Run time: 0.11 min
 setup_new_jobs.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
  
@@ -882,7 +441,7 @@ setup_new_jobs.ipynb
 Number of new bare (*) jobs setup: 0
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.096 min
+Run time: 0.081 min
 setup_dft_bare.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
  
@@ -893,10 +452,10 @@ setup_dft_bare.ipynb
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs/run_oh_covered/setup_dft_oh.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs
-Number of systems that haven't been manually approved: 0
+Number of systems that have not been manually approved: 0
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.126 min
+Run time: 0.143 min
 setup_dft_oh.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
@@ -906,49 +465,48 @@ setup_dft_oh.ipynb
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs/setup_jobs_from_oh/setup_new_jobs_from_oh.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/run_slabs
-15 new jobs are being set up
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/nscdbpmdct/1-102/active_site__28/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/nscdbpmdct/1-102/bare/active_site__28/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/cq7smr6lvj/20-3/active_site__49/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/cq7smr6lvj/20-3/bare/active_site__49/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/010/active_site__52/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/010/bare/active_site__52/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/zunqxh6g9j/100/active_site__57/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/zunqxh6g9j/100/bare/active_site__57/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/zunqxh6g9j/100/active_site__60/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/zunqxh6g9j/100/bare/active_site__60/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/73nhvjxyxf/111/active_site__54/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/73nhvjxyxf/111/bare/active_site__54/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/mkmsvkcyc5/200/active_site__20/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/mkmsvkcyc5/200/bare/active_site__20/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/mkmsvkcyc5/200/active_site__21/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/mkmsvkcyc5/200/bare/active_site__21/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/8gnt9rnd92/100/active_site__42/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/8gnt9rnd92/100/bare/active_site__42/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/cg8p7fxq65/1-11/active_site__51/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/cg8p7fxq65/1-11/bare/active_site__51/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/210/active_site__60/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/sherlock/cqbrnhbacg/210/bare/active_site__60/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/slac/cg8p7fxq65/32-3/active_site__58/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/cg8p7fxq65/32-3/bare/active_site__58/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/slac/cg8p7fxq65/32-3/active_site__62/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/cg8p7fxq65/32-3/bare/active_site__62/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/slac/9pb4c1927h/0001/active_site__48/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/9pb4c1927h/0001/bare/active_site__48/02_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/slac/cy94mecq6g/020/active_site__16/01_attempt/_01
-/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/cy94mecq6g/020/bare/active_site__16/02_attempt/_01
+0 new jobs are being set up
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.167 min
+Run time: 0.219 min
 setup_new_jobs_from_oh.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+setup_new_jobs.sh
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Run time: 868 s
+Run time: 14 min
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#__|
 ############################################################################################################################################
 
+
 Sleeping... for: 5
+
+
+
+
+
+
+
+
 
 ############################################################################################################################################
 PROJ_irox_oer__comm_jobs_sync_unsub_jobs_too_clus
 ############################################################################################################################################
+#| - PROJ_irox_oer__comm_jobs_sync_unsub_jobs_too_clus
+
+
+
+
+
+
+
 
 ############################################################################################################################################
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/bin/sync_unsub_jobs_to_clus.ipynb
@@ -956,26 +514,48 @@ python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/bin/syn
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.285 min
+Run time: 0.504 min
 sync_unsub_jobs_to_clus.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 ############################################################################################################################################
+
+
+
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+PROJ_irox_oer__comm_jobs_sync_unsub_jobs_too_clus
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Run time: 904 s
+Run time: 15 min
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#__|
 ############################################################################################################################################
+
 
 Sleeping... for: 5
 
-############################################################################################################################################
-bash /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/scripts/rclone_commands/rclone_gdrive_dell.sh to_local
-############################################################################################################################################
-Skipping /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/scripts/rclone_commands/rclone_gdrive_dell.sh
-GDrive is running
-############################################################################################################################################
 
-Sleeping... for: 5
+
+
+
+
+
+
 
 ############################################################################################################################################
 PROJ_irox_oer__comm_features_update
 ############################################################################################################################################
+#| - PROJ_irox_oer__comm_features_update
+
+
+
+
+
+
 
 
 
@@ -985,9 +565,11 @@ python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_eng
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.467 min
+Run time: 1.386 min
 octa_volume.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 
 
 
@@ -995,17 +577,69 @@ octa_volume.ipynb
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_engineering/oxid_state/oxid_state.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-For now only deal with active sites that have 1 Ir neighbor
-For now only deal with active sites that have 1 Ir neighbor
-For now only deal with active sites that have 1 Ir neighbor
-For now only deal with active sites that have 1 Ir neighbor
-For now only deal with active sites that have 1 Ir neighbor
-For now only deal with active sites that have 1 Ir neighbor
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 1.218 min
+Run time: 2.339 min
 oxid_state.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_engineering/active_site_angles/AS_angles.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 0.448 min
+AS_angles.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/dos_analysis/collect_dos_data.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 0.085 min
+collect_dos_data.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_engineering/pdos_features/pdos_feat.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 0.577 min
+pdos_feat.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_engineering/bader_features/bader_feat.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 0.321 min
+bader_feat.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 
 
 
@@ -1015,9 +649,11 @@ python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_eng
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.599 min
+Run time: 0.995 min
 collect_feature_data.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 
 
 
@@ -1025,20 +661,57 @@ collect_feature_data.ipynb
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_engineering/combine_features_targets.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-df_ads.shape[0]: 353
-Getting rid of NERSC jobs and phase 1 systems
+('features', 'o', 'dH_bulk')
+('features', 'o', 'volume_pa')
+('features', 'o', 'bulk_oxid_state')
+('features', 'oh', 'dH_bulk')
+('features', 'oh', 'volume_pa')
+('features', 'oh', 'bulk_oxid_state')
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.726 min
+Run time: 1.072 min
 combine_features_targets.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+PROJ_irox_oer__comm_features_update
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Run time: 1349 s
+Run time: 22 min
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#__|
 ############################################################################################################################################
 
+
 Sleeping... for: 5
+
+
+
+
+
+
+
+
 
 ############################################################################################################################################
 PROJ_irox_oer__comm_plotting_update
 ############################################################################################################################################
+#| - PROJ_irox_oer__comm_plotting_update
+
+
+
+
+
+
 
 
 
@@ -1046,11 +719,17 @@ PROJ_irox_oer__comm_plotting_update
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_analysis/oer_analysis.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+There is a nan in the energy dict!!!
+There is a nan in the energy dict!!!
+There is a nan in the energy dict!!!
+There is a nan in the energy dict!!!
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.17 min
+Run time: 0.196 min
 oer_analysis.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 
 
 
@@ -1058,24 +737,16 @@ oer_analysis.ipynb
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_analysis/oer_scaling/oer_scaling.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-Polynomial Fit (1st order): 
-[1.155, 1.431]
-RMSE (1st order): 0.18934853981938735
-Polynomial Fit (2nd order): 
-[-0.021, 1.195, 1.418]
-RMSE (2nd order): 0.18923892997236533
-AB2 ΔG_O Mean: 2.003958692635144
-AB3 ΔG_O Mean: 2.839753321034498
-diff: 0.8357946283993543
-----------------------------------------
-AB2 ΔG_OH Mean: 0.5311246106081153
-AB3 ΔG_OH Mean: 1.1831103276551833
-diff: 0.651985717047068
+('targets', 'g_o', '')
+('targets', 'g_oh', '')
+('data', 'stoich', '')
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.07 min
+Run time: 0.126 min
 oer_scaling.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 
 
 
@@ -1083,13 +754,15 @@ oer_scaling.ipynb
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_vs_features/new_oer_vs_features.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-Number of rows in df_features_targets: 300
+Number of rows in df_features_targets: 379
 Dropping phase 1 slabs
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.15 min
+Run time: 0.164 min
 new_oer_vs_features.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 
 
 
@@ -1097,29 +770,176 @@ new_oer_vs_features.ipynb
 python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_vs_features/oer_lin_model.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-Number of rows in df_features_targets: 300
+Number of rows in df_features_targets: 379
 Dropping phase 1 slabs
+Woops isdfsdf8osdfio
+Woops isdfsdf8osdfio
 ('slac', 'votafefa_68', 35.0)
 ('slac', 'votafefa_68', 38.0)
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.105 min
+Run time: 0.1 min
 oer_lin_model.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
 
 
+
+
 ****************************************
-python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_vs_features/scatter_plot_matrix/scatter_plot_matrix.ipynb
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_engineering/scatter_plot_matrix/scatter_plot_matrix.ipynb
 ****************************************
 /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
 Dropping phase 1 slabs
-show_plot: False
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 All done!
-Run time: 0.135 min
+Run time: 0.101 min
 scatter_plot_matrix.ipynb
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_analysis/volcano_1d/volcano_1d.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 0.181 min
+volcano_1d.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_analysis/volcano_2d/volcano_2d.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+Writing pdf with ORCA
+prepath: /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/oer_analysis/volcano_2d/out_plot/00_volcano_plot__v
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 0.386 min
+volcano_2d.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/feature_engineering/feature_covariance/feat_correlation.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+Dropping phase 1 slabs
+Ir*O_bader
+Ir*O_bader/ir_o_mean
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 0.281 min
+feat_correlation.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/model_building/linear_models/linear_model.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 0.174 min
+linear_model.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/workflow/model_building/gaussian_process/gaussian_proc.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 3.131 min
+gaussian_proc.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+PROJ_irox_oer__comm_plotting_update
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Run time: 1650 s
+Run time: 27 min
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#__|
 ############################################################################################################################################
 
+
 Sleeping... for: 5
+
+
+
+
+
+
+
+run_misc=true
+
+
+############################################################################################################################################
+PROJ_irox_oer__comm_misc_update
+############################################################################################################################################
+#| - PROJ_irox_oer__comm_misc_update
+
+
+
+
+
+
+
+
+
+****************************************
+python /mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/dft_workflow/job_analysis/prepare_oer_sets/write_oer_sets.ipynb
+****************************************
+/mnt/f/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+All done!
+Run time: 3.116 min
+write_oer_sets.ipynb
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+PROJ_irox_oer__comm_misc_update
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+Run time: 1844 s
+Run time: 30 min
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#__|
+############################################################################################################################################
+
+
+Sleeping... for: 5
+
+
+
+
+Total of 1849 seconds elapsed for this loop number
+Total of 30 minutes elapsed for this loop number
+
+#__| - Fold End
