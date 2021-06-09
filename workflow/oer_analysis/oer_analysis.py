@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ---
 # jupyter:
 #   jupytext:
@@ -14,8 +13,12 @@
 #     name: conda-env-PROJ_irox_oer-py
 # ---
 
-# # OER Volcano Plot
+# # OER Analysis Notebook
 # ---
+#
+# * Compute overpotential for all systems
+# * Save ORR_PLT instance for OXR plotting classes
+# * Save df_overpot dataframe to combine with df_features_targets
 
 # ### Import Modules
 
@@ -25,32 +28,23 @@ print(os.getcwd())
 import sys
 import time; ti = time.time()
 
-sys.path.insert(
-    0, os.path.join(
-        os.environ["PROJ_irox"],
-        "data"))
-
 # #########################################################
 # Python Modules
-import numpy as np
+import pickle
 
-import plotly.graph_objs as go
+import numpy as np
+import pandas as pd
+
 # #########################################################
 # My Modules
-from oxr_reaction.oxr_plotting_classes.oxr_plot_volcano import Volcano_Plot
-from plotting.my_plotly import my_plotly_plot
+from oxr_reaction.oxr_rxn import ORR_Free_E_Plot
 
-# #########################################################
-# Project Data
-from proj_data_irox import (
-    smart_format_dict,
-    gas_molec_dict,
-    scaling_dict_ideal,
+from methods import (
+    get_df_ads,
+    get_df_job_ids,
+    get_df_dft,
+    get_df_features_targets,
     )
-
-# #########################################################
-# Local Imports
-from local_methods import get_ORR_PLT
 # -
 
 from methods import isnotebook    
@@ -64,66 +58,209 @@ else:
     verbose = False
     show_plot = False
 
-# ### Script Inputs
+# +
+# #########################################################
+df_dft = get_df_dft()
 
-save_plot = False
-plot_exp_traces = True
+# #########################################################
+df_job_ids = get_df_job_ids()
 
-# + active=""
-#
-#
+# #########################################################
+df_features_targets = get_df_features_targets()
 
 # +
-# %%capture
+if verbose:
+    print(
+        "Change in size of df_features from dropping non-complete rows:"
 
-ORR_PLT = get_ORR_PLT()
+        "\n",
+        df_features_targets.shape[0],
+        sep="")
+
+# Only passing through OER sets that are 100% done will all calculations
+# if True:
+if False:
+    df_features_targets = df_features_targets[df_features_targets["data"]["all_done"] == True]
+
+
+if verbose:
+    print(
+        df_features_targets.shape[0],
+        sep="")
 
 # +
-# assert False
+smart_format_dict = [
+    [{"stoich": "AB2"}, {"color2": "black"}],
+    [{"stoich": "AB3"}, {"color2": "grey"}],
+    ]
+
+ORR_PLT = ORR_Free_E_Plot(
+    free_energy_df=None,
+    state_title="ads",
+    free_e_title="ads_g",
+    smart_format=smart_format_dict,
+    color_list=None,
+    rxn_type="OER")
+
+
+# new_col = (df_features_targets["targets"]["g_oh"] + 2.8)
+new_col = (1.16 * df_features_targets["targets"]["g_oh"] + 2.8)
+
+new_col.name = ("targets", "g_ooh", "", )
+
+df_features_targets = pd.concat([
+    new_col,
+    df_features_targets,
+    ], axis=1)
+
+
+
+# Loop through data and add to ORR_PLT
+data_dict_list_0 = []
+for name_i, row_i in df_features_targets.iterrows():
+
+
+    # #####################################################
+    g_o_i = row_i[("targets", "g_o", "", )]
+    g_oh_i = row_i[("targets", "g_oh", "", )]
+    g_ooh_i = row_i[("targets", "g_ooh", "", )]
+    slab_id_i = row_i[("data", "slab_id", "")]
+    active_site_i = row_i[("data", "active_site", "")]
+    job_id_o_i = row_i[("data", "job_id_o", "")]
+    job_id_oh_i = row_i[("data", "job_id_oh", "")]
+    # #####################################################
+
+    # #####################################################
+    df_job_ids_i = df_job_ids[df_job_ids.slab_id == slab_id_i]
+
+    bulk_ids = df_job_ids_i.bulk_id.unique()
+
+    mess_i = "SIJFIDSIFJIDSJIf"
+    assert len(bulk_ids) == 1, mess_i
+
+    bulk_id_i = bulk_ids[0]
+
+    # #########################################################
+    row_dft_i = df_dft.loc[bulk_id_i]
+    # #########################################################
+    stoich_i = row_dft_i.stoich
+    # #########################################################
+
+
+    data_dict_list =  [
+        {"ads_g": g_o_i, "ads": "o", },
+        {"ads_g": g_oh_i, "ads": "oh", },
+        {"ads_g": g_ooh_i, "ads": "ooh", },
+        {"ads_g": 0., "ads": "bulk", },
+        ]
+    df_i = pd.DataFrame(data_dict_list)
+
+    df_i["stoich"] = stoich_i
+
+
+    prop_name_list = [
+        "stoich",
+        ]
+
+    # #########################################################
+    # name_i = "IDSJFISDf"
+    name_i_2 = slab_id_i + "__" + str(int(active_site_i))
+    ORR_PLT.add_series(
+        df_i,
+        plot_mode="all",
+        overpotential_type="OER",
+        property_key_list=prop_name_list,
+        add_overpot=False,
+        name_i= name_i_2,
+        )
+
+    # #################################################
+    data_dict_i = dict()
+    # #################################################
+    data_dict_i["name"] = name_i_2
+    data_dict_i["compenv"] = name_i[0]
+    data_dict_i["slab_id"] = name_i[1]
+    data_dict_i["active_site"] = name_i[2]
+    # #################################################
+    data_dict_list_0.append(data_dict_i)
+    # #################################################
+
+
+df = pd.DataFrame(data_dict_list_0)
+df = df.set_index("name", drop=False)
 
 # +
-plot_range = {
-    "y": [3.7, 1.2],
-    "x": [0.2, 3.3],
-    }
+data_dict_list = []
+for OXR_Series_i in ORR_PLT.series_list:
 
-VP = Volcano_Plot(
-    ORR_PLT,
-    x_ax_species="o-oh",  # 'o-oh' or 'oh'
-    smart_format_dict=smart_format_dict,
-    plot_range=plot_range,
-    )
+    name_i = OXR_Series_i.name_i
 
-VP.create_volcano_relations_plot()
+    # #####################################################
+    overpot_out = OXR_Series_i.calc_overpotential_OER()
+    # #####################################################
+    overpot_i = overpot_out[0]
+    lim_step_i = overpot_out[1]
+    # #####################################################
 
-volcano_legs_data = VP.create_volcano_lines(
-    gas_molec_dict=gas_molec_dict,
-    scaling_dict=scaling_dict_ideal,
-    plot_all_legs=False,
-    plot_min_max_legs=True,
-    trace_priority="bottom",  # 'top' or 'bottom'
-    )
 
-data = volcano_legs_data + VP.data_points
+    if lim_step_i == ["bulk", "oh"]:
+        lim_step_str_i = "bulk__oh"
+        lim_step_num = 1
+    elif lim_step_i == ["oh", "o"]:
+        lim_step_str_i = "oh__o"
+        lim_step_num = 2
+    elif lim_step_i == ["o", "ooh"]:
+        lim_step_str_i = "o__ooh"
+        lim_step_num = 3
+    elif lim_step_i == ["ooh", "bulk"]:
+        lim_step_str_i = "ooh__bulk"
+        lim_step_num = 4
 
-layout = VP.get_plotly_layout()
+    else:
+        print("WOOOOOPS")
+        print(lim_step_i)
 
-fig = go.Figure(
-    data=data,
-    layout=layout,
-    )
 
-# print("Commented out")
-my_plotly_plot(
-    figure=fig,
-    save_dir=os.path.join(
-        os.environ["PROJ_irox_oer"],
-        "workflow/oer_analysis"),
-    plot_name="out_plot_02_large")
+    # #####################################################
+    data_dict_i = dict()
+    # #####################################################
+    data_dict_i["name"] = name_i
+    data_dict_i["overpot"] = overpot_i
+    data_dict_i["lim_step"] = lim_step_i
+    data_dict_i["lim_step_str"] = lim_step_str_i
+    data_dict_i["lim_step_num"] = lim_step_num
+    # #####################################################
+    data_dict_list.append(data_dict_i)
+    # #####################################################
+
+df_overpot = pd.DataFrame(data_dict_list)
+df_overpot = df_overpot.set_index("name", drop=True)
+
+# +
+df_overpot = pd.concat([df, df_overpot], axis=1)
+
+df_overpot = df_overpot.set_index(
+    ["compenv", "slab_id", "active_site", ])
 # -
 
-if show_plot:
-    fig.show()
+# ### Saving data to file
+
+# +
+directory = os.path.join(
+    os.environ["PROJ_irox_oer"],
+    "workflow/oer_analysis",
+    "out_data")
+
+# Pickling data ###########################################
+if not os.path.exists(directory): os.makedirs(directory)
+with open(os.path.join(directory, "df_overpot.pickle"), "wb") as fle:
+    pickle.dump(df_overpot, fle)
+# #########################################################
+if not os.path.exists(directory): os.makedirs(directory)
+with open(os.path.join(directory, "ORR_PLT.pickle"), "wb") as fle:
+    pickle.dump(ORR_PLT, fle)
+# #########################################################
+# -
 
 # #########################################################
 print(20 * "# # ")
@@ -136,41 +273,3 @@ print(20 * "# # ")
 # + active=""
 #
 #
-#
-
-# + jupyter={"source_hidden": true}
-# assert False
-
-# + jupyter={"source_hidden": true}
-# print(list(paths_dict.keys()))
-# print("")
-
-# tmp = [print(i) for i in paths_dict["vuvunira_55__72"]]
-# tmp = [print(i) for i in paths_dict["rakawavo_17__25"]]
-
-# + jupyter={"source_hidden": true}
-# ORR_PLT
-
-# + jupyter={"source_hidden": true}
-# # #########################################################
-# df_ads = get_df_ads()
-
-# df_ads = df_ads[~df_ads.g_oh.isna()]
-# df_m = df_ads
-
-# # #########################################################
-# df_jobs_paths = get_df_jobs_paths()
-
-# # #########################################################
-# df_jobs = get_df_jobs()
-
-# # #########################################################
-# df_jobs_anal = get_df_jobs_anal()
-
-# # #########################################################
-# from methods import get_df_dft
-# df_dft = get_df_dft()
-
-# # #########################################################
-# from methods import get_df_job_ids
-# df_job_ids = get_df_job_ids()

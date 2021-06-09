@@ -29,7 +29,7 @@ from pymatgen.io.ase import AseAtomsAdaptor
 from methods import get_df_dft
 
 # #########################################################
-from local_methods import XRDCalculator
+#  from local_methods import XRDCalculator
 from local_methods import get_top_xrd_facets
 from local_methods import compare_facets_for_being_the_same
 # -

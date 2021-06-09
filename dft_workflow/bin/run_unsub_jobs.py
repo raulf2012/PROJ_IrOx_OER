@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -111,6 +111,12 @@ else:
     if verbose:
         print("Run script with 'run' flag")
         print("run_unsub_jobs run")
+
+# +
+# # TEMP
+# print(111 * "TEMP | ")
+# print("Not running jobs TEMP")
+# run_jobs = False
 # -
 
 # # Parse directories
@@ -172,48 +178,9 @@ for i_cnt, row_i in df_not_sub.iterrows():
             wall_time_factor=wall_time_factor,
             queue=slac_sub_queue,
             )
-
         print("")
 
 # + active=""
 #
 #
 #
-
-# + jupyter={"source_hidden": true}
-# print("IIJIDFJIJISDF(SD*(DF(S(JS(DF)(SIDFD)))))")
-# print("")
-
-# tmp = [print(i) for i in df.path_rel_to_proj.tolist()]
-
-# + jupyter={"source_hidden": true}
-# import os
-
-# last_2_dirs = "/".join(root_dir.split("/")[-2:])
-# if last_2_dirs == "dft_workflow/bin":
-#     root_dir = os.path.join(
-#         os.environ["PROJ_irox_oer"],
-#         "dft_workflow")
-
-# if verbose:
-#     print("root_dir:", root_dir)
-
-# + jupyter={"source_hidden": true}
-# frac_of_jobs_to_run = 1.
-# for i in sys.argv:
-#     # i = "frac_of_jobs_to_run=0.2"
-#     if "frac_of_jobs_to_run" in i:
-#         frac_of_jobs_to_run = i.split("=")[-1]
-#         frac_of_jobs_to_run = float(frac_of_jobs_to_run)
-
-# + jupyter={"source_hidden": true}
-# assert False
-
-# + jupyter={"source_hidden": true}
-# print("")
-# print("frac_of_jobs_to_run:", frac_of_jobs_to_run)
-# print("run_jobs:", run_jobs)
-# print("")
-
-# + jupyter={"source_hidden": true}
-# assert False

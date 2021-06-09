@@ -19,24 +19,37 @@
 
 # ### Import Modules
 
-# + jupyter={"source_hidden": true}
+# +
+# ALL MODULES NEEDED
+
 import os
 print(os.getcwd())
 import sys
 import time; ti = time.time()
 
 import copy
+import pickle
 
 import numpy as np
+import pandas as pd
 
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, r2_score
 import plotly.graph_objs as go
+import plotly.express as px
 from plotly.subplots import make_subplots
+
+
+# #########################################################
+from plotting.my_plotly import my_plotly_plot
 
 # #########################################################
 from proj_data import layout_shared as layout_shared_main
 from proj_data import scatter_shared_props as scatter_shared_props_main
-from proj_data import stoich_color_dict
+from proj_data import (
+    stoich_color_dict,
+    shared_axis_dict,
+    font_tick_labels_size,
+    )
 
 # #########################################################
 from methods import get_df_features_targets
@@ -44,6 +57,11 @@ from methods import get_df_features_targets
 # #########################################################
 from layout import layout
 # -
+
+root_dir = os.path.join(
+    os.environ["PROJ_irox_oer"],
+    "workflow/oer_analysis/oer_scaling",
+    )
 
 from methods import isnotebook    
 isnotebook_i = isnotebook()
@@ -70,6 +88,16 @@ df_features_targets = df_features_targets.dropna(subset=[
     ("targets", "g_oh", ""),
     ])
 
+if ("data", "found_active_Ir__oh", "", ) in df_features_targets.columns:
+    # Drop systems were the coordination analysis couldn't find the active Ir
+    df = df_features_targets
+    df = df[
+        (df[("data", "found_active_Ir__oh", "", )] == True) &
+        (df[("data", "found_active_Ir__o", "", )] == True) &
+        [True for i in range(len(df))]
+        ]
+    df_features_targets = df
+
 # df_targets = df_features_targets["targets"].dropna()
 df_targets = df_features_targets["targets"]
 
@@ -77,42 +105,50 @@ x_array = df_targets["g_oh"]
 y_array = df_targets["g_o"]
 
 color_array = df_features_targets["format"]["color"]["stoich"]
+# -
+
+# ### Building color scale from numeric magmom data
 
 # +
-# print(111 * "TEMP | ")
-# print("")
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
 
-# df_features_targets.columns.tolist()
 
-# df_tmp = df_features_targets.loc[:, 
-#     [
-#         ('format', 'color', 'stoich'),
-#         ('data', 'stoich', ''),
-#         ]
-#     ]
+# float_color_list = df_features_targets["data"]["norm_sum_norm_abs_magmom_diff"]
+float_color_list = df_features_targets[("data", "SE__area_J_m2", "")]
 
-# for index_i, row_i in df_tmp.iterrows():
-#     tmp = 42
+floats = [4.5,5.5]
+df = pd.DataFrame({
+    'arrays':[(1.2, 3.4, 5.6),(1.7, 4.4, 8.1)],
+    'floats': floats,
+    })
 
-#     color_i = row_i["format"]["color"]["stoich"]
-#     stoich_i = row_i["data"]["stoich"][""]
+# colormap = cm.jet
+colormap = cm.copper
+normalize = mcolors.Normalize(
+    vmin=float_color_list.min(),
+    vmax=float_color_list.max(),
+    )
 
-#     # print("# ", stoich_i, " '", color_i, "'", sep="")
-    
-#     if stoich_i == "AB2":
-#         if color_i == "#46cf44":
-#             tmp = 42
-#             # print("AB2 Good")
-#         else:
-#             print("AB2 Bad")
+s_map = cm.ScalarMappable(norm=normalize, cmap=colormap)
 
-#     if stoich_i == "AB3":
-#         if color_i == "#42e3e3":
-#             tmp = 42
-#             # print("AB3 Good")
-#         else:
-#             print("AB3 Bad")
+# s_map.to_rgba(0.1)
+# matplotlib.colors.to_hex([ 0.47, 0.0, 1.0, 0.5 ], keep_alpha=False)
+
+color_list = []
+for float_i in float_color_list:
+    color_rgba_i = s_map.to_rgba(float_i)
+    color_hex_i = matplotlib.colors.to_hex(
+        color_rgba_i,
+        keep_alpha=False,
+        )
+    color_list.append(color_hex_i)
 # -
+
+float_color_list.min()
+float_color_list.max()
 
 # ### Fitting data
 
@@ -126,23 +162,38 @@ z_1 = np.polyfit(
 
 p_1 = np.poly1d(z_1)
 
-print(
-    "Polynomial Fit (1st order): ",
-    "\n",
-    [np.round(i, 3) for i in list(z_1)],
-    sep="")
+if verbose:
+    print(
+        "Polynomial Fit (1st order): ",
+        "\n",
+        [np.round(i, 3) for i in list(z_1)],
+        sep="")
 
 rmse_i = mean_squared_error(
     y_array,
     [p_1(i) for i in x_array],
     squared=False)
 
-print(
-    "RMSE (1st order): ",
-    rmse_i,
-    sep="")
+if verbose:
+    print(
+        "RMSE (1st order): ",
+        rmse_i,
+        sep="")
 
 y_poly_1 = [p_1(i) for i in x_poly]
+
+# +
+# #########################################################
+df_m = pd.DataFrame()
+# #########################################################
+df_m["y"] = y_array
+df_m["y_pred"] = [p_1(i) for i in x_array]
+df_m["diff"] = df_m["y"] - df_m["y_pred"]
+df_m["diff_abs"] = np.abs(df_m["diff"])
+# #########################################################
+
+MAE_1 = df_m["diff_abs"].sum() / df_m.shape[0]
+R2_1 = r2_score(df_m["y"], df_m["y_pred"])
 
 # +
 z_2 = np.polyfit(
@@ -152,23 +203,84 @@ z_2 = np.polyfit(
 
 p_2 = np.poly1d(z_2)
 
-print(
-    "Polynomial Fit (2nd order): ",
-    "\n",
-    [np.round(i, 3) for i in list(z_2)],
-    sep="")
+if verbose:
+    print(
+        "Polynomial Fit (2nd order): ",
+        "\n",
+        [np.round(i, 3) for i in list(z_2)],
+        sep="")
 
 rmse_i = mean_squared_error(
     y_array,
     [p_2(i) for i in x_array],
     squared=False)
 
-print(
-    "RMSE (2nd order): ",
-    rmse_i,
-    sep="")
+if verbose:
+    print(
+        "RMSE (2nd order): ",
+        rmse_i,
+        sep="")
 
 y_poly_2 = [p_2(i) for i in x_poly]
+# -
+
+# ### Figuring out which systems deviate from scaling the most
+
+# +
+data_dict_list = []
+for name_i, row_i in df_targets.iterrows():
+    name_dict_i = dict(zip(
+        list(df_targets.index.names),
+        name_i))
+
+
+    g_o_i = row_i[("g_o", "", )]
+    g_oh_i = row_i[("g_oh", "", )]
+
+    g_o_scaling_i = p_1(g_oh_i)
+
+    deviation = g_o_scaling_i - g_o_i
+
+    # #####################################################
+    data_dict_i = dict()
+    # #####################################################
+    data_dict_i.update(name_dict_i)
+    # #####################################################
+    data_dict_i["deviation"] = deviation
+    data_dict_i["deviation_abs"] = np.abs(deviation)
+    # #####################################################
+    data_dict_list.append(data_dict_i)
+    # #####################################################
+
+# #########################################################
+df_scal_dev = pd.DataFrame(data_dict_list)
+# #########################################################
+
+# +
+df_scal_dev = df_scal_dev.set_index(
+    ["compenv", "slab_id", "active_site", ],
+    drop=False,
+    )
+
+df_scal_dev
+
+# +
+df_scal_dev.sort_values("deviation_abs", ascending=False).iloc[0:40]
+
+# df_scal_dev.sort_values("deviation_abs", ascending=False).iloc[0:80].index.tolist()
+
+# +
+# #########################################################
+df_m = pd.DataFrame()
+# #########################################################
+df_m["y"] = y_array
+df_m["y_pred"] = [p_2(i) for i in x_array]
+df_m["diff"] = df_m["y"] - df_m["y_pred"]
+df_m["diff_abs"] = np.abs(df_m["diff"])
+# #########################################################
+
+MAE_2 = df_m["diff_abs"].sum() / df_m.shape[0]
+R2_2 = r2_score(df_m["y"], df_m["y_pred"])
 # -
 
 # ### Layout
@@ -183,6 +295,65 @@ layout_master = layout_shared.update(
 layout_master["xaxis"]["range"] = [x_array.min() - 0.2, x_array.max() + 0.2]
 
 layout_master["title"] = "*O vs *OH Scaling Plot (1st and 2nd order fits)"
+# -
+
+# ### Annotations
+
+# +
+coeff = [np.round(i, 3) for i in list(z_1)]
+
+linear_fit_eqn_str = "ΔG<sub>O</sub> = {}⋅ΔG<sub>OH</sub> + {}".format(*coeff)
+MAE_str = "MAE: {}".format(np.round(MAE_1, 3))
+R2_str = "R<sup>2</sup>: {} eV".format(np.round(R2_1, 3))
+
+# +
+annotations = [
+
+    {
+        "font": {"size": font_tick_labels_size},
+        "showarrow": False,
+        "text": linear_fit_eqn_str,
+        "x": 0.01,
+        "xanchor": "left",
+        "xref": "paper",
+        "y": 0.99,
+        "yanchor": "top",
+        "yref": "paper",
+        "yshift": 0.,
+        "bgcolor": "white",
+        },
+
+    {
+        "font": {"size": font_tick_labels_size},
+        "showarrow": False,
+        "text": R2_str,
+        "x": 0.01,
+        "xanchor": "left",
+        "xref": "paper",
+        "y": 0.89,
+        "yanchor": "top",
+        "yref": "paper",
+        "yshift": 0.,
+        "bgcolor": "white",
+        },
+
+    {
+        "font": {"size": font_tick_labels_size},
+        "showarrow": False,
+        "text": MAE_str,
+        "x": 0.01,
+        "xanchor": "left",
+        "xref": "paper",
+        "y": 0.79,
+        "yanchor": "top",
+        "yref": "paper",
+        "yshift": 0.,
+        "bgcolor": "white",
+        },
+
+    ]
+
+layout_master.annotations = annotations
 # -
 
 # ### Instantiate scatter plots
@@ -206,8 +377,21 @@ trace_poly_2 = go.Scatter(
 trace = go.Scatter(
     x=x_array, y=y_array,
     mode="markers",
-    # marker_color=color_i,
-    marker_color=color_array,
+    # marker_color=color_array,
+    # marker_color=color_list,
+    marker=go.scatter.Marker(
+        # color=color_list,
+        # color=color_array,
+        color=float_color_list,
+        colorscale='Viridis',
+        size=14,
+        colorbar=dict(
+            thickness=20,
+            len=0.8,
+            y=0.36,
+            ),
+        ),
+
     name="main",
     )
 
@@ -218,6 +402,15 @@ trace = trace.update(
     overwrite=False,
     )
 # -
+
+# Pickling data ###########################################
+path_i = os.path.join(
+    os.environ["PROJ_irox_oer"],
+    "workflow/oer_analysis/oer_scaling", 
+    "out_data/trace_poly_1.pickle")
+with open(path_i, "wb") as fle:
+    pickle.dump(trace_poly_1, fle)
+# #########################################################
 
 # ### Instantiate figure
 
@@ -241,11 +434,11 @@ fig.write_json(
 if show_plot:
     fig.show()
 
+# +
+# 2.220651	0.754728	
+
 # + active=""
 # There seems to be some nonlinearities at weak bonding energies
-
-# +
-# assert False
 
 # + active=""
 #
@@ -266,37 +459,38 @@ if show_plot:
 df_ab2 = df_features_targets[df_features_targets["data"]["stoich"] == "AB2"]
 df_ab3 = df_features_targets[df_features_targets["data"]["stoich"] == "AB3"]
 
-print(
+if verbose:
+    print(
 
-    # "\n",
-    "AB2 ΔG_O Mean: ",
-    df_ab2["targets"]["g_o"].mean(),
+        # "\n",
+        "AB2 ΔG_O Mean: ",
+        df_ab2["targets"]["g_o"].mean(),
 
-    "\n",
-    "AB3 ΔG_O Mean: ",
-    df_ab3["targets"]["g_o"].mean(),
+        "\n",
+        "AB3 ΔG_O Mean: ",
+        df_ab3["targets"]["g_o"].mean(),
 
 
-    "\n",
-    "diff: ",
-    df_ab3["targets"]["g_o"].mean() - df_ab2["targets"]["g_o"].mean(),
+        "\n",
+        "diff: ",
+        df_ab3["targets"]["g_o"].mean() - df_ab2["targets"]["g_o"].mean(),
 
-    "\n",
-    40 * "-",
+        "\n",
+        40 * "-",
 
-    "\n",
-    "AB2 ΔG_OH Mean: ",
-    df_ab2["targets"]["g_oh"].mean(),
+        "\n",
+        "AB2 ΔG_OH Mean: ",
+        df_ab2["targets"]["g_oh"].mean(),
 
-    "\n",
-    "AB3 ΔG_OH Mean: ",
-    df_ab3["targets"]["g_oh"].mean(),
+        "\n",
+        "AB3 ΔG_OH Mean: ",
+        df_ab3["targets"]["g_oh"].mean(),
 
-    "\n",
-    "diff: ",
-    df_ab3["targets"]["g_oh"].mean() - df_ab2["targets"]["g_oh"].mean(),
+        "\n",
+        "diff: ",
+        df_ab3["targets"]["g_oh"].mean() - df_ab2["targets"]["g_oh"].mean(),
 
-    sep="")
+        sep="")
 
 # +
 shared_layout_hist = go.Layout(
@@ -308,58 +502,6 @@ shared_trace_hist = dict(
     opacity=0.55,
     nbinsx=15,
     )
-# -
-
-# ### Trying to get the number of data in bins to set y-axis range (NOT WORKING SO FAR)
-
-# +
-# y_targets_list = [
-#     df_ab2.targets.g_oh,
-#     # df_ab3.targets.g_oh,
-#     # df_ab2.targets.g_o,
-#     # df_ab3.targets.g_o,
-#     ]
-
-# max_num_data_list = []
-# for y_target_i in y_targets_list:
-#     width = (y_target_i.max() - y_target_i.min()) / shared_trace_hist["nbinsx"]
-
-#     num_data_in_sliver_list = []
-#     for i in np.linspace(y_target_i.min(), y_target_i.max(), 200):
-
-#         i_upper = i + width / 2
-#         i_lower = i - width / 2
-
-#         print(i_upper, i_lower)
-
-#         y_in_sliver = y_target_i[
-#             (y_target_i < i_upper) & \
-#             (y_target_i > i_lower)
-#             ]
-
-#         num_data_in_sliver = y_in_sliver.shape[0]
-#         #print(num_data_in_sliver)
-#         num_data_in_sliver_list.append(num_data_in_sliver)
-
-#     max_num_data_in_sliver_i = np.max(num_data_in_sliver_list)
-#     print(max_num_data_in_sliver_i)
-#     print("")
-#     max_num_data_list.append(max_num_data_in_sliver_i)
-
-# max_max_num_in_sliver = np.max(max_num_data_list)
-
-# max_max_num_in_sliver
-
-# # width = 
-# (y_target_i.max() - y_target_i.min()) / shared_trace_hist["nbinsx"]
-
-# # y_targets_list[0]
-
-# # y_in_sliver = 
-# y_target_i[
-#     (y_target_i < 0.6) & \
-#     (y_target_i > 0.4)
-#     ]
 # -
 
 # ### Instantiate *OH plots
@@ -399,7 +541,11 @@ layout_shared.update(
     overwrite=False,
     )
 
-layout_shared.update(shared_layout_hist)
+shared_layout_hist_cpy = copy.deepcopy(shared_layout_hist)
+shared_layout_hist_cpy.update(dict(yaxis=dict(title=dict(text=""))))
+
+# layout_shared.update(shared_layout_hist)
+layout_shared.update(shared_layout_hist_cpy)
 fig_oh.update_layout(dict1=layout_shared)
 # -
 
@@ -483,7 +629,7 @@ fig.update_xaxes(
     )
 
 
-y_range_ub = 45
+y_range_ub = 60
 
 fig.update_yaxes(
     fig_o.layout["yaxis"].update(
@@ -510,6 +656,138 @@ fig.write_json(
         "workflow/oer_analysis/oer_scaling", 
         "out_plot/oer_scaling__O_OH_histogram.json"))
 
+my_plotly_plot(
+    figure=fig,
+    save_dir=root_dir,
+    place_in_out_plot=True,
+    plot_name="oer_histogram_gO_gOH",
+    write_html=True,
+    write_png=False,
+    png_scale=6.0,
+    write_pdf=False,
+    write_svg=False,
+    try_orca_write=False,
+    verbose=False,
+    )
+
+if show_plot:
+    fig.show()
+
+# ### Creating combined scaling and histogram plot
+
+# +
+df_concat = pd.concat([
+    df_features_targets[("targets", "g_o", "")],
+    df_features_targets[("targets", "g_oh", "")],
+    df_features_targets[("data", "stoich", "")],
+    ], axis=1)
+
+
+col_map_dict = {
+    ('targets', 'g_oh', ''): "g_oh",
+    ('targets', 'g_o', ''): "g_o",
+    ('data', 'stoich', ''): "stoich",
+    }
+
+new_cols = []
+for col_i in df_concat.columns.tolist():
+    tmp = 42
+
+    print(col_i)
+
+    new_col_i = col_map_dict[col_i]
+
+    new_cols.append(new_col_i)
+
+new_cols
+
+df_concat.columns = new_cols
+# -
+
+df_concat.head()
+
+# +
+fig = px.scatter(df_concat,
+    x="g_oh",
+    y="g_o",
+    color="stoich",
+    color_discrete_map=stoich_color_dict,
+    marginal_x="histogram",
+    marginal_y="histogram",
+    )
+
+
+# fig.show()
+# -
+
+tmp = fig.layout.update(
+    layout_shared_main
+    )
+tmp = fig.layout.update(
+    layout
+    )
+
+fig.layout.showlegend = False
+
+# +
+layout_keys_0 = list(fig.layout.to_plotly_json().keys())
+
+xaxis_keys = [i for i in layout_keys_0 if "xaxis" in i]
+yaxis_keys = [i for i in layout_keys_0 if "yaxis" in i]
+
+for x_axis_i in xaxis_keys:
+    x_axis_num = x_axis_i[5:]
+    
+    if x_axis_num == "":
+        x_axis_num_int = 1
+    else:
+        x_axis_num_int = int(x_axis_num)
+
+
+
+    for y_axis_i in yaxis_keys:
+        y_axis_num = y_axis_i[5:]
+
+        if y_axis_num == "":
+            y_axis_num_int = 1
+        else:
+            y_axis_num_int = int(y_axis_num)
+
+        # print(x_axis_num_int, y_axis_num_int)
+        # print(y_axis_num_int)
+
+        # fig.layout.update(layout_master)
+
+        fig.update_xaxes(
+            patch=shared_axis_dict,
+            selector=None,
+            overwrite=False,
+            row=y_axis_num_int,
+            col=x_axis_num_int,
+            )
+        fig.update_yaxes(
+            patch=shared_axis_dict,
+            selector=None,
+            overwrite=False,
+            row=y_axis_num_int,
+            col=x_axis_num_int,
+            )
+# -
+
+my_plotly_plot(
+    figure=fig,
+    save_dir=root_dir,
+    place_in_out_plot=True,
+    plot_name="oer_scaling_w_histogram",
+    write_html=True,
+    write_png=False,
+    png_scale=6.0,
+    write_pdf=False,
+    write_svg=False,
+    try_orca_write=False,
+    verbose=False,
+    )
+
 if show_plot:
     fig.show()
 
@@ -527,22 +805,12 @@ print(20 * "# # ")
 #
 
 # + jupyter={"source_hidden": true}
-# stoich_color_dict["AB2"]
+# color_array
 
-# # go.Histogram?
-
-# + jupyter={"source_hidden": true}
-# df_features_targets.head()
-
-# df_features_targets.columns.tolist()
+# # go.scatter.marker.ColorBar?
 
 # + jupyter={"source_hidden": true}
-# color_i
+# df_features_targets[("data", "SE__area_J_m2", "")]
 
 # + jupyter={"source_hidden": true}
-# print(len(x_array))
-# print(len(y_array))
-# print(len(color_i))
-
-# + jupyter={"source_hidden": true}
-# df_targets.sort_values("g_oh")
+# assert False

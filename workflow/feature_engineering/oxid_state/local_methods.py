@@ -50,6 +50,7 @@ def process_row(
         df_coord_i=df_coord_i,
         metal_atom_symbol=metal_atom_symbol,
         active_site_original=active_site_original,
+        verbose=verbose,
         )
     # # #####################################################
     # effective_ox_state_i = out_dict["effective_ox_state"]
@@ -87,6 +88,7 @@ def get_effective_ox_state(
     df_coord_i=None,
     metal_atom_symbol="Ir",
     active_site_original=None,
+    verbose=True,
     ):
     """
     """
@@ -123,9 +125,10 @@ def get_effective_ox_state(
 
 
     if num_Ir_neigh != 1:
-        mess_i = "For now only deal with active sites that have 1 Ir neighbor"
-        print(mess_i)
-        # assert num_Ir_neigh == 1, mess_i
+
+        if verbose:
+            mess_i = "TEMP | For now only deal with active sites that have 1 Ir neighbor"
+            print(mess_i)
 
         # #################################################
         out_dict = dict()
@@ -135,8 +138,6 @@ def get_effective_ox_state(
         out_dict["num_missing_Os"] = None
         out_dict["orig_slab_good"] = None
         out_dict["found_active_Ir"] = False
-        # print("s089huyjf8sdyuf8sdf80u9")
-        # print(out_dict)
         # #################################################
         return(out_dict)
         # #################################################
@@ -211,7 +212,7 @@ def get_effective_ox_state(
 
         out_dict_0 = find_missing_O_neigh_with_init_df_coord(
             nn_info=nn_info_i,
-            slab_id=slab_id_i,
+            # slab_id=slab_id_i,
             metal_index=metal_index,
             df_coord_orig_slab=df_coord_orig_slab,
             )
@@ -323,6 +324,7 @@ def get_effective_ox_state(
     return(out_dict)
     # #####################################################
     #__|
+
 
 # oxy_ind
 # df_coord = df_coord_i

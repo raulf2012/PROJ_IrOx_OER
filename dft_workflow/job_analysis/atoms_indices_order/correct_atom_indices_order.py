@@ -46,7 +46,6 @@ from methods import (
     are_dicts_the_same,
     get_df_jobs_anal,
     get_df_jobs_data,
-    get_df_slab,
     get_df_init_slabs,
     )
 
@@ -76,9 +75,6 @@ else:
 df_jobs = get_df_jobs()
 
 # #########################################################
-df_slab = get_df_slab()
-
-# #########################################################
 df_jobs_paths = get_df_jobs_paths()
 
 # #########################################################
@@ -96,48 +92,22 @@ df_init_slabs = get_df_init_slabs()
 #
 # Might need to download them with rclone
 
-indices_tmp = [
-    ('sherlock', 'ripirefu_15', 'bare', 62.0, 1),
-    ('sherlock', 'ripirefu_15', 'bare', 66.0, 1),
-    ('sherlock', 'ripirefu_15', 'bare', 67.0, 1),
-    ('sherlock', 'ripirefu_15', 'oh', 49.0, 0),
-    ('sherlock', 'ripirefu_15', 'oh', 49.0, 2),
-    ('sherlock', 'ripirefu_15', 'oh', 49.0, 3),
-    ('sherlock', 'ripirefu_15', 'oh', 62.0, 0),
-    ('sherlock', 'ripirefu_15', 'oh', 62.0, 1),
-    ('sherlock', 'ripirefu_15', 'oh', 62.0, 2),
-    ('sherlock', 'ripirefu_15', 'oh', 62.0, 3),
-    ('sherlock', 'ripirefu_15', 'oh', 66.0, 0),
-    ('sherlock', 'ripirefu_15', 'oh', 66.0, 1),
-    ('sherlock', 'ripirefu_15', 'oh', 66.0, 2),
-    ('sherlock', 'ripirefu_15', 'oh', 67.0, 0),
-    ('sherlock', 'rulageda_78', 'oh', 55.0, 2),
-    ('sherlock', 'temidule_87', 'bare', 37.0, 1),
-    ('sherlock', 'temidule_87', 'oh', 37.0, 1),
-    ('sherlock', 'temidule_87', 'oh', 37.0, 3),
+group_cols = [
+    "job_type", "compenv", "slab_id", "ads", "active_site", "att_num", 
     ]
 
 # +
 indices_to_process = []
 grouped = df_jobs_anal_completed.groupby(
-    ["compenv", "slab_id", "ads", "active_site", "att_num", ])
+    group_cols
+    )
 for name, df_jobs_anal_i in grouped:
-    
-# for name in indices_tmp:
-# if True:
-#     name = ('sherlock', 'ripirefu_15', 'bare', 62.0, 1)
-#     df_jobs_anal_i = grouped.get_group(name)
 
     # #####################################################
-    df_jobs_groups = df_jobs.groupby([
-        "compenv", "slab_id",
-        "ads", "active_site", "att_num", ])
+    df_jobs_groups = df_jobs.groupby(group_cols)
     df_jobs_i = df_jobs_groups.get_group(name)
     # #####################################################
 
-    # print(60 * "-")
-
-    # all_files_present_list = []
     all_ok_to_process_list = []
     for job_id_j in df_jobs_i.index:
         # #################################################
@@ -152,7 +122,6 @@ for name, df_jobs_anal_i in grouped:
         gdrive_path_j = os.path.join(
             os.environ["PROJ_irox_oer_gdrive"],
             gdrive_path_j)
-        # print(gdrive_path_j)
 
         # #############################
         path_tmp_0 = os.path.join(
@@ -161,7 +130,6 @@ for name, df_jobs_anal_i in grouped:
         contcar_present = False
         if Path(path_tmp_0).is_file():
             contcar_present = True
-        # print("contcar_present:", contcar_present)
 
         # #############################
         path_tmp_1 = os.path.join(
@@ -170,7 +138,6 @@ for name, df_jobs_anal_i in grouped:
         submitted_present = False
         if Path(path_tmp_1).is_file():
             submitted_present = True
-        # print("submitted_present:", submitted_present)
 
         # #############################
         path_j = os.path.join(
@@ -180,26 +147,50 @@ for name, df_jobs_anal_i in grouped:
         if Path(path_j).is_file():
             file_present = True
 
-        # print("file_present:", file_present)
-        # print("")
-
 
         if file_present:
             job_ok_to_process = True
         elif not contcar_present and submitted_present:
             job_ok_to_process = True
 
-        # all_files_present_list.append(file_present)
         all_ok_to_process_list.append(job_ok_to_process)
 
     all_ok_to_process = all(all_ok_to_process_list)
     if all_ok_to_process:
         indices_to_process.extend(df_jobs_anal_i.index.tolist())
+    else:
+        print(name)
+        # indices_to_not_process.extend()
 
 
-# name = ('sherlock', 'ripirefu_15', 'bare', 62.0, 1)
-# indices_to_process = [name, ]
+# #########################################################
 df_jobs_anal_completed_2 = df_jobs_anal_completed.loc[indices_to_process]
+# #########################################################
+
+# +
+# # df = df_jobs_anal_completed.index.to_frame()
+# df = df_jobs_anal.index.to_frame()
+# df = df[
+#     (df["slab_id"] == "momaposi_60") &
+#     (df["ads"] == "o") &
+#     # (df[""] == "") &
+#     [True for i in range(len(df))]
+#     ]
+# df
+
+# +
+# grouped.get_group(
+#     ('oer_adsorbate', 'sherlock', 'momaposi_60', 'o', 50.0, 1)
+#     )
+
+# +
+# name
+
+# +
+# ('oer_adsorbate', 'sherlock', 'momaposi_60', 'o', 50.0, 1) in indices_to_process
+
+# +
+# assert False
 
 # +
 not_processed_indices = []
@@ -220,49 +211,30 @@ if len(not_processed_indices) > 0:
 #
 #
 #
-
-# +
-# # TEMP
-# print("TEMP")
-# df_jobs_anal_completed_2 = df_jobs_anal_completed_2.loc[
-#     # [("nersc", "fosurufu_23", "bare", 45.0, 1)]
-#     [('slac', 'relovalu_12', 'oh', 24.0, 2)]
-#     ]
 # -
 
 # # Main Loop
-
-# +
-# # TEMP
-# print(222 * "TEMP | ")
-
-# df_jobs_anal_completed_2 = df_jobs_anal_completed_2.loc[[
-#     ('slac', 'ralutiwa_59', 'o', 30.0, 1)
-#     ]]
 
 # +
 # #########################################################
 data_dict_list = []
 # #########################################################
 grouped = df_jobs_anal_completed_2.groupby(
-    ["compenv", "slab_id", "ads", "active_site", "att_num", ])
+    ["job_type", "compenv", "slab_id", "ads", "active_site", "att_num", ])
 for name, df_jobs_anal_i in grouped:
-    # print(name)
     # #####################################################
     data_dict_i = dict()
     # #####################################################
-    compenv_i = name[0]
-    slab_id_i = name[1]
-    ads_i = name[2]
-    active_site_i = name[3]
-    att_num_i = name[4]
+    job_type_i = name[0]
+    compenv_i = name[1]
+    slab_id_i = name[2]
+    ads_i = name[3]
+    active_site_i = name[4]
+    att_num_i = name[5]
     # #####################################################
 
-
     # #####################################################
-    df_jobs_groups = df_jobs.groupby([
-        "compenv", "slab_id",
-        "ads", "active_site", "att_num", ])
+    df_jobs_groups = df_jobs.groupby(group_cols)
     df_jobs_i = df_jobs_groups.get_group(name)
     # #####################################################
 
@@ -297,6 +269,7 @@ for name, df_jobs_anal_i in grouped:
 
 
     # #####################################################
+    data_dict_i["job_type"] = job_type_i
     data_dict_i["compenv"] = compenv_i
     data_dict_i["slab_id"] = slab_id_i
     data_dict_i["ads"] = ads_i
@@ -314,18 +287,11 @@ for name, df_jobs_anal_i in grouped:
 df_atoms_index = pd.DataFrame(data_dict_list)
 
 index_cols = [
+    "job_type",
     "compenv", "slab_id",
     "ads", "active_site", "att_num"]
 
 df_atoms_index = df_atoms_index.set_index(index_cols)
-
-# +
-# unique_ids_with_no_equal_i
-# unique_job_ids
-# job_ids
-# df_atoms_ind_i
-
-# df_jobs_i
 
 # + active=""
 #
@@ -333,29 +299,26 @@ df_atoms_index = df_atoms_index.set_index(index_cols)
 #
 #
 #
-
-# +
-# assert False
 # -
 
-# # Creating atoms objects with correct index order and testing
+# ### Creating atoms objects with correct index order and testing
 
 # +
-list_0 = []
-list_1 = []
-
 data_dict_list = []
 for name_i, row_i in df_jobs_anal_completed_2.iterrows():
-    # if verbose:
-    #     print(40 * "=")
+    if verbose:
+        print(40 * "=")
+        print(name_i)
+
     data_dict_i = dict()
 
     # #########################################################
-    compenv_i = name_i[0]
-    slab_id_i = name_i[1]
-    ads_i = name_i[2]
-    active_site_i = name_i[3]
-    att_num_i = name_i[4]
+    job_type_i = name_i[0]
+    compenv_i = name_i[1]
+    slab_id_i = name_i[2]
+    ads_i = name_i[3]
+    active_site_i = name_i[4]
+    att_num_i = name_i[5]
     # #########################################################
 
     # #########################################################
@@ -383,8 +346,6 @@ for name_i, row_i in df_jobs_anal_completed_2.iterrows():
     # #####################################################
     init_atoms_i = row_init_slabs_i.init_atoms
     # #####################################################
-
-
 
 
     # print("final_atoms_i.get_global_number_of_atoms():", final_atoms_i.get_global_number_of_atoms())
@@ -430,11 +391,8 @@ for name_i, row_i in df_jobs_anal_completed_2.iterrows():
         #     print("Look into this manually if the atoms_distance is less than 2")
         #     print("I currently think that every single atoms object's indices are shuffled after DFT")
 
-
-    list_0.append(atoms_distance_0)
-    list_1.append(atoms_distance_1)
-
     # #####################################################
+    data_dict_i["job_type"] = job_type_i
     data_dict_i["compenv"] = compenv_i
     data_dict_i["slab_id"] = slab_id_i
     data_dict_i["ads"] = ads_i
@@ -457,6 +415,7 @@ for name_i, row_i in df_jobs_anal_completed_2.iterrows():
 df_atoms_sorted = pd.DataFrame(data_dict_list)
 
 index_cols = [
+    "job_type",
     "compenv", "slab_id",
     "ads", "active_site", "att_num"]
 df_atoms_sorted = df_atoms_sorted.set_index(index_cols)
@@ -470,40 +429,23 @@ df_comb_i = pd.concat(
     axis=1,
     )
 
-# +
-# df_comb_i[df_comb_i.atoms_sorted_good == None]
+# ### Pickling `df_atoms_index`
 
-# df_comb_i.loc[[
-#     ('slac', 'relovalu_12', 'oh', 24.0, 2)    
-#     ]]
-
-# +
-# assert False
-# -
-
-# # Pickling `df_atoms_index`
-
-# +
 # Pickling data ###########################################
-
-# /home/raulf2012/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/
-directory = "out_data"
 directory = os.path.join(
     os.environ["PROJ_irox_oer"],
     "dft_workflow/job_analysis/atoms_indices_order",
     "out_data")
-
 if not os.path.exists(directory): os.makedirs(directory)
 with open(os.path.join(directory, "df_atoms_sorted_ind.pickle"), "wb") as fle:
     pickle.dump(df_comb_i, fle)
 # #########################################################
-# -
 
-# # Read `df_atoms_index` with Pickle
+# ### Read `df_atoms_index` with Pickle
 
 from methods import get_df_atoms_sorted_ind
-# df_atoms_sorted_ind =
-tmp = get_df_atoms_sorted_ind()
+df_atoms_sorted_ind_tmp = get_df_atoms_sorted_ind()
+df_atoms_sorted_ind_tmp.head()
 
 # #########################################################
 print(20 * "# # ")
@@ -517,3 +459,75 @@ print(20 * "# # ")
 #
 #
 #
+
+# + jupyter={"source_hidden": true}
+# name_i
+
+# + jupyter={"source_hidden": true}
+# df_atoms_index
+
+# + jupyter={"source_hidden": true}
+# # row_atoms_index_i = 
+# df_atoms_index.loc[name_i]
+
+# + jupyter={"source_hidden": true}
+# df_atoms_index.head()
+
+# + jupyter={"source_hidden": true}
+# df_atoms_sorted.head()
+
+# + jupyter={"source_hidden": true}
+# sort_list_i = df_comb_i.sort_list.iloc[0]
+# resort_list_i = df_comb_i.resort_list.iloc[0]
+# atom_index_mapping_i = df_comb_i.atom_index_mapping.iloc[0]
+
+# + jupyter={"source_hidden": true}
+# df_atoms_index
+
+# + jupyter={"source_hidden": true}
+# df_jobs_groups
+
+# + jupyter={"source_hidden": true}
+# name
+
+# + jupyter={"source_hidden": true}
+# df_jobs_i = 
+# df_jobs_groups.get_group(name)
+
+# + jupyter={"source_hidden": true}
+# df_jobs_groups.head()
+
+# + jupyter={"source_hidden": true}
+# # df_jobs_i = 
+
+
+# # name
+# df_jobs_groups.get_group(name)
+
+# + jupyter={"source_hidden": true}
+# name
+
+# + jupyter={"source_hidden": true}
+# df_atoms_index
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# # TEMP
+# print(222 * "TEMP | ")
+
+# df_jobs_anal_completed_2 = df_jobs_anal_completed_2.loc[[
+#     # ('slac', 'ralutiwa_59', 'o', 30.0, 1)
+#     ('slac', 'vapopihe_87', 'o', 23.0, 1),
+#     ]]
+# df_jobs_anal_completed_2
+
+# + jupyter={"source_hidden": true}
+# df_jobs_anal_i
+
+# + jupyter={"source_hidden": true}
+# df_jobs_anal_completed_2.head()
+
+# + jupyter={"source_hidden": true}
+    # ["compenv", "slab_id", "ads", "active_site", "att_num", ])

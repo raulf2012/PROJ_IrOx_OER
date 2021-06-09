@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -21,7 +21,7 @@
 
 # # Import Modules
 
-# + jupyter={"source_hidden": true}
+# +
 import os
 print(os.getcwd())
 import sys
@@ -168,6 +168,14 @@ for i_cnt, row_i in df_ads_i.iterrows():
 df_cpu_hrs = pd.DataFrame(data_dict_list)
 
 df_cpu_hrs.cpu_hours_cum.mean()
+
+# +
+df_cpu_hrs.cpu_hours_cum.sum()
+
+1815590 / 1e6
+# -
+
+df_cpu_hrs
 
 # +
 3000 * 1000

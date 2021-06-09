@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -17,7 +17,7 @@
 # ---
 #
 
-# # Import Modules
+# ### Import Modules
 
 # +
 import os
@@ -59,14 +59,7 @@ else:
     verbose = False
     show_plot = False
 
-# +
-# Script Inputs
-
-# verbose = True
-# verbose = False
-# -
-
-# # Read Data
+# ### Read Data
 
 # +
 df_features_targets = get_df_features_targets()
@@ -146,7 +139,7 @@ df_i = df_m[cols_to_keep]
 df_i.iloc[0:2]
 # -
 
-# # Plotting everything
+# ### Plotting everything
 
 df_i["features"]["o"].sort_values("ir_o_mean", ascending=False)
 
@@ -248,85 +241,7 @@ print("new_oer_vs_features.ipynb")
 print(20 * "# # ")
 # #########################################################
 
-# +
-# px.scatter(df_i_2,
-# # px.scatter?
-
-# +
-# df_i_2
-
 # + active=""
 #
 #
 #
-
-# + jupyter={"source_hidden": true}
-# ('features', 'o', )
-# 'data'
-# 'targets'
-
-# + jupyter={"source_hidden": true}
-# x_array = df_i_2["features"][feature_ads_i][col_i]
-# y_array = df_i_2["targets"][target_j]
-
-# trace = go.Scatter(
-#     x=x_array,
-#     y=y_array,
-#     mode="markers",
-#     )
-# data = [trace]
-
-# fig = go.Figure(data=data)
-# fig.show()
-
-# + jupyter={"source_hidden": true}
-# import chart_studio.plotly as py
-# import plotly.graph_objs as go
-
-# import os
-
-# x_array = [0, 1, 2, 3]
-# y_array = [0, 1, 2, 3]
-
-
-# trace = go.Scatter(
-#     x=x_array,
-#     y=y_array,
-#     mode="markers",
-#     opacity=0.8,
-#     marker=dict(
-
-#         symbol="circle",
-#         color='LightSkyBlue',
-
-#         opacity=0.8,
-
-#         # color=z,
-#         colorscale='Viridis',
-#         colorbar=dict(thickness=20),
-
-#         size=20,
-#         line=dict(
-#             color='MediumPurple',
-#             width=2
-#             )
-#         ),
-
-#     line=dict(
-#         color="firebrick",
-#         width=2,
-#         dash="dot",
-#         ),
-
-#     error_y={
-#         "type": 'data',
-#         "array": [0.4, 0.9, 0.3, 1.1],
-#         "visible": True,
-#         },
-
-#     )
-
-# data = [trace]
-
-# fig = go.Figure(data=data)
-# fig.show()

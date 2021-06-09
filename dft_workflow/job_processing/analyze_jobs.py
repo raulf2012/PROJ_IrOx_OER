@@ -16,7 +16,7 @@
 # # Analyzing job sets (everything within a `02_attempt` dir for example)
 # ---
 
-# # Import Modules
+# ### Import Modules
 
 # +
 import os
@@ -64,12 +64,14 @@ else:
     from tqdm import tqdm
     verbose = False
 
-# # Script Inputs
+# ### Script Inputs
 
-TEST_no_file_ops = True  # True if just testing around, False for production mode
-# TEST_no_file_ops = False
+# +
+# TEST_no_file_ops = True  # True if just testing around, False for production mode
+# # TEST_no_file_ops = False
+# -
 
-# # Read Data
+# ### Read Data
 
 # +
 df_jobs = get_df_jobs()
@@ -114,7 +116,7 @@ if verbose:
 # -
 
 
-# # Filtering `df_jobs` by rows that are present in `df_jobs_data`
+# ### Filtering `df_jobs` by rows that are present in `df_jobs_data`
 
 # +
 df_jobs_i = df_jobs.loc[
@@ -128,28 +130,26 @@ if verbose:
         df_jobs.index.difference(df_jobs_data.index).tolist(), sep="")
 
 # +
-# print(40 * "TEMP | ")
+# # TEMP
 
-# # name_i = ("nafupemu_49", "o", 48., 1)
-# # name_i = ("relovalu_12", "o", "NaN", 1)
-# # name_i = ('sherlock', 'miforike_08', 1, 'o', 50.0)
-# name_i = ('miforike_08', 'o', 50.0, 1, )
+# print(222 * "TEST | ")
+# # ('dos_bader', 'sherlock', 'momaposi_60', 1, 'o', 54.0)
 
 # df = df_jobs_i
 # df = df[
-#     (df["slab_id"] == name_i[0]) &
-#     (df["ads"] == name_i[1]) &
-#     (df["active_site"] == name_i[2]) &
-#     (df["att_num"] == name_i[3]) &
+#     (df["job_type"] == "dos_bader") &
+#     (df["compenv"] == "sherlock") &
+#     (df["slab_id"] == "momaposi_60") &
+#     (df["att_num"] == 1) &
+#     (df["ads"] == "o") &
+#     (df["active_site"] == 54.) &
 #     [True for i in range(len(df))]
 #     ]
 # df_jobs_i = df
 
-# df_jobs_i
-
 # +
 data_dict_list = []
-group_cols = ["compenv", "slab_id", "att_num", "ads", "active_site"]
+group_cols = ["job_type", "compenv", "slab_id", "att_num", "ads", "active_site"]
 grouped = df_jobs_i.groupby(group_cols)
 for name, group in grouped:
 
@@ -160,11 +160,12 @@ for name, group in grouped:
         print("name:", name)
 
     # #####################################################
-    compenv_i = name[0]
-    slab_id = name[1]
-    att_num = name[2] 
-    ads_i = name[3]
-    active_site_i = name[4]
+    job_type_i = name[0]
+    compenv_i = name[1]
+    slab_id = name[2]
+    att_num = name[3] 
+    ads_i = name[4]
+    active_site_i = name[5]
     # #####################################################
 
     # #####################################################
@@ -234,6 +235,7 @@ for name, group in grouped:
     data_dict_i["ads"] = ads_i
     data_dict_i["active_site"] = active_site_i
     data_dict_i["job_understandable"] = job_understandable
+    data_dict_i["job_type"] = job_type_i
     data_dict_i["compenv"] = compenv_i
     data_dict_i["slab_id"] = slab_id
     data_dict_i["att_num"] = att_num
@@ -252,18 +254,14 @@ for name, group in grouped:
 
 # #########################################################
 df_jobs_anal = pd.DataFrame(data_dict_list)
-df_jobs_anal = df_jobs_anal.sort_values(["compenv", "slab_id", "path_rel_to_proj"])
+# df_jobs_anal = df_jobs_anal.sort_values(["compenv", "slab_id", "path_rel_to_proj"])
+df_jobs_anal = df_jobs_anal.sort_values(
+    ["job_type", "compenv", "slab_id", "path_rel_to_proj"])
 # #########################################################
 # -
 
 
-row_data_max_i
-
-# +
-# assert False
-# -
-
-# # Ordering `df_jobs_anal` and setting index
+# ### Ordering `df_jobs_anal` and setting index
 
 # +
 from misc_modules.pandas_methods import reorder_df_columns
@@ -293,18 +291,12 @@ df_jobs_anal = df_jobs_anal.drop(columns=["path_rel_to_proj", ])
 
 # #########################################################
 # Setting index
-index_keys = ["compenv", "slab_id", "ads", "active_site", "att_num"]
+# index_keys = ["compenv", "slab_id", "ads", "active_site", "att_num"]
+index_keys = ["job_type", "compenv", "slab_id", "ads", "active_site", "att_num"]
 df_jobs_anal = df_jobs_anal.set_index(index_keys)
 # -
 
-# # Saving data
-
-# +
-# df_jobs_anal
-
-# +
-# assert False
-# -
+# ### Writing `df_jobs_anal` to file
 
 # Pickling data ###########################################
 directory = os.path.join(
@@ -329,3 +321,77 @@ print(20 * "# # ")
 #
 #
 #
+
+# + jupyter={"source_hidden": true}
+# df_jobs_paths_i = df_jobs_paths[df_jobs_paths.compenv == compenv_i]
+# row_paths_max_i = df_jobs_paths_i.loc[job_id_max_i]
+
+# + jupyter={"source_hidden": true}
+# compenv_i
+
+# + jupyter={"source_hidden": true}
+# df_jobs_paths_i
+
+# + jupyter={"source_hidden": true}
+# group
+
+# + jupyter={"source_hidden": true}
+# df_jobs_anal[df_jobs_anal.job_id_max == "bisofadi_42"]
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# # row_data_max_iNone	False
+
+# df = df_jobs_anal
+# df = df[
+#     (df["ads"] == "oh") &
+#     (df["active_site"] == 69) &
+#     (df["att_num"] == 0) &
+#     # (df["compenv"] == "sherlock") &
+#     (df["slab_id"] == "bekusuvu_00") &
+#     [True for i in range(len(df))]
+#     ]
+# df
+
+# + jupyter={"source_hidden": true}
+# df_jobs_anal
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# print(40 * "TEMP | ")
+
+# # name_i = ("nafupemu_49", "o", 48., 1)
+# # name_i = ("relovalu_12", "o", "NaN", 1)
+# # name_i = ('sherlock', 'miforike_08', 1, 'o', 50.0)
+# name_i = ('miforike_08', 'o', 50.0, 1, )
+
+# df = df_jobs_i
+# df = df[
+#     (df["slab_id"] == name_i[0]) &
+#     (df["ads"] == name_i[1]) &
+#     (df["active_site"] == name_i[2]) &
+#     (df["att_num"] == name_i[3]) &
+#     [True for i in range(len(df))]
+#     ]
+# df_jobs_i = df
+
+# df_jobs_i
+# -
+
+
+
+# + jupyter={"source_hidden": true}
+# row_data_max_i
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# group
+
+# + jupyter={"source_hidden": true}
+# path_rel_to_proj

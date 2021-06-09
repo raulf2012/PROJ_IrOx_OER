@@ -1,7 +1,6 @@
 
 # #########################################################
-# TEMP
-# TEMP
+# Local methods for setup_jobs_from_oh
 # #########################################################
 
 #| - Import Modules
@@ -11,20 +10,8 @@ import sys
 import copy
 
 from methods import get_df_coord
-
-# import pandas as pd
-#
-# # #########################################################
-# from methods import (
-#     get_df_jobs,
-#     get_df_jobs_anal,
-#     get_df_oer_groups,
-#     get_df_jobs_oh_anal,
-#     get_df_rerun_from_oh,
-#     get_df_atoms_sorted_ind,
-#     )
-
 #__|
+
 
 
 def get_bare_o_from_oh(

@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -73,14 +73,19 @@ from methods import (
     get_df_slab_simil,
     get_df_active_sites,
     get_df_features_targets,
-
     get_other_job_ids_in_set,
     read_magmom_comp_data,
-
     get_df_coord,
     get_df_slabs_to_run,
     get_df_features,
+    get_df_jobs_on_clus__all,
+    get_df_octa_info,
     )
+from methods import get_df_bader_feat
+from methods import get_df_struct_drift
+
+from misc_modules.pandas_methods import reorder_df_columns
+
 # + jupyter={"source_hidden": true}
 df_dft = get_df_dft()
 df_job_ids = get_df_job_ids()
@@ -103,6 +108,11 @@ df_active_sites = get_df_active_sites()
 df_features_targets = get_df_features_targets()
 df_slabs_to_run = get_df_slabs_to_run()
 df_features = get_df_features()
+df_jobs_max = get_df_jobs(return_max_only=True)
+df_jobs_on_clus = get_df_jobs_on_clus__all()
+df_bader_feat = get_df_bader_feat()
+df_struct_drift = get_df_struct_drift()
+df_octa_info = get_df_octa_info()
 
 
 # + jupyter={"source_hidden": true}
@@ -156,225 +166,174 @@ df_list = [
 #
 #
 #
-#
-#
-#
-#
-#
-#
-#
+# +
+# slac	dotivela_46	26.0
 # -
 
-print(3 * "\n")
-
-# # TEST TEST TEST TEST
+df_jobs.loc["henasifu_78"]
 
 # +
-# slab_id_i = "pumusuma_66"
-slab_id_i = "romudini_21"
+index_i = ("slac", "dotivela_46", 26.0)
+row_i = df_features_targets.loc[[index_i]]
 
-# df_jobs.head()
+row_i
 
-df_jobs[df_jobs.slab_id == slab_id_i]
+# +
+index_i = ("sherlock", "vipikema_98", 47.0)
+row_i = df_features_targets.loc[[index_i]]
+
+
+row_i
 # -
 
-df_slab.loc["romudini_21"]
+df_jobs.loc["pekukele_64"]
 
-assert False
+for index_i, row_i in df_features_targets.iterrows():
+    slab_id_i = index_i[1]
+
+    job_id_o = row_i[("data", "job_id_o", "", )]
+
+    row_jobs_i = df_jobs.loc[job_id_o]
+    bulk_id_i = row_jobs_i["bulk_id"]
+
+    if bulk_id_i == "cqbrnhbacg":
+        tmp = 42
+        print(index_i)
+
+df_features_targets.loc[[
+    ('sherlock', 'kobehubu_94', 52.0),
+    ('sherlock', 'kobehubu_94', 60.0),
+    ('sherlock', 'vipikema_98', 47.0),
+    ('sherlock', 'vipikema_98', 53.0),
+    ('sherlock', 'vipikema_98', 60.0),
+    ('slac', 'dotivela_46', 26.0),
+    ('slac', 'dotivela_46', 32.0),
+    ('slac', 'ladarane_77', 15.0),
+    ]]
+
+
+
+df_features_targets[("data", "norm_sum_norm_abs_magmom_diff", "", )].sort_values(ascending=False).iloc[0:10].index.tolist()
 
 # +
-# df_dft
-# df_slab.shape
+# df_features_targets.describe()
 
-df_slab_2 = get_df_slab(mode="almost-final")
+import plotly.graph_objs as go
 
-df_slab_2.shape
+data = []
+trace = go.Scatter(
+    mode="markers",
+    y=df_features_targets[("data", "norm_sum_norm_abs_magmom_diff", "", )].sort_values(ascending=False),
+    # x=np.abs(df_target_pred_i["err_pred"]),
+    )
+data.append(trace)
+# trace = go.Scatter(
+#     # mode="markers",
+#     y=np.arange(0, 2, 0.1),
+#     x=np.arange(0, 2, 0.1),
+#     )
+# data.append(trace)
 
-# +
-# (519, 8)
-# (533, 8)
-# (544, 8)
+# data = [trace]
 
-# +
-# name_i = ('n36axdbw65', '023')
-# name_i = ('mkbj6e6e9p', '232')
-# name_i = ('v1xpx482ba', '20-21')
-# name_i = ('v1xpx482ba', '20-23')
-
-# name_i = ('n36axdbw65', '023')
-# <--------------------
-# name_i = ('mkbj6e6e9p', '232')
-# <--------------------
-# name_i = ('v1xpx482ba', '20-21')
-# <--------------------
-name_i = ('v1xpx482ba', '20-23')
-# <--------------------
+fig = go.Figure(data=data)
+fig.show()
 # -
 
-df = df_slab
-df = df[
-    (df["bulk_id"] == name_i[0]) &
-    (df["facet"] == name_i[1]) &
-    [True for i in range(len(df))]
-    ]
-df
+assert False
 
-df = df_slab_2
-df = df[
-    (df["bulk_id"] == name_i[0]) &
-    (df["facet"] == name_i[1]) &
-    [True for i in range(len(df))]
-    ]
-df
+df_octa_info
 
 assert False
 
-# slab_id_to_drop = "dupugulo_25"
-# slab_id_to_drop = "rehunuho_26"
-# slab_id_to_drop = "wovaseli_71"
-slab_id_to_drop = "pipotune_15"
+# +
+# df_features_targets
 
 # +
-# df_slab = df_slab.drop(slab_id_to_drop)
+# df_features_targets[("data", "job_id_o", "", )]
 
-df_slab_2 = df_slab_2.drop(slab_id_to_drop)
+df_features_targets_i = df_features_targets.loc[[
+    ('sherlock', 'kamevuse_75', 49.0)
+    ]]
 
-# +
-# import os; import pickle
-# directory = os.path.join(
-#     os.environ["PROJ_irox_oer"],
-#     "workflow/creating_slabs",
-#     "out_data")
-# if not os.path.exists(directory): os.makedirs(directory)
-# with open(os.path.join(directory, "df_slab_final.pickle"), "wb") as fle:
-#     pickle.dump(df_slab, fle)
+for name_i, row_i in df_features_targets_i.iterrows():
+    job_id_o_i = row_i[("data", "job_id_o", "", )]
+
+    df_octa_info_i = df_octa_info[df_octa_info.job_id_max == job_id_o_i]
+    row_octa_i = df_octa_info_i.iloc[0]
+
+    if row_octa_i.error:
+        print(name_i)
 # -
 
-import os; import pickle
-directory = os.path.join(
-    os.environ["PROJ_irox_oer"],
-    "workflow/creating_slabs",
-    "out_data")
-if not os.path.exists(directory): os.makedirs(directory)
-with open(os.path.join(directory, "df_slab.pickle"), "wb") as fle:
-    pickle.dump(df_slab_2, fle)
+df_octa_info_i
 
-assert False
-
-# + active=""
-#
-#
+df_features_targets.loc[
+    ('sherlock', 'momaposi_60', 50.0)
+    ]
 
 # +
-# Getting rid of these rows
+# (df[("data", "found_active_Ir__oh", "", )] == True) &
 
-# fevofivo_15	n36axdbw65	023
+# df_features_targets["data"]
+# df_features_targets.columns.tolist()
 
+df_features_targets[
+    ('data', 'found_active_Ir', '')
+    ].unique()
 # -
 
-df = df_slab_2
-df = df[
-    (df["bulk_id"] == "vl9on5zpm1") &
-    # (df[""] == "") &
-    # (df[""] == "") &
-    [True for i in range(len(df))]
+assert False
+
+# +
+job_ids = ['novofide_69', 'solalenu_64', 'huriwara_92', 'bevadofo_80']
+
+df_jobs_paths.loc[
+    job_ids
     ]
-df
+
+
+df_tmp = df_atoms_sorted_ind[df_atoms_sorted_ind.job_id.isin(job_ids)]
+
+for name_i, row_i in df_tmp.iterrows():
+    atoms_i = row_i.atoms_sorted_good
+    job_id_i = row_i.job_id
+
+    file_path_no_ext_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "sandbox",
+        "__temp__/20210530_atoms_write_temp",
+        job_id_i)
+
+        # job_id_i + ".traj")
+    # atoms_i.write(file_path_i)
+
+    atoms_i.write(file_path_no_ext_i + ".traj")
+
+    atoms_i.write(file_path_no_ext_i + ".cif")
+# -
 
 assert False
 
 # + jupyter={"source_hidden": true}
-# df_jobs_anal[df_jobs_anal.job_id_max == job_id_j]
+df_octa_info[df_octa_info.missing_oxy_neigh == True]
 
-df_ind_i = df_jobs_anal.index.to_frame()
-
-df = df_ind_i
-df = df[
-    (df["compenv"] == "sherlock") &
-    (df["slab_id"] == "likeniri_51") &
-    # (df[""] == "") &
-    [True for i in range(len(df))]
-    ]
-
-df_jobs_anal.loc[
-    df.index
-    ]
-
-# + jupyter={"source_hidden": true}
-df = df_jobs_data
-df = df[
-    (df["compenv"] == "sherlock") &
-    (df["slab_id"] == "likeniri_51") &
-    # (df[""] == "") &
-    [True for i in range(len(df))]
-    ]
-df.sort_values("rev_num")
-
-# + jupyter={"source_hidden": true}
-assert False
-
-# + jupyter={"source_hidden": true}
-df_feat_ab2 = df_features_targets[
-    df_features_targets["data"]["stoich"] == "AB2"
-    ]
-df_feat_ab2 = df_feat_ab2.sort_values(("targets", "g_oh", ""), ascending=False)
-
-df_feat_ab3 = df_features_targets[
-    df_features_targets["data"]["stoich"] == "AB3"
-    ]
-df_feat_ab3 = df_feat_ab3.sort_values(("targets", "g_oh", ""), ascending=False)
-
-# + jupyter={"source_hidden": true}
-df_feat_ab2
-
-# + jupyter={"source_hidden": true}
-df_feat_ab3
+# df_octa_info.index.tolist()
 
 # + jupyter={"source_hidden": true}
 assert False
 
 # + jupyter={"source_hidden": true}
-df_features[
-    df_features["features"]["octa_vol"].isna()
-    ].shape
+from proj_data import sys_to_ignore__df_features_targets
+
+sys_to_ignore__df_features_targets
+
+df_features_targets = df_features_targets.drop(
+    index=sys_to_ignore__df_features_targets)
 
 # + jupyter={"source_hidden": true}
-# ('sherlock', 'telibose_95', 54.0, )
+# df_features_targets
+# df_features_targets["features"]["o"]["active_o_metal_dist"].sort_values(ascending=False).iloc[0:6].index.tolist()
 
-df = df_jobs
-df = df[
-    (df["compenv"] == "sherlock") &
-    (df["slab_id"] == "telibose_95") &
-    (df["ads"] == "o") &
-    [True for i in range(len(df))]
-    ]
-df
-
-# + jupyter={"source_hidden": true}
-df_jobs_paths.loc["dipekilo_07"].gdrive_path
-
-# + jupyter={"source_hidden": true}
-assert False
-
-# + jupyter={"source_hidden": true}
-# 122 polymorphs are octahedral and unique
-# >>> Removing 12 systems manually because they are not good
-# -----
-# 110 polymorphs now
-
-
-# # ###############################################
-# 49 are layered materials
-# 61 are non-layered materials
-# -----
-# 61 polymorphs now
-
-
-# # ###############################################
-# 15 polymorphs are above the 0.3 eV/atom above hull cutoff
-# -----
-# 46 polymorphs now
-
-
-# # ###############################################
-# -----
+# df_features_targets["features"]["o"]["p_band_center"].sort_values(ascending=False).iloc[0:6].index.tolist()
+df_features_targets["features"]["o"]["p_band_center"].sort_values(ascending=True).iloc[0:12].index.tolist()

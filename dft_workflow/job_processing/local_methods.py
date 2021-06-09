@@ -28,7 +28,7 @@ from dft_job_automat.compute_env import ComputerCluster
 
 # #########################################################
 from proj_data import compenv
-from methods import temp_job_test, cwd
+from methods import cwd
 #__|
 
 
@@ -133,6 +133,37 @@ def parse_job_err(path, compenv=None):
 
     #__|
 
+
+    # print("compenv:", compenv)
+
+    #| - Parsing NERSC jobs
+    if compenv == "nersc":
+        job_out_file_path = os.path.join(path, "job.err")
+        my_file = Path(job_out_file_path)
+        if my_file.is_file():
+            with open(job_out_file_path, 'r') as f:
+                lines = f.readlines()
+
+            # print("")
+            # print("")
+            # print(lines)
+            # print("")
+            # print("")
+            #
+            # print("111111111")
+            for line in lines:
+
+                #| - Checking if job timed out
+                # Some of your processes may have been killed by the cgroup out-of-memory handler.
+                phrase_i = "killed by the cgroup out-of-memory handler"
+                if phrase_i in line:
+                    status_dict["error"] = True
+                    status_dict["error_type"] = "out-of-memory handler"
+                #__|
+
+    # __|
+
+
     # | - Parsing error file
     job_err_file_path = os.path.join(path, "job.err")
     my_file = Path(job_err_file_path)
@@ -155,6 +186,10 @@ def parse_job_err(path, compenv=None):
             if "Signal: Segmentation fault" in line:
                 status_dict["error"] = True
                 status_dict["error_type"] = "Segmentation fault"
+
+            if "Unable to confirm allocation for job" in line:
+                status_dict["error"] = True
+                status_dict["error_type"] = "slurm allocation issue"
 
     #__|
 
@@ -595,6 +630,40 @@ def get_ads_from_path(path_i):
     return(ads_i)
     #__|
 
+def get_forces_info(path_i):
+    """
+    """
+    #| - get_forces_info
+    from ase_modules.ase_methods import max_force
+    from pathlib import Path
+
+    # #####################################################
+    out_dict = dict()
+    # #####################################################
+    out_dict["force_largest"] = None
+    out_dict["force_sum"] = None
+    # #####################################################
+
+
+    full_path_i = os.path.join(path_i, "final_with_calculator.traj")
+    my_file = Path(full_path_i)
+    if my_file.is_file():
+        atoms = io.read(full_path_i)
+
+        force_largest, force_sum = max_force(atoms)
+
+        num_atoms = atoms.get_global_number_of_atoms()
+
+        force_sum_per_atom = force_sum / num_atoms
+
+        out_dict["force_largest"] = force_largest
+        out_dict["force_sum"] = force_sum
+        out_dict["force_sum_per_atom"] = force_sum_per_atom
+        # #################################################
+
+    return(out_dict)
+    # __|
+
 #__|
 
 # #########################################################
@@ -611,20 +680,16 @@ def process_large_job_out(path_i, job_out_size_limit=10):
         "dft_workflow/job_processing",
         "shorten_job_out.sh")
 
-    # if "job.out.short" not in os.listdir(path=path_full):
     if "job.out.short" not in os.listdir(path=path_i):
-        # Path_i = Path(os.path.join(path_full, "job.out"))
         Path_i = Path(os.path.join(path_i, "job.out"))
         if Path_i.is_file():
             size_mb_i = Path_i.stat().st_size / 1000 / 1000
             if size_mb_i > job_out_size_limit:
-                # with cwd(path_full):
                 with cwd(path_i):
                     result = subprocess.run(
                         [bash_script_path],
                         stdout=subprocess.PIPE)
                     out_lines = result.stdout.splitlines()
-                    # [print(str(i, "utf-8")) for i in out_lines]
 
     else:
         # Already processed
@@ -642,8 +707,6 @@ def rclone_sync_job_dir(
     # #########################################################
     gdrive_path = get_gdrive_job_path(path_job_root_w_att_rev)
 
-    # print(gdrive_path)
-
     # #########################################################
     rclone_gdrive_stanford = os.environ["rclone_gdrive_stanford"]
     PROJ_irox_oer_gdrive = os.environ["PROJ_irox_oer_gdrive"]
@@ -657,6 +720,8 @@ def rclone_sync_job_dir(
     gdrive_path_full = os.path.join(
         PROJ_irox_oer_gdrive_rel,
         gdrive_path)
+
+
 
     # #########################################################
     vasp_files_to_exclude = [
@@ -681,7 +746,7 @@ def rclone_sync_job_dir(
 
 
     # Adding max size filter
-    rclone_flags += "--max-size 100M "
+    rclone_flags += "--max-size 130M "
 
     local_path = os.path.join(
         os.environ["PROJ_irox_oer"],
@@ -689,10 +754,10 @@ def rclone_sync_job_dir(
 
     rclone_comm_i = "rclone copy " + rclone_flags + local_path + " " + rclone_gdrive_stanford + ":" + gdrive_path_full + " " + exclude_str
 
-    # print(40 * "*")
-    # print(rclone_comm_i)
+    print(40 * "*")
+    print(rclone_comm_i)
     print(path_rel_to_proj)
-    # print(40 * "*")
+    print(40 * "*")
 
     # #########################################################
     rclone_comm_list_i = [i for i in rclone_comm_i.split(" ") if i != ""]

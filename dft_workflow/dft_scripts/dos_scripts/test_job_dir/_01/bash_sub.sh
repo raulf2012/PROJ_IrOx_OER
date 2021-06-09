@@ -1,0 +1,1 @@
+/usr/bin/sbatch -p owners,iric,normal --nodes 1 --ntasks-per-node 16 --mem-per-cpu 4000 --time 1497 --job-name TEMP_DOS_WF --qos normal --mail-user flores12@stanford.edu --mail-type END --output job.out --error job.err -C CPU_GEN:HSW model.py

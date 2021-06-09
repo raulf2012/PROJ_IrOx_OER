@@ -12,12 +12,18 @@ import numpy as np
 import pandas as pd
 
 from methods import (
-    get_magmom_diff_data,
+    # get_magmom_diff_data,
     get_df_jobs,
     get_df_atoms_sorted_ind,
     get_df_job_ids,
     CountFrequency,
     )
+
+from methods_magmom_comp import (
+    get_magmom_diff_data,
+    _get_magmom_diff_data,
+    )
+
 #__|
 
 

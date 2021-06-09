@@ -3,10 +3,6 @@
 if [[ $1 == "to_local" ]]; then
     # | - to_local
 
-    # echo "ijidsjfisd98jsf9jds8fh8seufisdjdifjds"
-    # echo $2
-    # echo "ijidsjfisd98jsf9jds8fh8seufisdjdifjds"
-
     if [[ $2 == "no_verbose" ]]; then
         echo "Turned off verbose flag"
         verbose_flag=""
@@ -14,10 +10,13 @@ if [[ $1 == "to_local" ]]; then
         verbose_flag="--verbose"
     fi
 
-    # rclone sync \
-    rclone copy \
-    $rclone_gdrive_stanford:norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/ \
-    $PROJ_irox_oer_gdrive/dft_workflow/run_slabs/ \
+    # $rclone_gdrive_stanford:norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/ \
+    # $PROJ_irox_oer_gdrive/dft_workflow/run_slabs/ \
+
+    # rclone copy \
+    rclone sync \
+    $rclone_gdrive_stanford:norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/ \
+    $PROJ_irox_oer_gdrive/dft_workflow/ \
     --exclude "out_data.old/**" \
     --exclude vasprun.xml \
     --exclude PROCAR \

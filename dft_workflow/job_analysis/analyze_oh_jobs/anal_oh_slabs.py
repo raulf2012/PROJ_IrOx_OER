@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.5.0
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -16,7 +16,7 @@
 # # Analyze *OH slab job sets
 # ---
 
-# # Import Modules
+# ### Import Modules
 
 # +
 import os
@@ -29,7 +29,6 @@ import pandas as pd
 
 # #########################################################
 from methods import (
-    get_df_jobs,
     get_df_jobs_anal,
     get_df_jobs_data,
     get_df_atoms_sorted_ind,
@@ -37,11 +36,18 @@ from methods import (
     )
 # -
 
-# # Read Data
+from methods import isnotebook    
+isnotebook_i = isnotebook()
+if isnotebook_i:
+    from tqdm.notebook import tqdm
+    verbose = True
+else:
+    from tqdm import tqdm
+    verbose = False
+
+# ### Read Data
 
 # +
-df_jobs = get_df_jobs()
-
 df_jobs_anal = get_df_jobs_anal()
 df_jobs_anal_i = df_jobs_anal
 
@@ -50,7 +56,12 @@ df_jobs_data = get_df_jobs_data()
 df_atoms_sorted_ind = get_df_atoms_sorted_ind()
 
 df_features = get_df_features()
-# df_features = df_features.droplevel(5, axis=0)
+# -
+
+df_ind = df_jobs_anal.index.to_frame()
+df_jobs_anal = df_jobs_anal.loc[
+    df_ind[df_ind.job_type == "oer_adsorbate"].index
+    ]
 
 # + active=""
 #
@@ -75,13 +86,7 @@ df_index_i = df_index_i[df_index_i.ads == "oh"]
 df_jobs_anal_i = df_jobs_anal_i.loc[
     df_index_i.index 
     ]
-# -
 
-df_jobs_anal_i.iloc[0:2]
-
-
-# +
-# row_i = df_jobs_anal_i.iloc[3]
 
 # +
 def method(row_i):
@@ -102,34 +107,7 @@ def method(row_i):
 df_jobs_anal_i["num_missing_Os"] = df_jobs_anal_i.apply(method, axis=1)
 # -
 
-df_features
-
-# +
-# # TEMP
-# print("TEMP")
-
-# df_ind = df_jobs_anal_i.index.to_frame()
-
-# # sherlock	bivahobe_50	32.0	
-
-# df = df_ind
-# df = df[
-#     (df["compenv"] == "sherlock") &
-#     (df["slab_id"] == "bivahobe_50") &
-#     (df["active_site"] == 32.) &
-#     [True for i in range(len(df))]
-#     ]
-
-# df_jobs_anal_i = df_jobs_anal_i.loc[
-#     df.index
-#     ]
-# df_jobs_anal_i
-
-# +
-# assert False
-# -
-
-df_jobs_anal_i
+# ### Main Loop
 
 # +
 # #########################################################
@@ -137,6 +115,11 @@ data_dict_list = []
 # #########################################################
 grouped = df_jobs_anal_i.groupby(["compenv", "slab_id", "active_site", ])
 for name, group in grouped:
+
+# for i in range(1):
+#     name =  ('slac', 'dotivela_46', 26.0, )
+#     group = grouped.get_group(name)
+
     # #####################################################
     data_dict_i = dict()
     # #####################################################
@@ -146,14 +129,15 @@ for name, group in grouped:
     # #####################################################
 
 
-    any_nan_in_missing_O_col = any(group.num_missing_Os.isna())
-    if any_nan_in_missing_O_col:
-        print("There are NaN in missing_Os col")
-        print("name:", name)
-        continue
+    # TEMP
+    # any_nan_in_missing_O_col = any(group.num_missing_Os.isna())
+    # if any_nan_in_missing_O_col:
+    #     print("There are NaN in missing_Os col")
+    #     print("name:", name)
+    #     continue
 
-    if any_nan_in_missing_O_col:
-        print("This shouldn't get printed if the prev 'continue' statement is working")
+    # if any_nan_in_missing_O_col:
+    #     print("This shouldn't get printed if the prev 'continue' statement is working")
 
     job_ids_w_missing_Os = group[group.num_missing_Os > 0].job_id_max.tolist()
 
@@ -166,15 +150,6 @@ for name, group in grouped:
     all_jobs_bad = False
     if group_2.shape[0] == 0:
         all_jobs_bad = True
-
-
-    # #####################################################
-    # df_jobs_i = df_jobs.loc[
-    #     group.job_id_max.tolist()
-    #     ]
-    # #####################################################
-    # att_nums_all = df_jobs_i.att_num.unique()
-    # #####################################################
 
     # #####################################################
     df_anal_ind = df_jobs_anal.index.to_frame()
@@ -228,30 +203,7 @@ for name, group in grouped:
 
 # #########################################################
 df_jobs_oh_anal = pd.DataFrame(data_dict_list)
-df_jobs_oh_anal.iloc[0:2]
-
-# +
-# df_jobs_oh_anal
-
-# +
-# group
-
-# +
-# # TEMP
-
-# # sherlock	bivahobe_50	32.0	
-
-# df = df_jobs_oh_anal
-# df = df[
-#     (df["compenv"] == "sherlock") &
-#     (df["slab_id"] == "bivahobe_50") &
-#     (df["active_site"] == 32.) &
-#     [True for i in range(len(df))]
-#     ]
-# df
-
-# +
-# assert False
+# df_jobs_oh_anal.iloc[0:2]
 # -
 
 # Pickling data ###########################################

@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -19,7 +19,7 @@
 # This notebook is time consuming. Additional processing of the slab (correct vacuum applied, and bulk constraints, etc.) are done in `process_slabs.ipynb`
 
 # + active=""
-# # 565 total polymorphs from first  project
+# # 565 total polymorphs from first project
 #
 # # 122 polymorphs are octahedral and unique
 # # >>> Removing 12 systems manually because they are not good
@@ -103,7 +103,6 @@ from local_methods import (
     )
 
 
-
 # -
 
 # # Script Inputs
@@ -182,6 +181,26 @@ df_dft_i = df_dft_for_slab_creation(
     frac_of_layered_to_include=frac_of_layered_to_include,
     verbose=False,
     )
+
+# +
+# get_bulk_selection_data().keys()
+
+# +
+# assert False
+
+# +
+# TEMP
+
+# mj7wbfb5nt	011	(0, 1, 1)	
+
+df = df_slab_old
+df = df[
+    (df["bulk_id"] == "mj7wbfb5nt") &
+    (df["facet"] == "011") &
+    # (df[""] == "") &
+    [True for i in range(len(df))]
+    ]
+df
 
 # +
 # assert False
@@ -481,6 +500,25 @@ df_to_run = pd.DataFrame(data_dict_list)
 # #########################################################
 # -
 
+df_dft_i.loc[
+    "v1xpx482ba"
+    ]
+
+df_to_run
+
+df = df_to_run
+df = df[
+    (df["bulk_id"] == "v1xpx482ba") &
+    (df["facet_str"] == "20-23") &
+    # (df[""] == "") &
+    [True for i in range(len(df))]
+    ]
+df
+
+# +
+# assert False
+# -
+
 # Pickling data ###########################################
 directory = os.path.join(
     os.environ["PROJ_irox_oer"],
@@ -492,26 +530,50 @@ with open(os.path.join(directory, "df_slabs_to_run.pickle"), "wb") as fle:
     pickle.dump(df_slabs_to_run, fle)
 # #########################################################
 
-# +
-# df_slabs_to_run
-# -
-
-df_to_run[df_to_run.bulk_id == "b583vr8hvw"]
-
 df_to_run_2 = df_to_run[
-    # (df_to_run.sys_processed == False) & \
-    (df_to_run.took_too_long_prev == True)
-    # (df_to_run.facet_abs_sum < 7)
+    (df_to_run.sys_processed == False) & \
+    (df_to_run.took_too_long_prev == False) & \
+    (df_to_run.facet_abs_sum <= 7)
     ]
 
 # +
-# b583vr8hvw 110
-# -
-
-# df_to_run_2.shape
-df_to_run_2 = df_to_run_2.iloc[[0]]
+# mj7wbfb5nt	011	(0, 1, 1)	
 
 df_to_run_2
+# -
+
+assert False
+
+# +
+# df_to_run_2 = df_to_run_2.loc[[164]]
+# -
+
+assert False
+
+# +
+# df_to_run_2 = df_to_run[
+#     # (df_to_run.sys_processed == False) & \
+#     (df_to_run.took_too_long_prev == True)
+#     # (df_to_run.facet_abs_sum < 7)
+#     ]
+
+# df_to_run_2 = df_to_run_2.iloc[[0]]
+
+# + active=""
+#
+#
+
+# +
+# df_slabs_to_run
+
+# +
+# df_to_run[df_to_run.bulk_id == "b583vr8hvw"]
+
+# +
+# b583vr8hvw 110
+
+# +
+# df_to_run_2
 
 # +
 # 	bulk_id	facet_str	facet	facet_rank	facet_abs_sum	source	sys_processed	took_too_long_prev
@@ -525,17 +587,9 @@ df_to_run_2
 #     print(
 #         i in df_dft_i.index
 #         )
-
-# +
-# df_to_run_2 = df_to_run[
-#     (df_to_run.sys_processed == False) & \
-#     (df_to_run.took_too_long_prev == False) & \
-#     (df_to_run.facet_abs_sum < 7)
-#     ]
-
-# +
-# assert False
 # -
+
+assert False
 
 # # Main Loop | Creating slabs
 
@@ -570,6 +624,19 @@ for i_cnt, (ind_i, row_i) in enumerate(df_to_run_2.iterrows()):
     slab_id_i = get_slab_id(bulk_id_i, facet_i, df_slab_ids)
     if slab_id_i is None:
         slab_id_i = GetFriendlyID(append_random_num=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # #####################################################
     data_dict_i["bulk_id"] = bulk_id_i
@@ -619,6 +686,14 @@ for i_cnt, (ind_i, row_i) in enumerate(df_to_run_2.iterrows()):
     df_slab_old = create_save_dataframe(
         data_dict_list=[data_dict_i],
         df_slab_old=df_slab_old)
+
+# +
+# slab_id_i = get_slab_id(bulk_id_i, facet_i, df_slab_ids)
+# if slab_id_i is None:
+#     slab_id_i = GetFriendlyID(append_random_num=True)
+# -
+
+slab_id_i
 
 # +
 # bulk_id_i: 9i6ixublcr slab_id_i: kogituwu_25 facet: 31-3

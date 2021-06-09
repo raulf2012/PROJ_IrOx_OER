@@ -6,14 +6,17 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.5.0
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
 #     name: conda-env-PROJ_irox_oer-py
 # ---
 
-# # Import Modules
+# # Setup *OH OER jobs
+# ---
+
+# ### Import Modules
 
 # +
 import os
@@ -36,14 +39,13 @@ from ase import io
 
 # #########################################################
 from methods import (
-    get_df_slab,
+#     get_df_slab,
     get_df_slabs_to_run,
     get_df_jobs,
     get_df_jobs_anal,
     get_df_jobs_data,
     get_df_jobs_paths,
     get_df_active_sites,
-    get_df_atoms_sorted_ind,
     get_df_slabs_oh,
     )
 
@@ -60,18 +62,14 @@ else:
     from tqdm import tqdm
     verbose = False
 
-# # Script Inputs
+# ### Script Inputs
 
 # Slac queue to submit to
 slac_sub_queue_i = "suncat3"  # 'suncat', 'suncat2', 'suncat3'
 
-# # Read Data
+# ### Read Data
 
 # +
-# #########################################################
-df_slab = get_df_slab()
-df_slab = df_slab.set_index("slab_id")
-
 # #########################################################
 df_jobs_data = get_df_jobs_data()
 
@@ -89,13 +87,18 @@ df_slabs_to_run = get_df_slabs_to_run()
 df_slabs_to_run = df_slabs_to_run.set_index(["compenv", "slab_id", "att_num"], drop=False)
 
 # #########################################################
-df_atoms_sorted_ind = get_df_atoms_sorted_ind()
-
-# #########################################################
 df_slabs_oh = get_df_slabs_oh()
 # -
 
-# # Setup
+# ### Filtering down to `oer_adsorbate` jobs
+
+df_ind = df_jobs_anal.index.to_frame()
+df_jobs_anal = df_jobs_anal.loc[
+    df_ind[df_ind.job_type == "oer_adsorbate"].index
+    ]
+df_jobs_anal = df_jobs_anal.droplevel(level=0)
+
+# ### Setup
 
 # +
 directory = os.path.join(
@@ -115,12 +118,12 @@ if not os.path.exists(directory):
 compenv = os.environ["COMPENV"]
 # -
 
-# # Filtering `df_jobs_anal`
+# ### Filtering `df_jobs_anal`
 
 # +
 from methods_run_slabs import get_systems_to_run_bare_and_oh
 
-indices_to_process = get_systems_to_run_bare_and_oh()
+indices_to_process = get_systems_to_run_bare_and_oh(df_jobs_anal)
 df_jobs_anal_i = df_jobs_anal.loc[indices_to_process]
 
 
@@ -166,12 +169,9 @@ for i in df_jobs_anal_i.index:
         indices_not_in.append(i)
 
 print(
-    "Number of systems that haven't been manually approved:",
+    "Number of systems that have not been manually approved:",
     len(indices_not_in),
     )
-
-# +
-# assert False
 
 # +
 # #########################################################
@@ -277,13 +277,6 @@ df_to_setup = df_to_setup.set_index(
     ["compenv", "slab_id", "att_num", "active_site", ], drop=False)
 
 df_to_setup_i = df_to_setup[df_to_setup.path_exists == False]
-
-# +
-# df_to_setup_i
-
-# +
-# print(222 * "TEMP | ")
-# assert False
 
 # +
 # #########################################################
@@ -412,73 +405,4 @@ print(20 * "# # ")
 # + active=""
 #
 #
-
-# + jupyter={"source_hidden": true}
-# slab_ids_phase_2 = df_slab[df_slab.phase == 2].index.tolist()
-
-# df_index_i = df_to_setup_i.index.to_frame()
-
-# for i in df_index_i.slab_id.unique():
-#     if i not in slab_ids_phase_2:
-#         print("Not there")
-
-# + jupyter={"source_hidden": true}
-# # df_dft_params = 
-# pd.DataFrame(data_dict_list)
-
-# # keys = ["compenv", "slab_id", "att_num", "active_site"]
-# # df_dft_params = df_dft_params.set_index(keys, drop=False)
-
-# + jupyter={"source_hidden": true}
-# df_slabs_oh
-
-# + jupyter={"source_hidden": true}
-# (compenv_i, slab_id_i, "o", active_site_j, att_num_i, )
-
-# + jupyter={"source_hidden": true}
-# # df_slabs_oh_i
-
-# # df_slabs_oh_i = 
-# df_slabs_oh.loc[
-#     (compenv_i, slab_id_i, "o", active_site_j, att_num_i, )
-#     ]
-
-# + jupyter={"source_hidden": true}
-# active_sites_unique_i
-
-# + jupyter={"source_hidden": true}
-# df_to_setup_i.path_full.tolist()
-
-# df_to_setup_i
-
-# + jupyter={"source_hidden": true}
-# # df_jobs_anal[df_jobs_anal.job_id_max == job_id_j]
-
-# df_ind_i = df_jobs_anal.index.to_frame()
-
-# df = df_ind_i
-# df = df[
-#     (df["compenv"] == "sherlock") &
-#     (df["slab_id"] == "likeniri_51") &
-#     # (df[""] == "") &
-#     [True for i in range(len(df))]
-#     ]
-
-# df_jobs_anal.loc[
-#     df.index
-#     ]
-
-# + jupyter={"source_hidden": true}
-# print(20 * "TEMP | ")
-
-# df_i = df_i.loc[
-#     [("slac", "fodopilu_17", 1)]
-#     ]
-
-# + jupyter={"source_hidden": true}
-# indices_to_process
-
-# + jupyter={"source_hidden": true}
-# job_id_j = "job_id_j"
-
-# df_i[df_i.job_id_max == job_id_j]
+#

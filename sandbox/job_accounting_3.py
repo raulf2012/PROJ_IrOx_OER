@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -22,6 +22,9 @@
 import os
 print(os.getcwd())
 import sys
+
+import copy
+from collections import Counter 
 
 import numpy as np
 import pandas as pd
@@ -41,6 +44,8 @@ from methods import (
     get_df_features_targets,
     )
 # -
+
+import plotly.graph_objs as go
 
 # ### Read Data
 
@@ -78,6 +83,8 @@ df_jobs_anal_i = df_jobs_anal[
     df_jobs_anal.index.to_frame().slab_id.isin(slab_ids)
     ]
 # -
+
+# # --------------------------------
 
 # ### Job accounting starting from jobs
 
@@ -297,7 +304,20 @@ print(
 #
 #
 #
+#
+#
+#
+#
+#
+#
+#
+#
+#
 # -
+
+# # --------------------------------
+
+# ### Job accounting using good slabs as starting point
 
 print(
     5  * "\n",
@@ -312,8 +332,6 @@ print(
     40 * "#",
 
     sep="")
-
-import copy
 
 df_slab_i = copy.deepcopy(df_slab)
 
@@ -390,60 +408,29 @@ for slab_id_i, row_i in df_slab_i.iterrows():
             # print("What's up with this one:", slab_id_i)
 
 df_slab_i_2 = df_slab_i.loc[good_slab_ids]
-# -
-
-len(good_slab_ids)
-
-np.unique(good_slab_ids).shape
-
-df_slab_i.shape
-
-df_slab_i.slab_id.unique().shape
 
 # +
-bulk_facet_list = []
-for slab_id_i, row_i in df_slab_i_2.iterrows():
-    tmp = 42
+# # TEMP | TEMP | TEMP | TEMP | TEMP | TEMP
 
-    tup_i = (
-        row_i.bulk_id,
-        row_i.facet,
-        )
-    bulk_facet_list.append(tup_i)
+# bulk_facet_list = []
+# for slab_id_i, row_i in df_slab_i_2.iterrows():
+#     tmp = 42
 
-idx = pd.MultiIndex.from_tuples(bulk_facet_list)
+#     tup_i = (
+#         row_i.bulk_id,
+#         row_i.facet,
+#         )
+#     bulk_facet_list.append(tup_i)
 
-len(idx.unique().tolist())
-# -
+# idx = pd.MultiIndex.from_tuples(bulk_facet_list)
 
-from collections import Counter 
+# len(idx.unique().tolist())
 
-for i in bulk_facet_list:
-    d = Counter(bulk_facet_list)
-    if d[i] > 1:
-        print(i)
 
-# +
-# assert False
-# -
-
-df = df_slab_i_2
-df = df[
-    (df["bulk_id"] == "n36axdbw65") &
-    (df["facet"] == "023") &
-    # (df[""] == "") &
-    [True for i in range(len(df))]
-    ]
-df
-
-# +
-# print('{} has occurred {} times'.format(x, d[x])) 
-# l = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5] 
-# l = bulk_facet_list
-# x = i
-# -
-
-df_slab_i_2.shape
+# for i in bulk_facet_list:
+#     d = Counter(bulk_facet_list)
+#     if d[i] > 1:
+#         print(i)
 
 # +
 num_took_too_long = 0
@@ -478,28 +465,6 @@ for i_cnt, row_i in df_slabs_to_run.iterrows():
         print(bulk_id_i, facet_i)
 
 #         print("ijisdf")
-
-# +
-# df_slabs_to_run.loc[[
-#     211,
-#     217,
-#     250,
-#     256,
-#     263,
-#     264,
-#     265,
-#     267,
-#     ]]
-
-# +
-# b583vr8hvw 110
-# b583vr8hvw 310
-# b583vr8hvw 200
-# b583vr8hvw 111
-# b583vr8hvw 001
-
-# +
-# assert False
 # -
 
 print(
@@ -540,18 +505,37 @@ print(
     " of them are over 80 atoms",
     
     sep="")
-# -
 
+# +
+# df_slab_i_2.num_atoms.max()
+
+# +
+cutoff_list = []
+num_slabs_list = []
+for cutoff_i in range(0, 350, 1):
+    cutoff_list.append(cutoff_i)
+
+    num_slabs_i = df_slab_i_2[df_slab_i_2.num_atoms <= cutoff_i].shape[0]
+    num_slabs_list.append(num_slabs_i)
+
+
+x_array = cutoff_list
+y_array = num_slabs_list
+trace = go.Scatter(
+    x=x_array,
+    y=y_array,
+    )
+data = [trace]
+
+fig = go.Figure(data=data)
+# fig.show()
+
+# +
+# assert False
+
+# +
 df_slab_i_3 = df_slab_i_2[df_slab_i_2.num_atoms < 80]
 
-# +
-# # TEMP
-# print(111 * "TEMP | ")
-# df_slab_i_3 = df_slab_i_3.loc[[
-#     "vapopihe_87"    
-#     ]]
-
-# +
 df_ind_i = df_jobs_anal.index.to_frame()
 
 num_have_been_run = 0
@@ -569,7 +553,7 @@ for slab_id_i, row_i in df_slab_i_3.iterrows():
     
     if df.shape[0] == 0:
         num_have_not_been_run += 1
-        # print(slab_id_i, "|", row_i.phase)
+        print(slab_id_i, "|", row_i.phase)
         # print(df.shape[0])
 
     elif df.shape[0] > 0:
@@ -595,10 +579,6 @@ print(
 
     sep="")
 
-
-
-174 + 15
-
 # +
 # #########################################################
 # These don't have any jobs run for them, why?
@@ -611,6 +591,8 @@ print(
 # naronusu_67 | 1
 # nofabigo_84 | 1
 # kodefivo_37 | 1
+
+# NEW | THESE ARE GOOD NOW I THINK
 # romudini_21 | 2
 # wafitemi_24 | 2
 # kapapohe_58 | 2
@@ -620,14 +602,6 @@ print(
 # migidome_55 | 2
 # semodave_57 | 2
 
-# +
-# df_slab.loc[
-#     "pumusuma_66"
-#     ]
-# -
-
-assert False
-
 # + active=""
 #
 #
@@ -635,6 +609,8 @@ assert False
 #
 #
 # -
+
+# # --------------------------------
 
 # # Doing something here forgot what
 
@@ -703,3 +679,66 @@ df_jobs_anal_o_i.loc[
 #         3),
 #     " active sites on average",
 #     sep="")
+# -
+
+
+
+# + jupyter={"source_hidden": true}
+# len(good_slab_ids)
+
+# np.unique(good_slab_ids).shape
+
+# df_slab_i.shape
+
+# df_slab_i.slab_id.unique().shape
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# df = df_slab_i_2
+# df = df[
+#     (df["bulk_id"] == "n36axdbw65") &
+#     (df["facet"] == "023") &
+#     # (df[""] == "") &
+#     [True for i in range(len(df))]
+#     ]
+# df
+
+# + jupyter={"source_hidden": true}
+# print('{} has occurred {} times'.format(x, d[x])) 
+# l = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5] 
+# l = bulk_facet_list
+# x = i
+
+# + jupyter={"source_hidden": true}
+# df_slab_i_2.shape
+
+# + jupyter={"source_hidden": true}
+# df_slabs_to_run.loc[[
+#     211,
+#     217,
+#     250,
+#     256,
+#     263,
+#     264,
+#     265,
+#     267,
+#     ]]
+
+# + jupyter={"source_hidden": true}
+# b583vr8hvw 110
+# b583vr8hvw 310
+# b583vr8hvw 200
+# b583vr8hvw 111
+# b583vr8hvw 001
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# +
+# # TEMP
+# print(111 * "TEMP | ")
+# df_slab_i_3 = df_slab_i_3.loc[[
+#     "vapopihe_87"    
+#     ]]

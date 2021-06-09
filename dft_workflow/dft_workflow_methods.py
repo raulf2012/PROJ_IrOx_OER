@@ -20,6 +20,7 @@ from proj_data import compenv
 from dft_job_automat.compute_env import ComputerCluster
 #__|
 
+from proj_data import compenvs
 
 
 # #########################################################
@@ -196,6 +197,17 @@ def job_decision(
     #__|
 
     # #####################################################
+    #| - If cgroup out-of-memory handler error
+    if error and error_type == "out-of-memory handler":
+        decision_i.append("out of memory")
+        decision_i.append("resubmit")
+        dft_params_new.update(dict(
+            kpar=10,
+            npar=6,
+            ))
+    #__|
+
+    # #####################################################
     #| - If POSMAP symmetry error occurs
     if error and error_type == "POSMAP symm err":
         decision_i.append("tweak_params")
@@ -226,6 +238,9 @@ def job_decision(
 
     if error and error_type == "Segmentation fault":
         decision_i.append("resubmit")
+    if error and error_type == "slurm allocation issue":
+        decision_i.append("resubmit")
+
 
 
     if job_state == "FAILED":
@@ -361,7 +376,6 @@ def get_job_spec_scheduler_params(
     #__|
 
 def submit_job(
-    # wall_time_i=None,
     nodes_i=None,
     path_i=None,
     num_atoms=None,
@@ -369,6 +383,14 @@ def submit_job(
     queue=None,
     ):
     #| - submit_job
+
+    print("nodes_i:", nodes_i)
+    print("path_i:", path_i)
+    print("num_atoms:", num_atoms)
+    print("wall_time_factor:", wall_time_factor)
+    print("queue:", queue)
+
+
 
     #| - Wall time
     # wall_time_i = calc_wall_time(num_atoms, factor=wall_time_factor)
@@ -716,7 +738,8 @@ def get_job_paths_info(path_i):
 
     # #########################################################
     #  Getting the compenv
-    compenvs = ["slac", "sherlock", "nersc", ]
+    # compenvs = ["slac", "sherlock", "nersc", ]
+
     compenv_out = None
     got_compenv_from_path = False
     for compenv_i in compenvs:

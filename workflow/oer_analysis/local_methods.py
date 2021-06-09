@@ -18,20 +18,21 @@ from methods import (
     get_df_ads,
     get_df_job_ids,
     get_df_dft,
+    get_df_features_targets,
     )
 #__|
 
 
-def get_ORR_PLT():
+def old_get_ORR_PLT():
     """
     """
     #| - get_ORR_PLT
 
     # #########################################################
-    df_ads = get_df_ads()
+    # df_ads = get_df_ads()
 
-    df_ads = df_ads[~df_ads.g_oh.isna()]
-    df_m = df_ads
+    # df_ads = df_ads[~df_ads.g_oh.isna()]
+    # df_m = df_ads
 
     # #########################################################
     df_dft = get_df_dft()
@@ -39,9 +40,9 @@ def get_ORR_PLT():
     # #########################################################
     df_job_ids = get_df_job_ids()
 
+    # #########################################################
+    df_features_targets = get_df_features_targets()
 
-    # df_m.g_ooh = 1.16 * df_m.g_oh + 2.8
-    df_m["g_ooh"] = df_m.g_oh + 2.8
 
 
     smart_format_dict = [
@@ -57,22 +58,36 @@ def get_ORR_PLT():
         color_list=None,
         rxn_type="OER")
 
+    # # df_m.g_ooh = 1.16 * df_m.g_oh + 2.8
+    # df_m["g_ooh"] = df_m.g_oh + 2.8
 
-    df_m = df_m.set_index(["compenv", "slab_id", ], drop=False)
+    # df_m = df_m.set_index(["compenv", "slab_id", ], drop=False)
+
+    new_col = (df_features_targets["targets"]["g_oh"] + 2.8)
+
+    new_col.name = ("targets", "g_ooh", "", )
+
+    df_features_targets = pd.concat([
+        new_col,
+        df_features_targets,
+        ], axis=1)
+
 
     paths_dict = dict()
-    for name_i, row_i in df_m.iterrows():
-        #| - Loop through data and add to ORR_PLT
-        # #####################################################
-        g_o_i = row_i.g_o
-        g_oh_i = row_i.g_oh
-        g_ooh_i = row_i.g_ooh
-        slab_id_i = row_i.slab_id
-        active_site_i = row_i.active_site
-        job_id_o_i = row_i.job_id_o
-        job_id_oh_i = row_i.job_id_oh
-        # #####################################################
+    # for name_i, row_i in df_m.iterrows():
+    for name_i, row_i in df_features_targets.iterrows():
 
+        #| - Loop through data and add to ORR_PLT
+
+        # #####################################################
+        g_o_i = row_i[("targets", "g_o", "", )]
+        g_oh_i = row_i[("targets", "g_oh", "", )]
+        g_ooh_i = row_i[("targets", "g_ooh", "", )]
+        slab_id_i = row_i[("data", "slab_id", "")]
+        active_site_i = row_i[("data", "active_site", "")]
+        job_id_o_i = row_i[("data", "job_id_o", "")]
+        job_id_oh_i = row_i[("data", "job_id_oh", "")]
+        # #####################################################
 
         # #####################################################
         df_job_ids_i = df_job_ids[df_job_ids.slab_id == slab_id_i]

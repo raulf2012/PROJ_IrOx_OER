@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.5.0
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -16,7 +16,7 @@
 # # Setup new jobs to resubmit *O (and possibly *) from *OH to achieve better magmom matching
 # ---
 
-# # Import Modules
+# ### Import Modules
 
 # +
 import os
@@ -30,21 +30,15 @@ from shutil import copyfile
 
 import numpy as np
 import pandas as pd
-# pd.set_option("display.max_columns", None)
-# pd.set_option('display.max_rows', None)
 pd.options.display.max_colwidth = 130
 
 # #########################################################
 from methods import (
     get_df_jobs,
-    get_df_jobs_anal,
-    get_df_oer_groups,
-    get_df_jobs_oh_anal,
     get_df_rerun_from_oh,
     get_df_atoms_sorted_ind,
     )
 from methods import get_df_coord
-from methods import get_df_jobs_paths
 from methods import get_df_jobs_data
 from methods import get_other_job_ids_in_set
 from methods import get_df_slab
@@ -61,35 +55,32 @@ else:
     from tqdm import tqdm
     verbose = False
 
-# # Read Data
+# ### Read Data
 
 # +
 df_jobs = get_df_jobs()
-
-df_oer_groups = get_df_oer_groups()
-
-df_jobs_oh_anal = get_df_jobs_oh_anal()
 
 df_rerun_from_oh = get_df_rerun_from_oh()
 df_rerun_from_oh_i = df_rerun_from_oh
 
 df_atoms_sorted_ind = get_df_atoms_sorted_ind()
 
-df_jobs_paths = get_df_jobs_paths()
-
 df_jobs_data = get_df_jobs_data()
 
 df_slab = get_df_slab()
+# -
+
+# ### Filtering down to `oer_adsorbate` jobs
+
+df_ind = df_atoms_sorted_ind.index.to_frame()
+df_atoms_sorted_ind = df_atoms_sorted_ind.loc[
+    df_ind[df_ind.job_type == "oer_adsorbate"].index
+    ]
+df_atoms_sorted_ind = df_atoms_sorted_ind.droplevel(level=0)
 
 # + active=""
 #
 #
-# -
-
-df_rerun_from_oh
-
-# +
-# assert False
 # -
 
 # ### Only setting up jobs for slab phase > 1
@@ -112,8 +103,6 @@ if verbose:
 # -
 
 df_rerun_from_oh_i = df_rerun_from_oh_i.reset_index()
-
-df_rerun_from_oh_i
 
 # +
 # #########################################################
@@ -234,22 +223,12 @@ for i_cnt, row_i in df_rerun_from_oh_i.iterrows():
     data_dict_dict[i_cnt] = data_dict_i
 
 df_rerun_from_oh_i_2 = df_rerun_from_oh_i.loc[indices_to_process]
-
-# +
-# df_rerun_from_oh_i_2 = df_rerun_from_oh_i_2.iloc[[0]]
 # -
 
 print(
     df_rerun_from_oh_i_2.shape[0],
     " new jobs are being set up",
     sep="")
-
-# +
-# df_rerun_from_oh_i_2
-
-# +
-# assert False
-# -
 
 # ### Create directories and initialize
 
@@ -300,7 +279,7 @@ for i_cnt, row_i in df_rerun_from_oh_i_2.iterrows():
 
     # #########################################################
     from local_methods import get_bare_o_from_oh
-    bare_o_out_dict =  get_bare_o_from_oh(
+    bare_o_out_dict = get_bare_o_from_oh(
         compenv=compenv_i,
         slab_id=slab_id_i,
         active_site=active_site_i,
@@ -510,5 +489,6 @@ print(20 * "# # ")
 # #########################################################
 
 # + active=""
+#
 #
 #

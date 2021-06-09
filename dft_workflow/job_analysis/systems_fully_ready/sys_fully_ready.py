@@ -17,6 +17,8 @@
 # ---
 #
 # Notebooks commonly broke because of trivial issues, like the files weren't downloaded locally or something like that
+#
+#
 
 # # Import Modules
 
@@ -30,6 +32,8 @@ import numpy as np
 
 # #########################################################
 from methods import get_df_jobs, get_df_atoms_sorted_ind
+from methods import get_df_features_targets
+from methods import get_df_features
 # -
 
 from methods import isnotebook    
@@ -46,23 +50,13 @@ df_jobs = get_df_jobs()
 df_jobs_i = df_jobs
 
 df_atoms_sorted_ind = get_df_atoms_sorted_ind()
+
+# df_features_targets = get_df_features_targets()
+
+df_features = get_df_features()
 # -
 
-# #########################################################
-group_cols = ["compenv", "slab_id", "ads", "active_site", "att_num", ]
-grouped = df_jobs_i.groupby(group_cols)
-# #########################################################
-num_groups_processed = 0
-for i_cnt, (name_i, group_i) in enumerate(grouped):
-    tmp = 42
-
-group_i
-
-# +
-df_atoms_sorted_ind
-
-name_i
-# -
+df_features[df_features["data"]["orig_slab_good"] == False]
 
 # #########################################################
 print(20 * "# # ")
@@ -76,3 +70,30 @@ print(20 * "# # ")
 #
 #
 #
+
+# +
+# # #########################################################
+# group_cols = ["compenv", "slab_id", "ads", "active_site", "att_num", ]
+# grouped = df_jobs_i.groupby(group_cols)
+# # #########################################################
+# num_groups_processed = 0
+# for i_cnt, (name_i, group_i) in enumerate(grouped):
+#     tmp = 42
+
+# + active=""
+#
+#
+#
+
+# + jupyter={"source_hidden": true}
+# group_i
+
+# + jupyter={"source_hidden": true}
+# df_atoms_sorted_ind
+
+# name_i
+
+# + jupyter={"source_hidden": true}
+# df_features_targets["data"].columns
+
+# df_features_targets

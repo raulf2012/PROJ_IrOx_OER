@@ -8,17 +8,17 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.4.2
 #   kernelspec:
-#     display_name: Python [conda env:PROJ_IrOx_Active_Learning_OER]
+#     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
-#     name: conda-env-PROJ_IrOx_Active_Learning_OER-py
+#     name: conda-env-PROJ_irox_oer-py
 # ---
 
-# # Collect DFT data into *, *O, *OH collections
+# # Collect DFT data into OER sets 
 # ---
 
 # # Import Modules
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 import os
 print(os.getcwd())
 import sys
@@ -27,9 +27,9 @@ import time; ti = time.time()
 import pickle
 
 import pandas as pd
-# pd.set_option("display.max_columns", None)
-pd.set_option('display.max_rows', None)
-# pd.options.display.max_colwidth = 100
+pd.set_option('display.max_columns', None)
+# pd.set_option('display.max_rows', None)
+
 import numpy as np
 
 # #########################################################
@@ -40,6 +40,9 @@ from methods import get_df_jobs_anal
 from methods import get_df_jobs_data
 from methods import get_df_slabs_to_run
 from methods import get_df_jobs_oh_anal
+from methods import get_df_atoms_sorted_ind
+from methods import get_df_octa_info
+from methods import get_df_struct_drift
 
 # #########################################################
 from local_methods import calc_ads_e
@@ -56,10 +59,7 @@ else:
     from tqdm import tqdm
     verbose = False
 
-# # Read Data
-
-# +
-# df_slabs_to_run
+# ### Read Data
 
 # +
 # #########################################################
@@ -78,14 +78,28 @@ df_slabs_to_run = df_slabs_to_run.set_index(
 df_jobs_oh_anal = get_df_jobs_oh_anal()
 df_jobs_oh_anal = df_jobs_oh_anal.set_index(["compenv", "slab_id", "active_site"])
 
-# +
-# df_jobs_oh_anal
-# get_df_jobs_anal()
+# #########################################################
+df_atoms_sorted = get_df_atoms_sorted_ind()
 
-# get_df_jobs_oh_anal()
+# #########################################################
+df_octa_info = get_df_octa_info()
+
+# #########################################################
+df_struct_drift = get_df_struct_drift()
+# -
+
+# ### Filtering `df_jobs_anal` to only `oer_adsorbate` job types
 
 # +
-# assert False
+df_ind = df_jobs_anal_i.index.to_frame()
+
+df_jobs_anal_i = df_jobs_anal_i.loc[
+    df_ind[df_ind.job_type == "oer_adsorbate"].index
+    ]
+df_jobs_anal_i = df_jobs_anal_i.droplevel(level=0)
+# -
+
+# ### Filter columns in `df_jobs_anal_i`
 
 # +
 from misc_modules.pandas_methods import drop_columns
@@ -159,12 +173,11 @@ df_jobs_anal_i = df_jobs_anal_i.apply(
     method,
     axis=1,
     )
+# -
+
+# ### Removing O slabs from dataframe
 
 # +
-# #########################################################
-# Only completed jobs will be considered
-df_jobs_anal_i = df_jobs_anal_i[df_jobs_anal_i.job_completely_done == True]
-
 # #########################################################
 # Remove the *O slabs for now
 # The fact that they have NaN active sites will mess up the groupby
@@ -175,7 +188,23 @@ idx = pd.IndexSlice
 df_jobs_anal_no_o = df_jobs_anal_i.loc[idx[:, :, ads_list_no_o, :, :], :]
 # -
 
-# # Main Loop
+# ### Removing rows whose atoms failed to sort
+
+# +
+df_atoms_sorted_i = df_atoms_sorted[df_atoms_sorted.index.to_frame().job_type == "oer_adsorbate"] 
+df_atoms_sorted_i = df_atoms_sorted_i.droplevel(level=0)
+
+df_atoms_sorted_i = df_atoms_sorted_i[df_atoms_sorted_i.failed_to_sort == True]
+
+
+# Dropping rows that have failed to sort atoms objects
+df_jobs_anal_no_o = df_jobs_anal_no_o.drop(df_atoms_sorted_i.index)
+# -
+
+# ### Main Loop
+
+# +
+# print("TEMP TEMP TEMP | heuristic__if_lower_e=True | TEMP TEMP TEMP")
 
 # +
 # #########################################################
@@ -185,26 +214,25 @@ groupby_cols = ["compenv", "slab_id", "active_site", ]
 grouped = df_jobs_anal_no_o.groupby(groupby_cols)
 for name_i, group in grouped:
 
+
+
+# # #########################################################
 # for i in range(1):
-#     # name_i = ('sherlock', 'vuvunira_55', 73.0)
-#     # name_i = ('slac', 'waloguhe_35', 65.0)
-#     name_i = ("slac", "kalisule_45", 68.0)
+#     # name_i = ('sherlock', 'kamevuse_75', 49.0)
+#     # name_i = ('nersc', 'kererape_22', 88.0, )
+#     name_i = ('nersc', 'dakoputu_58', 74.0)
+#     # #####################################################
 #     group = grouped.get_group(name_i)
+# # #########################################################
+
+    # print(name_i)
 
     # #####################################################
-    ads_e_o_i = None
-    ads_e_oh_i = None
-    job_id_o_i = None
-    job_id_oh_i  = None
-    job_id_bare_i = None
-    all_jobs_in_group_done = None
-    any_bare_done = None
-    any_oh_done = None
-    any_o_done = None
-    any_o_done_with_active_sites = None
+    ads_e_o_i = None; ads_e_oh_i = None
+    job_id_o_i = None; job_id_oh_i  = None; job_id_bare_i = None
+    any_bare_done = None; any_oh_done = None; any_o_done = None
+    any_o_done_with_active_sites = None; all_jobs_in_group_done = None
     # #####################################################
-
-
 
     # #####################################################
     data_dict_i = dict()
@@ -215,7 +243,6 @@ for name_i, group in grouped:
     slab_id_i = name_i[1]
     active_site_i = name_i[2]
     # #####################################################
-
 
 
     out_dict = get_group_w_all_ads(
@@ -238,102 +265,121 @@ for name_i, group in grouped:
     any_bare_done = out_dict["any_bare_done"]
 
 
-    # TEMP
+    # Check that potential energy is numerical
     for i in group_i.pot_e.tolist():
         if type(i) != float:
-            print("8asdihydfsd908f: ", name_i)
+            print("A non-numerical potential energy entered WF: ", name_i)
 
 
-    oer_trip_i = get_oer_triplet(
-        name=name_i,
-        group=group_i,
-        df_jobs_oh_anal=df_jobs_oh_anal,
-        )
+    # Only consider done jobs from here
+    group_done_i = group_i[group_i.job_completely_done == True]
+
+    group_ind_i = group_done_i.index.to_frame()
+
+    necessary_ads_present = True
+    if "o" not in group_ind_i.ads.tolist():
+        necessary_ads_present = False
+
+    if necessary_ads_present:
+
+        oer_trip_i = get_oer_triplet(
+            name=name_i,
+            group=group_done_i,
+            df_jobs_oh_anal=df_jobs_oh_anal,
+            df_octa_info=df_octa_info,
+            heuristic__if_lower_e=False,
+            # heuristic__if_lower_e=True,
+            )
 
 
 
 
-    # #####################################################
-    # Checking if *O is avail and get job id
-    o_avail = "o" in oer_trip_i.index.to_frame()["ads"].tolist()
-    if o_avail:
-        idx = pd.IndexSlice
-        row_o_i = oer_trip_i.loc[idx[:, :, "o", :, :], :].iloc[0]
-        job_id_o_i = row_o_i.job_id_max
-    else:
-        ads_e_o_i = None
-        job_id_o_i = None
+        # #################################################
+        # Checking if *O is avail and get job id
+        o_avail = "o" in oer_trip_i.index.to_frame()["ads"].tolist()
+        if o_avail:
+            idx = pd.IndexSlice
+            row_o_i = oer_trip_i.loc[idx[:, :, "o", :, :], :].iloc[0]
+            job_id_o_i = row_o_i.job_id_max
+            low_e_not_from_oh__o = row_o_i.low_e_not_from_oh
+        else:
+            ads_e_o_i = None
+            job_id_o_i = None
 
-    # #####################################################
-    # Checking if *OH is avail and get job id
-    oh_avail = "oh" in oer_trip_i.index.to_frame()["ads"].tolist()
-    if oh_avail:
-        idx = pd.IndexSlice
-        row_oh_i = oer_trip_i.loc[idx[:, :, "oh", :, :], :].iloc[0]
-        job_id_oh_i = row_oh_i.job_id_max
-    else:
-        ads_e_oh_i = None
-        job_id_oh_i = None
-
-
-    # #####################################################
-    # Can only compute adsorption energies if bare (*) is avail
-    bare_avail = "bare" in oer_trip_i.index.to_frame()["ads"].tolist()
-    if bare_avail:
-        idx = pd.IndexSlice
-        row_bare_i = oer_trip_i.loc[idx[:, :, "bare", :, :], :].iloc[0]
-        job_id_bare_i = row_bare_i.job_id_max
-
-
-        df_ads_i = calc_ads_e(oer_trip_i.reset_index())
-        df_ads_i = df_ads_i.set_index("ads", drop=False)
-
-        ads_e_o_i = df_ads_i.loc["o"]["ads_e"]
-
-        if "oh" in df_ads_i.index:
-            ads_e_oh_i = df_ads_i.loc["oh"]["ads_e"]
-            job_id_oh_i = df_ads_i.loc["oh"]["job_id_max"]
+        # #################################################
+        # Checking if *OH is avail and get job id
+        oh_avail = "oh" in oer_trip_i.index.to_frame()["ads"].tolist()
+        if oh_avail:
+            idx = pd.IndexSlice
+            row_oh_i = oer_trip_i.loc[idx[:, :, "oh", :, :], :].iloc[0]
+            job_id_oh_i = row_oh_i.job_id_max
         else:
             ads_e_oh_i = None
             job_id_oh_i = None
 
-    else:
-        job_id_bare_i = None
+
+        # #################################################
+        # Can only compute adsorption energies if bare (*) is avail
+        bare_avail = "bare" in oer_trip_i.index.to_frame()["ads"].tolist()
+        if bare_avail:
+            idx = pd.IndexSlice
+            row_bare_i = oer_trip_i.loc[idx[:, :, "bare", :, :], :].iloc[0]
+            job_id_bare_i = row_bare_i.job_id_max
+            low_e_not_from_oh__bare = row_bare_i.low_e_not_from_oh
+
+            df_ads_i = calc_ads_e(oer_trip_i.reset_index())
+            df_ads_i = df_ads_i.set_index("ads", drop=False)
+
+            ads_g_o_i = df_ads_i.loc["o"]["ads_e"]
+            ads_e_o_i = df_ads_i.loc["o"]["ads_e_elec"]
+
+            if "oh" in df_ads_i.index:
+                ads_g_oh_i = df_ads_i.loc["oh"]["ads_e"]
+                ads_e_oh_i = df_ads_i.loc["oh"]["ads_e_elec"]
+                job_id_oh_i = df_ads_i.loc["oh"]["job_id_max"]
+            else:
+                ads_g_oh_i = None
+                ads_e_oh_i = None
+                job_id_oh_i = None
+
+        else:
+            job_id_bare_i = None
 
 
 
-    # #####################################################
-    data_dict_i.update(name_dict_i)
-    # #####################################################
-    data_dict_i["g_o"] = ads_e_o_i
-    data_dict_i["g_oh"] = ads_e_oh_i
-    data_dict_i["job_id_o"] = job_id_o_i
-    data_dict_i["job_id_oh"] = job_id_oh_i 
-    data_dict_i["job_id_bare"] = job_id_bare_i
-    data_dict_i["all_done"] = all_jobs_in_group_done
-    data_dict_i["any_bare_done"] = any_bare_done
-    data_dict_i["any_oh_done"] = any_oh_done
-    data_dict_i["any_o_done"] = any_o_done
-    data_dict_i["any_o_w_as_done"] = any_o_done_with_active_sites
-    # #####################################################
-    data_dict_list.append(data_dict_i)
-    # #####################################################
+        # #################################################
+        data_dict_i.update(name_dict_i)
+        # #################################################
+        data_dict_i["g_o"] = ads_g_o_i
+        data_dict_i["g_oh"] = ads_g_oh_i
+        data_dict_i["e_o"] = ads_e_o_i
+        data_dict_i["e_oh"] = ads_e_oh_i
+        data_dict_i["job_id_o"] = job_id_o_i
+        data_dict_i["job_id_oh"] = job_id_oh_i 
+        data_dict_i["job_id_bare"] = job_id_bare_i
+        data_dict_i["all_done"] = all_jobs_in_group_done
+        data_dict_i["any_bare_done"] = any_bare_done
+        data_dict_i["any_oh_done"] = any_oh_done
+        data_dict_i["any_o_done"] = any_o_done
+        data_dict_i["any_o_w_as_done"] = any_o_done_with_active_sites
+        data_dict_i["low_e_not_from_oh__o"] = low_e_not_from_oh__o
+        data_dict_i["low_e_not_from_oh__bare"] = low_e_not_from_oh__bare
+        # #################################################
+        data_dict_list.append(data_dict_i)
+        # #################################################
 
 
 # #########################################################
 df_ads = pd.DataFrame(data_dict_list)
 # #########################################################
-# -
-
-df_ads
 
 # + active=""
 #
 #
-
-# +
-# assert False
+#
 # -
+
+# ### Writing data to pickle
 
 # Pickling data ###########################################
 directory = os.path.join(
@@ -349,8 +395,7 @@ with open(os.path.join(directory, "df_ads.pickle"), "wb") as fle:
 from methods import get_df_ads
 
 df_ads_tmp = get_df_ads()
-
-df_ads_tmp.head()
+df_ads_tmp.iloc[0:3]
 # -
 
 # #########################################################

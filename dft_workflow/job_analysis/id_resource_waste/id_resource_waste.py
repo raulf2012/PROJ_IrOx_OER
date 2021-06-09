@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -133,6 +133,11 @@ df_i = df[df.job_completely_done == False]
 df_i = df_i[df_i.num_revs > 3]
 
 df_i
+
+# +
+# df_i.iloc[0:3].index.tolist()
+
+df_i.iloc[0:3].index.tolist()
 
 # + active=""
 #

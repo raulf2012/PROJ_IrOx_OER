@@ -72,22 +72,63 @@ if df_active_sites_prev is None:
 
 # # Create Directories
 
-directory = "out_data"
-assert False, "Fix os.makedirs"
+# directory = "out_data"
+directory = os.path.join(
+    os.environ["PROJ_irox_oer"],
+    "workflow/enumerate_adsorption",
+    "out_data")
+# assert False, "Fix os.makedirs"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
+# +
+# # df_active_sites_prev.loc[[
+# df_active_sites_prev = df_active_sites_prev.drop([
+#     "pumusuma_66",
+#     "fufalego_15",
+#     "tefenipa_47",
+#     "silovabu_91",
+#     "naronusu_67",
+#     "nofabigo_84",
+#     "kodefivo_37",
+#     ])
+
+# +
+# # df_slab_i = 
+# df_slab.loc[[
+#     "pumusuma_66",
+#     "fufalego_15",
+#     "tefenipa_47",
+#     "silovabu_91",
+#     "naronusu_67",
+#     "nofabigo_84",
+#     "kodefivo_37",
+#     ]]
+
+# +
 slab_ids_to_proc = []
 for slab_id_i, row_i in df_slab.iterrows():
     if slab_id_i not in df_active_sites_prev.index:
         slab_ids_to_proc.append(slab_id_i)
 
-# +
 df_slab_i = df_slab.loc[
     slab_ids_to_proc
     ]
 
 df_slab_i = df_slab_i[df_slab_i.phase == 2]
+# -
+
+df_slab_i
+
+
+
+# +
+# df_slab_i = df_slab_i.loc[["pemupehe_18"]]
+
+# df_slab_i
+
+# +
+# assert False
 
 # +
 # #########################################################
@@ -158,6 +199,14 @@ df_active_sites = df_active_sites = pd.concat([
     df_active_sites,
     df_active_sites_prev,
     ])
+
+# +
+# from plotting.my_plotly import my_plotly_plot
+
+# # my_plotly_plot?
+
+# +
+# assert False
 # -
 
 # # Post-process active site dataframe
@@ -177,15 +226,6 @@ columns_list = [
 df_active_sites = reorder_df_columns(columns_list, df_active_sites)
 # -
 
-# # Combining previous `df_active_sites` and the rows processed during current run
-
-# +
-# df_active_sites = df_active_sites = pd.concat([
-#     df_active_sites,
-#     df_active_sites_prev,
-#     ])
-# -
-
 # # Summary of data objects
 
 print(
@@ -196,11 +236,14 @@ print(
     df_active_sites.num_active_sites_unique.sum())
 
 # Pickling data ###########################################
-directory = "out_data"
-assert False, "Fix os.makedirs"
+directory = os.path.join(
+    os.environ["PROJ_irox_oer"],
+    "workflow/enumerate_adsorption",
+    "out_data")
 if not os.path.exists(directory): os.makedirs(directory)
 with open(os.path.join(directory, "df_active_sites.pickle"), "wb") as fle:
     pickle.dump(df_active_sites, fle)
+    # pickle.dump(df_active_sites_prev, fle)
 # #########################################################
 
 print(df_active_sites.shape)
@@ -231,3 +274,16 @@ for i_cnt, row_i in df_active_sites.iterrows():
     df_rdf_ij_dict[row_i.slab_id] = df_rdf_ij_i
 
 rdf_ij_list = [i for i in df_rdf_ij_i.values.flatten() if i != 0.]
+
+# + active=""
+#
+#
+#
+
+# + jupyter={"source_hidden": true}
+# Combining previous `df_active_sites` and the rows processed during current run
+
+# df_active_sites = df_active_sites = pd.concat([
+#     df_active_sites,
+#     df_active_sites_prev,
+#     ])

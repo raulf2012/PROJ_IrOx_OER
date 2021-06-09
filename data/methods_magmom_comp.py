@@ -20,6 +20,9 @@ from pymatgen.io.ase import AseAtomsAdaptor
 # __|
 
 
+from methods import nearest_atom_mine
+
+
 def nearest_atom(atoms, position):
     """Returns atom nearest to position"""
     #| - nearest_atom
@@ -30,63 +33,6 @@ def nearest_atom(atoms, position):
         dist_list.append(dist)
 
     return atoms[np.argmin(dist_list)]
-    #__|
-
-def nearest_atom_mine(atoms, position, nth_closest=0):
-    """
-
-    args:
-      atoms:
-      position:
-      nth_closest: pass 0 for nearest atom, 1 for 2nd neareset and so on...
-    """
-    #| - nearest_atom_mine
-    struct = AseAtomsAdaptor.get_structure(atoms)
-    Lattice = struct.lattice
-
-    # #########################################################
-    dummy_site_j = PeriodicSite(
-        "N", position, Lattice,
-        to_unit_cell=False, coords_are_cartesian=True,
-        properties=None, skip_checks=False)
-
-    data_dict_list = []
-    for index_i, site_i in enumerate(struct):
-        data_dict_i = dict()
-        # site_i = struct[32]
-
-        distance_i, image_i = site_i.distance_and_image(dummy_site_j)
-        # print("distance_i:", distance_i)
-
-        # #####################################################
-        data_dict_i["atoms_index"] = int(index_i)
-        data_dict_i["distance"] = distance_i
-        data_dict_i["image"] = image_i
-        # #####################################################
-        data_dict_list.append(data_dict_i)
-
-    # #########################################################
-    df_dist = pd.DataFrame(data_dict_list)
-    df_dist = df_dist.sort_values("distance")
-
-
-    # #########################################################
-    closest_site = df_dist.iloc[nth_closest]
-
-    closest_index = int(closest_site.atoms_index)
-    closest_distance = closest_site.distance
-    image = closest_site.image
-
-    closest_atom = atoms[closest_index]
-
-
-    out_dict = dict(
-        closest_atom=closest_atom,
-        closest_distance=closest_distance,
-        image=image,
-        )
-    return(out_dict)
-    # return(closest_atom)
     #__|
 
 def get_magmom_diff_data(
@@ -187,8 +133,13 @@ def _get_magmom_diff_data(
         # ads_atom = nearest_atom(ads, slab_atom.position)
         # ads_atom = nearest_atom_mine(ads, slab_atom.position)
 
+        # print(dir(slab_atom))
+
         # #################################################
-        out_dict_i = nearest_atom_mine(ads, slab_atom.position, nth_closest=0)
+        out_dict_i = nearest_atom_mine(
+            ads, slab_atom.position,
+            slab_atom.symbol, nth_closest=0,
+            )
         # #################################################
         closest_atom = out_dict_i["closest_atom"]
         closest_distance = out_dict_i["closest_distance"]
@@ -471,11 +422,3 @@ class Get_G:
         #__|
 
     # __|
-
-
-
-#| - __old__
-# # ads_atoms =
-# # slab_atoms =
-# flip_spin_sign = True
-#__|

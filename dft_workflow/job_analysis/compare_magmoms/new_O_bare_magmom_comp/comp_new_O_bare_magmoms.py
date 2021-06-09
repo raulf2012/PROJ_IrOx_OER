@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -39,6 +39,8 @@ df_jobs_anal = get_df_jobs_anal()
 df_jobs_data = get_df_jobs_data()
 
 # +
+# TODO | Don't use df_oer_groups, not needed anymore
+
 from methods import get_df_oer_groups
 
 df_oer_groups = get_df_oer_groups()

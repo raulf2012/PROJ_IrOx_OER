@@ -25,22 +25,20 @@ import plotly.graph_objects as go
 from pymatgen.io.ase import AseAtomsAdaptor
 from pymatgen.analysis import local_env
 
+from pymatgen.core.sites import PeriodicSite
+
 # #########################################################
 from misc_modules.pandas_methods import drop_columns
+
+# #########################################################
+from proj_data import metal_atom_symbol
+from proj_data import compenvs
 #__|
 
 
-from methods_magmom_comp import (
-    get_magmom_diff_data,
-    _get_magmom_diff_data,
-    )
 
-# from methods_ccf_struct import (
-#     get_ccf,
-#     get_D_ij,
-#     get_identical_slabs,
-#     )
 
+# #########################################################
 # #########################################################
 #| - Get data objects methods
 
@@ -200,15 +198,18 @@ def get_structure_coord_df(
     return(df_struct_coord_i)
     #__|
 
-def get_df_jobs(exclude_wsl_paths=True):
+def get_df_jobs(
+    exclude_wsl_paths=True,
+    return_max_only=False,
+    ):
     """
     The data object is created by the following notebook:
 
     $PROJ_irox_oer/dft_workflow/job_processing/collect_job_dirs_data.ipynb
     """
     #| - get_df_jobs
-
     # #####################################################
+    # Reading df_jobs dataframe from pickle
     import pickle; import os
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
@@ -216,69 +217,47 @@ def get_df_jobs(exclude_wsl_paths=True):
         "out_data/df_jobs_combined.pickle")
     with open(path_i, "rb") as fle:
         df_jobs = pickle.load(fle)
-    # #####################################################
 
+    # #####################################################
     if exclude_wsl_paths:
         df_jobs = df_jobs[df_jobs.compenv != "wsl"]
 
+    # #####################################################
     df_jobs = df_jobs.fillna("NaN")
 
-    # print("TEMP | Removing NERSC manually")
-    # df_jobs = df_jobs[df_jobs.compenv != "nersc"]
+    #| - Returning only last rev for each job system
+    if return_max_only:
+        max_rev_list = []
+        group_cols = ["compenv", "slab_id", "job_type", "ads", "active_site", "att_num", ]
+        grouped = df_jobs.groupby(group_cols)
+        for name, group in grouped:
 
-    #| - __old__
-    # # Sorting dataframe
-    # sort_list = ["compenv", "bulk_id", "slab_id", "att_num", "rev_num"]
-    # df_jobs = df_jobs.sort_values(sort_list)
-    #
-    #
-    # #| - Adding short path column
-    # def method(row_i):
-    #     """
-    #     """
-    #     path_job_root_w_att_rev = row_i.path_job_root_w_att_rev
-    #
-    #     new_path_list = []
-    #     start_adding = False; start_adding_ind = None
-    #     for i_cnt, i in enumerate(path_job_root_w_att_rev.split("/")):
-    #         if i == "dft_jobs":
-    #             start_adding = True
-    #             start_adding_ind = i_cnt
-    #         if start_adding and i_cnt > start_adding_ind:
-    #             new_path_list.append(i)
-    #
-    #     path_short_i = "/".join(new_path_list)
-    #
-    #     return(path_short_i)
-    #
-    # df_i = df_jobs
-    # df_i["path_short"] = df_i.apply(method, axis=1)
-    # df_jobs = df_i
-    # #__|
-    #
-    # #| - Dropping Columns
-    # cols_to_drop = [
-    #     "is_rev_dir",
-    #     "is_attempt_dir",
-    #     "path_job_root_w_att",
-    #     "gdrive_path",
-    #     "path_rel_to_proj",
-    #     "path_full",
-    #     "path_job_root_w_att_rev",
-    #     # "path_job_root",
-    #     ]
-    #
-    # df_jobs = df_jobs.drop(
-    #     # labels=["", ],
-    #     # axis=1,
-    #     # index=None,
-    #     columns=cols_to_drop,
-    #     # level=None,
-    #     # inplace=False,
-    #     # errors="raise",
-    #     )
-    # #__|
-    #__|
+        # cnt_tmp = 0
+            # cnt_tmp += 1
+            # if cnt_tmp > 25:
+            #     break
+
+            mess_i = "Must only have one system at a time, rev_num must bne monotonic"
+            assert group.num_revs.unique().shape[0], mess_i
+
+
+            mess_i = "IUSDFISDIFJISDEIFJISDJFIJSDIFj"
+            assert group.iloc[0].num_revs == group.shape[0], mess_i
+
+            row_max = group[group.rev_num == group.rev_num.max()]
+            # row_max = row_max.iloc[0]
+
+            max_rev_list.append(row_max)
+
+        df_jobs_max = pd.concat(
+            max_rev_list)
+
+        mess_i = "max_rev must equal num_revs for all rows now"
+        assert (df_jobs_max["rev_num"] - df_jobs_max["num_revs"]).sum() == 0, mess_i
+
+        df_jobs = df_jobs_max
+    # __|
+
 
     return(df_jobs)
     #__|
@@ -289,7 +268,7 @@ def get_df_jobs_paths():
 
     $PROJ_irox_oer/dft_workflow/job_processing/collect_job_dirs_data.ipynb
     """
-    #| - get_df_jobs
+    #| - get_df_jobs_paths
 
     # #####################################################
     import pickle; import os
@@ -362,8 +341,9 @@ def get_df_jobs_data_clusters():
     #| - get_df_jobs_data_clusters
     compenv = os.environ["COMPENV"]
 
-    compenvs = ["nersc", "sherlock", "slac", ]
-    # compenvs = ["nersc", "sherlock", "slac", "wsl", ]
+
+    # compenvs = ["nersc", "sherlock", "slac", ]
+    # # compenvs = ["nersc", "sherlock", "slac", "wsl", ]
 
     df_jobs_data_clusters_empty = pd.DataFrame()
 
@@ -435,7 +415,6 @@ def get_df_atoms_sorted_ind():
        os.environ["PROJ_irox_oer"],
        "dft_workflow/job_analysis/atoms_indices_order",
        "out_data/df_atoms_sorted_ind.pickle")
-       # "out_data/df_atoms_index.pickle")
     with open(path_i, "rb") as fle:
         df_atoms_sorted_ind = pickle.load(fle)
 
@@ -788,7 +767,9 @@ def get_bulk_selection_data():
 
 #| - Feature Engineering
 
-def get_df_features_targets():
+from proj_data import sys_to_ignore__df_features_targets
+
+def get_df_features_targets(drop_bad_rows=True):
     """
     """
     #| - get_df_features_targets
@@ -798,6 +779,12 @@ def get_df_features_targets():
         "out_data/df_features_targets.pickle")
     with open(path_i, "rb") as fle:
         df_features_targets = pickle.load(fle)
+
+
+
+    if drop_bad_rows:
+        df_features_targets = df_features_targets.drop(
+            index=sys_to_ignore__df_features_targets)
 
     return(df_features_targets)
     #__|
@@ -820,8 +807,6 @@ def get_df_features():
 
     return(df_features)
     #__|
-
-
 
 def get_df_eff_ox():
     """
@@ -858,6 +843,150 @@ def get_df_octa_vol():
 
     return(df_octa_vol)
     #__|
+
+def get_df_octa_vol_init():
+    """
+    """
+    #| - get_df_eff_ox
+
+    # #########################################################
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/feature_engineering/octahedra_volume",
+        "out_data/df_octa_vol_init.pickle")
+    with open(path_i, "rb") as fle:
+            df_octa_vol_init = pickle.load(fle)
+    # #########################################################
+
+    return(df_octa_vol_init)
+    #__|
+
+def get_df_angles():
+    """
+    """
+    #| - get_df_angles
+
+    # #########################################################
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/feature_engineering/active_site_angles",
+        "out_data/df_AS_angles.pickle")
+    with open(path_i, "rb") as fle:
+            df_angles = pickle.load(fle)
+    # #########################################################
+
+    return(df_angles)
+    #__|
+
+def get_df_angles():
+    """
+    """
+    #| - get_df_angles
+
+    # #########################################################
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/feature_engineering/active_site_angles",
+        "out_data/df_AS_angles.pickle")
+    with open(path_i, "rb") as fle:
+            df_angles = pickle.load(fle)
+    # #########################################################
+
+    return(df_angles)
+    #__|
+
+def get_df_pdos_feat():
+    """
+    """
+    #| - get_df_pdos_feat
+    # #########################################################
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/feature_engineering/pdos_features",
+        # "workflow/feature_engineering/active_site_angles",
+        "out_data/df_pdos_feat.pickle")
+    with open(path_i, "rb") as fle:
+            df_pdos_feat = pickle.load(fle)
+    # #########################################################
+
+    return(df_pdos_feat)
+    #__|
+
+def get_df_bader_feat():
+    """
+    """
+    #| - get_df_bader_feat
+    # #########################################################
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/feature_engineering/pdos_features",
+        "out_data/df_bader_feat.pickle")
+    with open(path_i, "rb") as fle:
+            df_bader_feat = pickle.load(fle)
+    # #########################################################
+
+    return(df_bader_feat)
+    #__|
+
+def get_df_SOAP_AS():
+    """Active oxygen centered SOAP descriptor
+    """
+    #| - get_df_pdos_feat
+    # #########################################################
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/feature_engineering/SOAP_QUIP",
+        "out_data/df_SOAP_AS.pickle")
+    with open(path_i, "rb") as fle:
+            df_SOAP_AS = pickle.load(fle)
+    # #########################################################
+
+    return(df_SOAP_AS)
+    #__|
+
+def get_df_SOAP_MS():
+    """Metal Ir centered SOAP descriptor, single atom
+    """
+    #| - get_df_pdos_feat
+    # #########################################################
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/feature_engineering/SOAP_QUIP",
+        "out_data/df_SOAP_MS.pickle")
+    with open(path_i, "rb") as fle:
+            df_SOAP_MS = pickle.load(fle)
+    # #########################################################
+
+    return(df_SOAP_MS)
+    #__|
+
+def get_df_SOAP_ave():
+    """Averaged SOAP descriptor, averages across active Ir and 6 oxygens
+    """
+    #| - get_df_pdos_feat
+    # #########################################################
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/feature_engineering/SOAP_QUIP",
+        "out_data/df_SOAP_ave.pickle")
+    with open(path_i, "rb") as fle:
+            df_SOAP_ave = pickle.load(fle)
+    # #########################################################
+
+    return(df_SOAP_ave)
+    #__|
+
+#__|
+
+
 
 def get_metal_index_of_active_site(
     df_coord=None,
@@ -910,9 +1039,6 @@ def get_metal_index_of_active_site(
     # return(metal_index_i)
     #__|
 
-#__|
-
-
 # #########################################################
 # #########################################################
 # #########################################################
@@ -934,7 +1060,7 @@ def get_df_coord(
     ):
     """
     mode:
-        'bulk', 'slab', 'post-dft'
+        'bulk', 'slab', 'post-dft', 'init-slab'
     post_dft_name_tuple:
         ex.) ('nersc', 'fosurufu_23',    'o',    'NaN',       1)
               compenv      slab_id       ads   active_site att_num
@@ -952,6 +1078,7 @@ def get_df_coord(
             "workflow/creating_slabs",
             "out_data/df_coord_files")
         path_i = os.path.join(root_path, file_name_i)
+        print(path_i)
         with open(path_i, "rb") as fle:
             df_coord_slab_i = pickle.load(fle)
             df_coord_i = df_coord_slab_i
@@ -1037,19 +1164,8 @@ def get_df_coord(
 
         mess_i = "IJSFDIS9ijdjfsij"
         assert init_slab_name_tuple is not None, mess_i
-        # ex.) (compenv, slab_id, ads, active_site, att_num)
 
         compenv, slab_id, ads, active_site, att_num = init_slab_name_tuple
-
-        # #####################################################
-        # mode = "init-slab"
-        # compenv = compenv_i
-        # slab_id = slab_id_i
-        # ads = ads_i
-        # active_site = active_site_i
-        # att_num = att_num_i
-        # #####################################################
-
 
         if active_site == "NaN":
             active_site_str = active_site
@@ -1073,26 +1189,33 @@ def get_df_coord(
 
         path_i = os.path.join(directory, file_name_i)
 
-        # print(path_i)
-
         # #################################################
         with open(path_i, "rb") as fle:
             df_coord_i = pickle.load(fle)
         # #################################################
 
         #__|
-
     else:
         print("Come back to this eventually")
 
+
     return(df_coord_i)
     #__|
+
+
+# name=(
+#     compenv, slab_id,
+#     ads_0, active_site_0, att_num_0)
+# active_site=active_site
 
 def get_df_coord_wrap(
     name=None,
     active_site=None,
     ):
     """
+    name:
+        ex.) ('nersc', 'fosurufu_23',    'o',    'NaN',       1)
+              compenv      slab_id       ads   active_site att_num
     """
     #| - get_df_coord_wrap
     # #####################################################
@@ -1107,22 +1230,14 @@ def get_df_coord_wrap(
     # #####################################################
 
 
-    # # #############################################
-    # if read_orig_O_df_coord:
-    #     name_i = (
-    #         compenv_i, slab_id_i, ads_i,
-    #         "NaN", att_num_i)
-    # else:
-    #     name_i = (
-    #         compenv_i, slab_id_i, ads_i,
-    #         active_site_i, att_num_i)
-
     if ads_i == "o":
         porous_adjustment_i = True
     elif ads_i == "oh":
-        # porous_adjustment_i = True
         porous_adjustment_i = False
-
+    elif ads_i == "bare":
+        porous_adjustment_i = True
+    else:
+        print("IJSDFIIDSJFISDIf woops")
 
     df_coord_i = get_df_coord(
         mode="post-dft",
@@ -1130,27 +1245,311 @@ def get_df_coord_wrap(
         porous_adjustment=porous_adjustment_i,
         )
 
-    df_coord_i = df_coord_i.set_index("structure_index", drop=False)
-    # row_coord_i = df_coord_i.loc[active_site_i]
-    row_coord_i = df_coord_i.loc[active_site_j]
 
-    nn_info_i = row_coord_i.nn_info
-    neighbor_count_i = row_coord_i.neighbor_count
+    if df_coord_i is not None:
 
-    num_Ir_neigh = neighbor_count_i.get("Ir", 0)
+        df_coord_i = df_coord_i.set_index("structure_index", drop=False)
 
-    if num_Ir_neigh != 1 and ads_i == "oh":
-        porous_adjustment_i = True
-        df_coord_i = get_df_coord(
-            mode="post-dft",
-            post_dft_name_tuple=name_i,
-            porous_adjustment=porous_adjustment_i,
-            )
+        # I'm wrapping this into an if statement
+        if ads_i == "oh":
+            row_coord_i = df_coord_i.loc[active_site_j]
+
+            nn_info_i = row_coord_i.nn_info
+            neighbor_count_i = row_coord_i.neighbor_count
+
+            num_Ir_neigh = neighbor_count_i.get("Ir", 0)
+
+            if num_Ir_neigh != 1 and ads_i == "oh":
+                porous_adjustment_i = True
+                df_coord_i = get_df_coord(
+                    mode="post-dft",
+                    post_dft_name_tuple=name_i,
+                    porous_adjustment=porous_adjustment_i,
+                    )
 
     return(df_coord_i)
     #__|
 
 
+# from methods import get_octahedra_oxygens_from_init
+#
+# df_coord=df_coord_0
+# ads=ads_0
+# active_site=active_site
+# metal_active_site=active_metal_index
+# compenv=compenv
+# slab_id=slab_id
+# df_init_slabs=df_init_slabs
+# atoms_0=atoms_0
+
+def get_octahedra_oxy_neigh(
+    df_coord=None,
+    ads=None,
+    active_site=None,
+    metal_active_site=None,
+    compenv=None,
+    slab_id=None,
+    df_init_slabs=None,
+    atoms_0=None,
+    ):
+    """
+    """
+    # | - get_octahedra_oxy_neigh
+    # #####################################################
+    df_coord_i = df_coord
+    # #####################################################
+    error_i = False
+    note_i = ""
+    octahedral_oxygens = None
+    octahedral_oxygens_2 = []
+    missing_oxy_neigh = False
+    too_many_oxy_neigh = False
+    missing_active_Ir = False
+    # #####################################################
+
+
+    if metal_active_site is None:
+        row_coord_i = df_coord_i[
+            df_coord_i.structure_index == active_site]
+        row_coord_i = row_coord_i.iloc[0]
+
+        # metal_active_site = None
+        for nn_j in row_coord_i.nn_info:
+            if nn_j["site"].specie.symbol == metal_atom_symbol:
+                metal_active_site = nn_j["site_index"]
+
+        if metal_active_site is None:
+            missing_active_Ir = True
+            error_i = True
+
+
+    if metal_active_site is not None:
+        row_coord_i = df_coord_i[
+            df_coord_i.structure_index == metal_active_site]
+        row_coord_ir_i = row_coord_i.iloc[0]
+        octahedral_oxygens = row_coord_ir_i.to_dict()["nn_info"]
+        octahedral_oxygens_tmp = octahedral_oxygens
+
+
+
+        oxygens_nn = []
+        for nn_i in octahedral_oxygens_tmp:
+            if nn_i["site"].specie.symbol == "O":
+                oxygens_nn.append(nn_i)
+                octahedral_oxygens_2.append(nn_i["site_index"])
+
+        num_oxy_neigh = len(oxygens_nn)
+
+        if ads != "bare":
+            if num_oxy_neigh < 6:
+                missing_oxy_neigh = True
+                error_i = True
+        elif ads == "bare":
+            if num_oxy_neigh < 5:
+                missing_oxy_neigh = True
+                error_i = True
+            elif num_oxy_neigh > 5:
+                too_many_oxy_neigh = True
+                error_i = True
+        else:
+            print("Woops, not good sikdjfijsdif987y98sd78978978")
+
+
+        octahedra_oxygens_from_init = get_octahedra_oxygens_from_init(
+            compenv=compenv,
+            slab_id=slab_id,
+            metal_active_site=metal_active_site,
+            df_init_slabs=df_init_slabs,
+            atoms_0=atoms_0,
+            )
+        octahedral_oxygens = octahedra_oxygens_from_init
+
+
+    # #####################################################
+    data_dict_out = dict(
+        metal_active_site=metal_active_site,
+        octahedral_oxygens=octahedral_oxygens,
+        octahedral_oxygens_2=octahedral_oxygens_2,
+        num_oxy_neigh=num_oxy_neigh,
+        missing_oxy_neigh=missing_oxy_neigh,
+        too_many_oxy_neigh=too_many_oxy_neigh,
+        missing_active_Ir=missing_active_Ir,
+        error=error_i,
+        note=note_i,
+        )
+    # #####################################################
+    return(data_dict_out)
+    # #####################################################
+
+    # __|
+
+
+# compenv=None,
+# slab_id=None,
+# metal_active_site=None,
+# df_init_slabs=None,
+# atoms_0=None,
+
+def get_octahedra_oxygens_from_init(
+    compenv=None,
+    slab_id=None,
+    metal_active_site=None,
+    df_init_slabs=None,
+    atoms_0=None,
+    ):
+    """
+    """
+    #| - get_octahedra_oxygens_from_init
+
+    row_init_slab = df_init_slabs.loc[
+        (
+            compenv, slab_id,
+            "o", "NaN", 1,
+            )
+        ]
+
+    init_atoms_i = row_init_slab.init_atoms
+
+    # init_atoms_i.write("__temp__/init_atoms.traj")
+    # atoms_0.write("__temp__/atoms_0.traj")
+
+    df_match_init = match_atoms(
+        atoms_0,
+        init_atoms_i,
+        )
+
+    init_slab_name_tuple = \
+        (
+            compenv, slab_id, "o",
+             "NaN", 1, )
+
+    df_coord_init = get_df_coord(
+        mode="init-slab",
+        init_slab_name_tuple=init_slab_name_tuple,
+        verbose=False,
+        )
+
+    row_coord_init_i = \
+        df_coord_init[df_coord_init.structure_index == metal_active_site]
+
+    row_coord_init_i = row_coord_init_i.iloc[0]
+
+    oxy_indices_from_init = []
+    for nn_j in row_coord_init_i.nn_info:
+        if nn_j["site"].specie.symbol == "O":
+            oxy_indices_from_init.append(nn_j["site_index"])
+
+    oxy_indices_mapped = []
+    for oxy_i in oxy_indices_from_init:
+        # print(oxy_i)
+
+        row_match_init_i = df_match_init[df_match_init.atom_ind_1 == oxy_i]
+        if row_match_init_i.shape[0] > 0:
+            atom_ind_0_i = row_match_init_i.iloc[0].atom_ind_0
+            oxy_indices_mapped.append(atom_ind_0_i)
+
+    return(oxy_indices_mapped)
+    #__|
+
+
+# atoms_0 = atoms_0
+# atoms_1 = init_atoms_i
+
+def match_atoms(
+    atoms_0,
+    atoms_1,
+    ):
+    """
+    """
+    # | - match_atoms
+    data_dict_list = []
+    for atom_i in atoms_0:
+        pos_i = atom_i.position
+        index_i = atom_i.index
+        data_dict_i = dict()
+        data_dict_i["z"] = pos_i[2]
+        data_dict_i["ind"] = index_i
+        data_dict_list.append(data_dict_i)
+    df_tmp = pd.DataFrame(data_dict_list)
+    df_tmp = df_tmp.sort_values("z")
+
+
+    atom_indices_sorted_z = df_tmp.ind.tolist()
+
+    # Creating copy of atoms_1, will have atoms removed as they are matched
+    atoms_1_cpy = copy.deepcopy(atoms_1)
+
+
+    data_dict_list = []
+
+    tmp_cnt = 0
+    for atom_ind_i in atom_indices_sorted_z:
+        # print(atom_ind_i)
+
+        # print(20 * "-")
+        # # print(tmp_cnt)
+        # print(atoms_1_cpy.get_global_number_of_atoms())
+
+        # TEMP
+        tmp_cnt += 1
+        # if tmp_cnt == 10: break
+
+        atom_0 = atoms_0[atom_ind_i]
+
+
+        symbol_i = atom_0.symbol
+
+        actual_index = None
+        closest_distance = None
+        image = None
+        if atoms_1_cpy.get_global_number_of_atoms() > 0:
+            # #################################################
+            out_dict_i = nearest_atom_mine(
+                atoms_1_cpy, atom_0.position, atom_0.symbol,
+                nth_closest=0, match_with_atom_type=True)
+            # #################################################
+            closest_atom = out_dict_i["closest_atom"]
+            closest_distance = out_dict_i["closest_distance"]
+            image = out_dict_i["image"]
+            # #################################################
+
+            symbol = None
+            if closest_atom is not None:
+
+                for atom_i in atoms_1:
+                    if list(closest_atom.position) == list(atom_i.position):
+                        atom_x = atom_i
+                actual_index = int(atom_x.index)
+
+                symbol = closest_atom.symbol
+
+                # #################################################
+                atoms_1_cpy.pop(i=closest_atom.index)
+
+
+            # atoms_1_cpy.write(os.path.join(
+            #     "__temp__/progression_0_tmp",
+            #     str(tmp_cnt).zfill(3) + ".traj"))
+
+
+        # #####################################################
+        data_dict_i = dict()
+        data_dict_i["symbol_0"] = symbol_i
+        data_dict_i["symbol"] = symbol
+        data_dict_i["atom_ind_0"] = atom_ind_i
+        data_dict_i["atom_ind_1"] = actual_index
+        data_dict_i["closest_distance"] = closest_distance
+        data_dict_i["image"] = image
+        # if atoms_1_cpy.get_global_number_of_atoms() > 0:
+        data_dict_list.append(data_dict_i)
+        # #####################################################
+
+    df_match = pd.DataFrame(data_dict_list)
+    # df_match = df_match.dropna()
+
+    return(df_match)
+    # __|
+
 
 # #########################################################
 # #########################################################
@@ -1158,16 +1557,12 @@ def get_df_coord_wrap(
 # #########################################################
 # #########################################################
 # #########################################################
-
 
 
 def get_df_active_sites():
     """
     """
     #| - get_df_active_sites
-    # /home/raulf2012/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER
-    # workflow/enumerate_adsorption/out_data/df_active_sites.pickle
-
     # #####################################################
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
@@ -1184,6 +1579,7 @@ def get_df_active_sites():
 
     return(df_active_sites)
     #__|
+
 
 def get_df_magmoms():
     """
@@ -1211,7 +1607,6 @@ def get_df_magmoms():
 
     return(df_magmoms)
     #__|
-
 
 
 def read_magmom_comp_data(
@@ -1299,37 +1694,6 @@ def read_magmom_comp_data(
     #__|
 
 
-#| - __old__
-# def read_magmom_comp_data():
-#     """
-#     """
-#     #| - read_magmom_comp_data
-#     # #########################################################
-#     # import pickle; import os
-#
-#     directory = os.path.join(
-#         os.environ["PROJ_irox_oer"],
-#         "dft_workflow/job_analysis/compare_magmoms",
-#         "out_data")
-#
-#     path_i = os.path.join(directory, "magmom_comparison_data.pickle")
-#
-#     file_size = os.path.getsize(path_i)
-#
-#     if Path(path_i).is_file() and file_size > 0.:
-#         print(path_i)
-#         with open(path_i, "rb") as fle:
-#             data_dict = pickle.load(fle)
-#     else:
-#         data_dict = dict()
-#     # #########################################################
-#
-#     return(data_dict)
-#     #__|
-#
-#__|
-
-
 def get_df_jobs_oh_anal():
     """
     """
@@ -1347,6 +1711,7 @@ def get_df_jobs_oh_anal():
 
     return(df_jobs_oh_anal)
     #__|
+
 
 def get_df_rerun_from_oh():
     """
@@ -1374,21 +1739,55 @@ def get_df_rerun_from_oh():
     return(df_rerun_from_oh)
     #__|
 
+
 def get_df_struct_drift():
     """
+
     """
     #| - get_df_struct_drift
-
-    # import pickle; import os
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
         "dft_workflow/job_analysis/slab_struct_drift",
-        "out_data/df_struct_drift.pickle")
-    with open(path_i, "rb") as fle:
-        df_struct_drift = pickle.load(fle)
+        "out_data/df_struct_drift_new.pickle")
+
+    my_file = Path(path_i)
+    if my_file.is_file():
+        with open(path_i, "rb") as fle:
+            df_struct_drift = pickle.load(fle)
+    else:
+        df_struct_drift = pd.DataFrame(columns=["pair_str", ])
+
 
     return(df_struct_drift)
-    #__|
+    # __|
+
+
+def get_df_magmom_drift():
+    """
+
+    """
+    #| - get_df_struct_drift
+
+    # dft_workflow/job_analysis/compare_magmoms
+    # out_data
+
+
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "dft_workflow/job_analysis/compare_magmoms",
+        "out_data/df_magmom_drift.pickle")
+
+    my_file = Path(path_i)
+    if my_file.is_file():
+        with open(path_i, "rb") as fle:
+            df_magmom_drift = pickle.load(fle)
+    else:
+        df_magmom_drift = pd.DataFrame(columns=["pair_str", ])
+
+
+    return(df_magmom_drift)
+    # __|
+
 
 def read_data_json():
     """
@@ -1413,6 +1812,130 @@ def read_data_json():
     return(data)
     #__|
 
+
+def get_ORR_PLT():
+    """
+    """
+    # | - get_ORR_PLT
+    # import pickle; import os
+
+    directory = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/oer_analysis",
+        "out_data")
+    path_i = os.path.join(
+        directory,
+        "ORR_PLT.pickle")
+
+    with open(path_i, "rb") as fle:
+        ORR_PLT = pickle.load(fle)
+
+    return(ORR_PLT)
+    # __|
+
+
+def get_df_jobs_on_clus__all():
+    """
+    """
+    #| - get_df_jobs_on_clus__all
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "dft_workflow/cluster_scripts",
+        "out_data/df_jobs_on_clus__all.pickle")
+    with open(path_i, "rb") as fle:
+        df_jobs_on_clus__all = pickle.load(fle)
+
+    return(df_jobs_on_clus__all)
+    # __|
+
+
+def read_pdos_data(job_id_i):
+    """
+    """
+    # | - read_pdos_data
+    directory = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/dos_analysis",
+        "out_data/pdos_data")
+
+    # #########################################################
+    file_path_i = os.path.join(
+        directory,
+        job_id_i + "__df_pdos" + ".pickle")
+    # #########################################################
+    with open(file_path_i, "rb") as fle:
+        df_pdos = pickle.load(fle)
+    # #########################################################
+
+    # #########################################################
+    file_path_i = os.path.join(
+        directory,
+        job_id_i + "__df_band_centers" + ".pickle")
+    # #########################################################
+    with open(file_path_i, "rb") as fle:
+        df_band_centers = pickle.load(fle)
+    # #########################################################
+
+    return(df_pdos, df_band_centers)
+    # __|
+
+
+def get_df_SE():
+    """
+    The data object is created by the following notebook:
+
+    $PROJ_irox_oer/workflow/surface_energy/surface_energy.ipynb
+    """
+    #| - get_df_SE
+    # #####################################################
+    # Reading df_jobs dataframe from pickle
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/surface_energy",
+        "out_data/df_SE.pickle")
+    with open(path_i, "rb") as fle:
+        df_SE = pickle.load(fle)
+
+    return(df_SE)
+    #__|
+
+
+def get_df_octa_info():
+    """
+    The data object is created by the following notebook:
+
+    PROJ_IrOx_OER/workflow/octahedra_info/get_octahedra_atoms.ipynb
+    """
+    #| - get_df_octa_info
+    # #####################################################
+    # Reading df_jobs dataframe from pickle
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/octahedra_info",
+        "out_data/df_octa_info.pickle")
+    with open(path_i, "rb") as fle:
+        get_df_octa_info = pickle.load(fle)
+
+    return(get_df_octa_info)
+    #__|
+
+
+def get_df_features_targets_seoin():
+    """
+    """
+    #| - get_df_features_targets_seoin
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/seoin_irox_data/featurize_data",
+        "out_data/df_features_targets.pickle")
+    with open(path_i, "rb") as fle:
+        df_seoin = pickle.load(fle)
+
+    return(df_seoin)
+    #__|
 
 
 
@@ -1439,7 +1962,10 @@ def get_slab_id(bulk_id_i, facet_i, df_slab_ids):
     return(slab_id_i)
     #__|
 
+
 def get_job_id(
+    job_type,
+
     compenv,
     bulk_id,
     slab_id,
@@ -1448,6 +1974,7 @@ def get_job_id(
     rev_num,
     ads,
     active_site,
+
     df_job_ids=None,
     ):
     """
@@ -1460,7 +1987,6 @@ def get_job_id(
     df = df_job_ids
 
 
-    # if np.isnan(active_site):
     if pd.isnull(active_site):
         active_site = "NaN"
     else:
@@ -1468,6 +1994,8 @@ def get_job_id(
 
 
     df_i = df[
+        (df.job_type == job_type) & \
+
         (df.compenv == compenv) & \
         (df.bulk_id == bulk_id) & \
         (df.slab_id == slab_id) & \
@@ -1514,6 +2042,7 @@ def get_job_id(
     return(job_id_i)
     #__|
 
+
 def get_df_oer_groups():
     """
     """
@@ -1532,10 +2061,18 @@ def get_df_oer_groups():
     return(df_oer_groups)
     #__|
 
+
+# job_id=job_id_x
+# df_jobs=df_jobs
+# oer_set=True
+# # only_last_rev=False
+# only_last_rev=True
+
 def get_other_job_ids_in_set(
     job_id,
     df_jobs=None,
     oer_set=False,
+    only_last_rev=False,
     ):
     """
     """
@@ -1543,6 +2080,7 @@ def get_other_job_ids_in_set(
     row_jobs = df_jobs.loc[job_id]
 
     # #####################################################
+    job_type_i = row_jobs.job_type
     compenv_i = row_jobs.compenv
     bulk_id_i = row_jobs.bulk_id
     slab_id_i = row_jobs.slab_id
@@ -1552,11 +2090,16 @@ def get_other_job_ids_in_set(
     # #####################################################
 
 
+
     # #####################################################
     if oer_set:
         #| - Create OER set, all jobs in OER  set
+        if ads_i == "o":
+            print("Don't use a ads=o job_id or this won't work")
+
         # #####################################################
         df_jobs_i = df_jobs[
+            (df_jobs.job_type == job_type_i) & \
             (df_jobs.compenv == compenv_i) & \
             (df_jobs.bulk_id == bulk_id_i) & \
             (df_jobs.slab_id == slab_id_i) & \
@@ -1568,6 +2111,7 @@ def get_other_job_ids_in_set(
 
         # df_jobs_i =
         df_jobs_o_i = df_jobs[
+            (df_jobs.job_type == job_type_i) & \
             (df_jobs.compenv == compenv_i) & \
             (df_jobs.bulk_id == bulk_id_i) & \
             (df_jobs.slab_id == slab_id_i) & \
@@ -1586,6 +2130,7 @@ def get_other_job_ids_in_set(
         #| - Create job set, all jobs in one system
         # #####################################################
         df_jobs_i = df_jobs[
+            (df_jobs.job_type == job_type_i) & \
             (df_jobs.compenv == compenv_i) & \
             (df_jobs.bulk_id == bulk_id_i) & \
             (df_jobs.slab_id == slab_id_i) & \
@@ -1596,82 +2141,108 @@ def get_other_job_ids_in_set(
             ]
         df_jobs_out_i = df_jobs_i
         #__|
+
     # #####################################################
     df_jobs_out_i = df_jobs_out_i.sort_values(["ads", "att_num", "rev_num", ])
     # #####################################################
+
+
+    if only_last_rev:
+        # #####################################################
+        latest_rev_job_ids = []
+        # #####################################################
+        group_cols = ["ads", "att_num", "active_site", ]
+        grouped = df_jobs_out_i.groupby(group_cols)
+        # #####################################################
+        for name, group in grouped:
+            # display(group)
+
+            group_last_rev = group[group.rev_num == group.rev_num.max()]
+            latest_rev_job_ids.extend(group_last_rev.index)
+
+        df_jobs_out_i = df_jobs_out_i.loc[latest_rev_job_ids]
 
     return(df_jobs_out_i)
     #__|
 
 
-#| - __old__
-# def get_df_jobs_max_rev(
-#     df_jobs=None,
-#     ):
-#     """
-#     """
-#     #| - get_df_jobs_max_rev
-#     max_rev_job_ids = []
-#
-#     rows_list = []
-#     group_list = ["compenv", "bulk_id", "slab_id", "facet", "att_num", ]
-#     # group_list = ["slab_id", "att_num", ]
-#     grouped = df_jobs.groupby(group_list)
-#     for name, group in grouped:
-#         # print("---")
-#         slab_id = name[0]
-#         att_num = name[1]
-#
-#         # #####################################################
-#         facet = group.facet.unique().tolist()[0]
-#
-#         # #####################################################
-#         max_rev_num = group.rev_num.max()
-#         df_max_i = group[group.rev_num == max_rev_num]
-#         assert df_max_i.shape[0] == 1, "This should be one I think"
-#         job_id_max_i = df_max_i.iloc[0].name
-#         row_i = df_max_i.iloc[0]
-#         rows_list.append(row_i)
-#         # #####################################################
-#         max_rev_job_ids.append(job_id_max_i)
-#
-#         # # #############################################################################
-#         # # #############################################################################
-#         # # #############################################################################
-#         # indices = [
-#         #     "weritidu_20",
-#         #     "mohegosa_07",
-#         #     ]
-#
-#         # for index_i in indices:
-#         #     if index_i in group.index:
-#         #         print("IJSDIFISDI")
-#         #         group_tmp = group
-#         #         from IPython.display import display
-#         #         display(group)
-#         # # #############################################################################
-#         # # #############################################################################
-#         # # #############################################################################
-#
-#
-#     # df_jobs_max = df_jobs.loc[max_rev_job_ids]
-#     # rows_list
-#
-#     df_jobs_max = pd.DataFrame(rows_list)
-#
-#     mess_i = "All rows's rev number must be the same as the max rev num"
-#     check_i = all(df_jobs_max.num_revs == df_jobs_max.rev_num)
-#     assert check_i, mess_i
-#
-#     df_jobs_max = df_jobs_max.sort_values(["compenv", "path_job_root", ])
-#
-#     return(df_jobs_max)
-#     #__|
 #__|
 
-#__|
 
 #__|
+# #########################################################
+# #########################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # #########################################################
 #| - ASE Atoms Methods
@@ -2352,6 +2923,7 @@ def get_systems_to_stop_run_indices(
     # return(df_jobs_anal)
     #__|
 
+
 def compare_facets_for_being_the_same(
     facet_0,
     facet_1,
@@ -2424,12 +2996,91 @@ def compare_facets_for_being_the_same(
     #__|
 
 
+# atoms = atoms_1
+# position = atom_0.position
+# symbol = atom_0.symbol
+# nth_closest=0
+# match_with_atom_type = True
+
+def nearest_atom_mine(
+    atoms,
+    position,
+    symbol,
+    nth_closest=0,
+    match_with_atom_type=True,
+    ):
+    """
+
+    args:
+      atoms:
+      position:
+      nth_closest: pass 0 for nearest atom, 1 for 2nd neareset and so on...
+    """
+    #| - nearest_atom_mine
+    struct = AseAtomsAdaptor.get_structure(atoms)
+    Lattice = struct.lattice
+
+    # #########################################################
+    dummy_site_j = PeriodicSite(
+        "N", position, Lattice,
+        to_unit_cell=False, coords_are_cartesian=True,
+        properties=None, skip_checks=False)
+
+    data_dict_list = []
+    for index_i, site_i in enumerate(struct):
+        data_dict_i = dict()
+        # site_i = struct[32]
+
+        elem_i = site_i.specie.name
+
+        distance_i, image_i = site_i.distance_and_image(dummy_site_j)
+        # print("distance_i:", distance_i)
+
+        # #####################################################
+        data_dict_i["atoms_index"] = int(index_i)
+        data_dict_i["elem"] = elem_i
+        data_dict_i["distance"] = distance_i
+        data_dict_i["image"] = image_i
+        # #####################################################
+        data_dict_list.append(data_dict_i)
+
+    # #########################################################
+    df_dist = pd.DataFrame(data_dict_list)
+    df_dist = df_dist.sort_values("distance")
 
 
-def temp_job_test():
-    """
-    """
-    #| - temp_job_test
-    print("This is just a test")
-    return(42)
+
+    # #########################################################
+    if match_with_atom_type:
+        df_dist_2 = df_dist[df_dist.elem == symbol]
+
+        if df_dist_2.shape[0] == 0:
+            # print("Couldn't match atom")
+            closest_site = None
+            closest_index = None
+
+        else:
+            closest_site = df_dist_2.iloc[nth_closest]
+            closest_index = int(closest_site.atoms_index)
+    else:
+        closest_site = df_dist.iloc[nth_closest]
+        closest_index = int(closest_site.atoms_index)
+
+
+    closest_distance = None
+    image = None
+    closest_atom = None
+    if closest_site is not None and closest_index is not None:
+        closest_distance = closest_site.distance
+        image = closest_site.image
+
+        closest_atom = atoms[closest_index]
+
+
+    out_dict = dict(
+        closest_atom=closest_atom,
+        closest_distance=closest_distance,
+        image=image,
+        )
+    return(out_dict)
     #__|

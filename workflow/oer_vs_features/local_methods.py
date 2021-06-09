@@ -8,22 +8,27 @@ import sys
 import copy
 
 import numpy as np
+import pandas as pd
 from sklearn.linear_model import LinearRegression
 
 import plotly.graph_objs as go
 
 # #########################################################
 from plotting.my_plotly import my_plotly_plot
+
+from proj_data import scatter_marker_size
 #__|
 
 
 
 # df = df_j
-# feature_columns = [feature_col_i, ]
+# # feature_columns = [feature_col_i, ]
+# feature_columns = feature_cols_all
 # ads = ads_i
 # feature_ads = feature_ads_i
 # layout = layout
 # verbose = True
+# save_plot_to_file = True
 
 def create_linear_model_plot(
     df=None,
@@ -48,7 +53,9 @@ def create_linear_model_plot(
         features_cols_to_include = df_i["features_stan"][feature_ads].columns
 
     cols_to_drop = []
-    for col_i in df_i["features_stan"][feature_ads].columns:
+    # for col_i in df_i["features_stan"][feature_ads].columns:
+    # for col_i in df_i["features"][feature_ads].columns:
+    for col_i in df_i["features"].columns:
         if col_i not in features_cols_to_include:
             cols_to_drop.append(col_i)
     df_tmp = copy.deepcopy(df_i)
@@ -57,7 +64,9 @@ def create_linear_model_plot(
         df_i = df_i.drop(columns=[("features_stan", feature_ads, col_i)])
 
     # feature_cols = list(df_i.features_stan.columns)
-    feature_cols = list(df_i["features_stan"][feature_ads].columns)
+    # feature_cols = list(df_i["features_stan"][feature_ads].columns)
+    feature_cols = list(df_i["features"].columns)
+
     # print(feature_cols)
 
 
@@ -66,8 +75,11 @@ def create_linear_model_plot(
     #__|
 
     #| - Creating linear model
-    X = df_i["features_stan"][feature_ads].to_numpy()
-    X = X.reshape(-1, len(df_i["features_stan"][feature_ads].columns))
+    # X = df_i["features_stan"][feature_ads].to_numpy()
+    # X = X.reshape(-1, len(df_i["features_stan"][feature_ads].columns))
+
+    X = df_i["features"].to_numpy()
+    X = X.reshape(-1, len(df_i["features"].columns))
 
     y = df_i.targets[
         df_i.targets.columns[0]
@@ -78,19 +90,49 @@ def create_linear_model_plot(
 
     y_predict = model.predict(X)
 
+
+    #__|
+
+
+    # | - Put together model output y_pred and y into dataframe
+    # y = out_dict["y"]
+    # y_predict = out_dict["y_predict"]
+
+    y.name = y.name[0]
+    df_model_i = pd.DataFrame(y)
+
+    df_model_i.columns = ["y", ]
+
+    df_model_i["y_predict"] = y_predict
+
+
+    df_model_i["diff"] = df_model_i["y"] - df_model_i["y_predict"]
+
+    df_model_i["diff_abs"] = np.abs(df_model_i["diff"])
+    # __|
+
+
+    # Calculate Mean Absolute Error (MAE)
+    mae = df_model_i["diff_abs"].sum() / df_model_i["diff"].shape[0]
+
+
+
     if verbose:
         print(20 * "-")
         print("model.score(X, y):", model.score(X, y))
+        print("Model MAE:", mae)
         print("")
 
         # print(feature_cols)
         # print(model.coef_)
 
-        for i, j in zip(list(df_i["features_stan"][ads].columns), model.coef_):
+        # for i, j in zip(list(df_i["features_stan"][ads].columns), model.coef_):
+        for i, j in zip(list(df_i["features"].columns), model.coef_):
             print(i, ": ", j, sep="")
         print(20 * "-")
 
-    #__|
+
+
 
     #| - Plotting
     data = []
@@ -187,15 +229,17 @@ def create_linear_model_plot(
 
     #| - Main Data Trace
 
-    color_list_i = df_i["format"]["color"][format_dict["color"]]
+    # color_list_i = df_i["format"]["color"][format_dict["color"]]
 
     trace_i = go.Scatter(
         y=y,
         x=y_predict,
         mode="markers",
         marker=go.scatter.Marker(
-            size=12,
-            color=color_list_i,
+            # size=12,
+            size=scatter_marker_size,
+
+            # color=color_list_i,
 
             colorscale='Viridis',
             colorbar=dict(thickness=20),
@@ -204,38 +248,25 @@ def create_linear_model_plot(
 
             ),
         # text=df_i.name_str,
-        text=df_i.data.name_str,
+        # text=df_i.data.name_str,
         textposition="bottom center",
         )
     data.append(trace_i)
     #__|
 
     #| - Layout
-
     # y_axis_target_col = df_i.target_cols.columns[0]
     y_axis_target_col = df_i.targets.columns[0]
     y_axis_target_col = y_axis_target_col[0]
 
-    # print("y_axis_target_col:", y_axis_target_col)
-
-    # print("y_axis_target_col:", y_axis_target_col)
     if y_axis_target_col == "g_o":
-        # print("11111")
         layout.xaxis.title.text = "Predicted ΔG<sub>*O</sub>"
         layout.yaxis.title.text = "Simulated ΔG<sub>*O</sub>"
     elif y_axis_target_col == "g_oh":
-        # print("22222")
         layout.xaxis.title.text = "Predicted ΔG<sub>*OH</sub>"
         layout.yaxis.title.text = "Simulated ΔG<sub>*OH</sub>"
     else:
         print("Woops isdfsdf8osdfio")
-
-
-    layout.xaxis.title.font.size = 25
-    layout.yaxis.title.font.size = 25
-
-    layout.yaxis.tickfont.size = 20
-    layout.xaxis.tickfont.size = 20
 
     layout.xaxis.range = [2.5, 5.5]
 
@@ -253,7 +284,6 @@ def create_linear_model_plot(
         np.max(y) + dd,
         ]
 
-    # layout.title = "TEMP isdjfijsd"
     layout.title = plot_title
     #__|
 
@@ -271,13 +301,25 @@ def create_linear_model_plot(
 
     #__|
 
+
     # #####################################################
     out_dict = dict()
     # #####################################################
     out_dict["fig"] = fig
+    out_dict["df_model_i"] = df_model_i
+    out_dict["mae"] = mae
+
+    out_dict["X"] = X
+    out_dict["y"] = y
+    out_dict["y_predict"] = y_predict
     # #####################################################
     return(out_dict)
     #__|
+
+
+
+# df = df_i
+# target_col = "g_o"
 
 def isolate_target_col(df, target_col=None):
     """
@@ -298,11 +340,21 @@ def isolate_target_col(df, target_col=None):
         elif col_i[0] == "format":
             cols_tuples.append(col_i)
         else:
+            # print("Woops:", col_i)
             tmp = 42
 
     df_j = df_i.loc[:, cols_tuples]
 
-    df_j = df_j.dropna()
+    cols_to_check_nan_in = []
+    for col_i in df_j.columns:
+        if "features" in col_i[0]:
+            cols_to_check_nan_in.append(col_i)
+        elif "targets" in col_i[0]:
+            cols_to_check_nan_in.append(col_i)
+
+
+    df_j = df_j.dropna(subset=cols_to_check_nan_in)
+    # df_j = df_j.dropna()
 
     return(df_j)
     #__|

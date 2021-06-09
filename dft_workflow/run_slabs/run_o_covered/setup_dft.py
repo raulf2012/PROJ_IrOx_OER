@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -59,7 +59,8 @@ slac_sub_queue = "suncat3"  # 'suncat', 'suncat2', 'suncat3'
 
 # COMPENV to submit to
 # compenv_i = "slac"
-compenv_i = "sherlock"
+# compenv_i = "sherlock"
+compenv_i = "nersc"
 # -
 
 # # Read Data
@@ -72,14 +73,6 @@ df_slab_i = df_slab
 
 # #########################################################
 df_jobs = get_df_jobs()
-
-# +
-# # TEMP
-# # df_slab_i.loc["pumusuma_66"]
-# df_slab_i.loc["romudini_21"]
-
-# +
-# assert False
 # -
 
 # ### Read `df_slabs_to_run` from `create_slabs.ipynb`, used to mark priority slabs
@@ -111,18 +104,6 @@ for i_cnt, row_i in df_slabs_to_run.iterrows():
     if df.shape[0] == 0:
         indices_not_good.append(i_cnt)
 
-
-        # print("Not good")
-
-#         display(
-#             row_i.to_frame().T
-#             )
-#     else:
-#         print("Good")
-
-        # print(row_i.to_frame().T)
-        # print(row_i)
-
 df_slabs_to_run.loc[
     indices_not_good
     ]
@@ -143,17 +124,10 @@ df_slab_i = df_slab_i[df_slab_i.phase == 2]
 
 # #########################################################
 # Selecting smallest slabs
-df_slab_i = df_slab_i[df_slab_i.num_atoms < 80]
+# df_slab_i = df_slab_i[df_slab_i.num_atoms < 80]
 
 # print("Just doing XRD facets for now")
 # df_slab_i = df_slab_i[df_slab_i.source == "xrd"]
-
-# +
-# # TEMP
-# df_slab_i.loc["romudini_21"]
-
-# +
-# assert False
 # -
 
 # ### Filtering down to best slabs, no layered, all octahedra, 0.3 eV/atom above hull cutoff
@@ -187,26 +161,46 @@ df_slab_i = df_slab_i.loc[
     ]
 
 # +
-# # TEMP
-# df_slab_i.loc["romudini_21"]
+df = df_slab_i
+df = df[
+    (df["num_atoms"] <= 100) &
+    # (df[""] == "") &
+    # (df[""] == "") &
+    [True for i in range(len(df))]
+    ]
+df_slab_i = df
 
-# +
-# romudini_21 | 2
-# wafitemi_24 | 2
-# kapapohe_58 | 2
-# bekusuvu_00 | 2
-# pemupehe_18 | 2
-# hahesegu_39 | 2
-# migidome_55 | 2
-# semodave_57 | 2
+df_slab_i = df_slab_i.sort_values("num_atoms", ascending=False)
 # -
 
-df_slab_i.shape
+df_slab_i
+
+df_slab_i.index.tolist()
+
+df_slab_i = df_slab_i.loc[
+    [
+
+        'legofufi_61',
+        'gekawore_16',
+        'mitilaru_63',
+
+        # 'winomuvi_99',
+        # 'letapivu_80',
+        # 'giworuge_14',
+
+        # 'lirilapa_78',
+        # 'wakidowo_59',
+
+        # 'kererape_22',
+        # 'nekelele_74',
+        # 'pebitiru_79',
+
+        ]
+    ]
+
+df_slab_i
 
 assert False
-
-# df_slab_i = df_slab_i.iloc[0:10]
-df_slab_i = df_slab_i.iloc[0:5]
 
 # # Setting up the job folders
 
@@ -327,9 +321,6 @@ for i_cnt, row_i in df_slab_i.iterrows():
 df_jobs_new = pd.DataFrame(data_dict_list)
 df_jobs_new = df_jobs_new.set_index("slab_id")
 # #########################################################
-
-# +
-# assert False
 # -
 
 # # Assigning job specific DFT parameters
@@ -416,7 +407,6 @@ print(20 * "# # ")
 print("All done!")
 print("setup_dft.ipynb")
 print(20 * "# # ")
-# assert False
 # #########################################################
 
 # + active=""
@@ -424,128 +414,16 @@ print(20 * "# # ")
 #
 
 # + jupyter={"source_hidden": true}
-# Some messages for user
-
-# print("")
-# print("Manually change if statement to True to submit DFT jobs")
-# print("    search for submit_job(")
-# print("")
-
-# + jupyter={"source_hidden": true}
-# Submit jobs
-
-# out_dict = get_job_spec_scheduler_params(compenv=compenv)
-# wall_time_factor = out_dict["wall_time_factor"]
-
-# for i_cnt, row_i in df_jobs_new.iterrows():
-#     # #######################################
-#     num_atoms = row_i.num_atoms
-#     path_i =row_i.path_i
-#     # #######################################
-
-#     if False:
-#         submit_job(
-#             path_i=path_i,
-#             num_atoms=num_atoms,
-#             wall_time_factor=wall_time_factor,
-#             queue=slac_sub_queue,
-#             )
-
-# + jupyter={"source_hidden": true}
-# df_jobs_new
-
-# slab_id
-# bulk_id
-# facet
-# slab_final
-# num_atoms
-# attempt
-# rev
-# path_i
-
-# + jupyter={"source_hidden": true}
-# Setup
-
-# directory = "out_data/dft_jobs"
-# if not os.path.exists(directory):
-#     os.makedirs(directory)
-
-# compenv = os.environ["COMPENV"]
-
-# + jupyter={"source_hidden": true}
 # df_slab_i
 
 # + jupyter={"source_hidden": true}
 # assert False
 
 # + jupyter={"source_hidden": true}
-# lst_0 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-
-# lst_0[0:5]
-# lst_0[5:10]
-# + jupyter={"source_hidden": true}
-# ['relovalu_12',
-#  'hivovaru_77',
-#  'lawuduni_55',
-#  'pumisumi_35',
-#  'gesumule_22',
-#  'vovumota_03',
-#  'dafanapa_38',
-#  'papapesi_26',
-#  'fukuwevi_91',
-#  'nuriramu_38',
-#  'sabedabu_27',
-#  'votafefa_68',
-#  'bokawemu_25',
-#  'fewirefe_11',
-#  'gifopira_28']
-
-# df_slab_i.index.tolist()
-
-# + jupyter={"source_hidden": true}
-# df_slab_i.shape
-
 # df_slab_i
 
 # + jupyter={"source_hidden": true}
-# # Pickling data ###########################################
-# import os; import pickle
-# # directory = "out_data"
-# directory = os.path.join(
-#     os.environ["PROJ_irox_oer"],
-#     "workflow/creating_slabs",
-#     "out_data")
-# if not os.path.exists(directory): os.makedirs(directory)
-# with open(os.path.join(directory, "df_slabs_to_run.pickle"), "wb") as fle:
-#     df_slabs_to_run = df_to_run
-#     pickle.dump(df_slabs_to_run, fle)
-# # #########################################################
+# df_slab_i = df_slab_i.iloc[[0]]
 
 # + jupyter={"source_hidden": true}
-# tmp_list = []
-# for slab_id_i, row_i in df_slab_i.iterrows():
-#     tmp = 42
-
-#     bulk_id_i = row_i.bulk_id
-#     facet_i = row_i.facet
-
-#     df = df_slabs_to_run
-#     df = df[
-#         (df["bulk_id"] == bulk_id_i) &
-#         (df["facet_str"] == facet_i) &
-#         # (df[""] == "") &
-#         [True for i in range(len(df))]
-#         ]
-#     if df.shape[0] > 0:
-#         tmp_list.append(row_i)
-
-# df_tmp = pd.DataFrame(
-#     tmp_list
-#     )
-
-# df_tmp.shape
-
-# + jupyter={"source_hidden": true}
-# # row_i
-
-# facet_i
+# assert False

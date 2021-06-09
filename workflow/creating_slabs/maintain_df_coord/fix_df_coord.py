@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -14,12 +14,11 @@
 # ---
 
 # # Create `df_coord` for all atoms objects in `df_init_slabs`
+#
 # # Fix `df_coord` for systems in `df_slab`
 # ---
-#
-# TEMP
 
-# # Import Modules
+# ### Import Modules
 
 # +
 import os
@@ -65,7 +64,7 @@ df_slab_i = df_slab
 df_init_slabs = get_df_init_slabs()
 # -
 
-# # Creating `df_coord` for all init slabs
+# ### Creating `df_coord` for all init slabs
 
 # +
 # for name_i, row_i in df_init_slabs.iterrows():
@@ -118,9 +117,7 @@ for i_cnt, index_i in enumerate(iterator):
             pickle.dump(df_coord_i, fle)
 # -
 
-# # TEMP
-
-# # Main Loop
+# ### Main Loop
 
 df_slab_i = df_slab_i[df_slab_i.phase > 1]
 

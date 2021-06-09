@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -111,33 +111,6 @@ df_comb = df_comb.reset_index(drop=True)
 df_jobs = df_comb
 
 # +
-# list(df_dict.values())
-
-# +
-# assert False
-
-# +
-# 1898	slac	mwmg9p7s6o	hivovaru_77 11-20
-# 1901
-
-# +
-# df_jobs
-
-# +
-# df = df_jobs
-# df = df[
-#     (df["compenv"] == "slac") &
-#     # (df["slab_id"] == "mwmg9p7s6o") &
-#     (df["bulk_id"] == "mwmg9p7s6o") &
-#     (df["ads"] == "bare") &
-#     (df["facet"] == "11-20") &
-#     (df["active_site"] == 27.) &
-#     [True for i in range(len(df))]
-#     ]
-# #     bare	48	
-# df.path_job_root_w_att.tolist()
-
-# +
 from misc_modules.pandas_methods import reorder_df_columns
 
 df_jobs = reorder_df_columns(["compenv", "compenv_origin"], df_jobs)
@@ -155,6 +128,7 @@ df_jobs["slab_id"] = slab_ids
 from misc_modules.pandas_methods import reorder_df_columns
 
 df_cols = [
+    "job_type",
     "compenv",
     "bulk_id",
     "slab_id",
@@ -180,15 +154,16 @@ df_cols = [
 df_jobs = reorder_df_columns(df_cols, df_jobs)
 #__|
 # -
-# # Remove duplicates from gathering form local and cluster systems
+# ### Remove duplicates introduced by gathering from local and cluster systems
 
 # +
 df_jobs["active_site"] = df_jobs.active_site.fillna("NaN")
 
 series_list = []
+
 grouped = df_jobs.groupby([
     "compenv", "bulk_id", "slab_id", "facet",
-    "ads", "active_site", "att_num", "rev_num", ])
+    "ads", "active_site", "att_num", "rev_num", "job_type", ])
 for name, group in grouped:
 
     df_i = group
@@ -209,42 +184,25 @@ for name, group in grouped:
 df_jobs = pd.DataFrame(series_list)
 # -
 
-df_i.path_full.tolist()
+# ### Creating job ids data
 
 # +
-# print("TEMP")
-# assert False
-
-# +
-# df_i_2
-# df_i.path_full.tolist()
-
-# +
-# group
-
-# +
-# df_jobs
-
-# +
-# assert False
-# -
-
-# # Creating job ids data
-
-# +
-job_ids_list = []
 used_ids = set(df_job_ids.job_id.tolist())
+
+# #########################################################
+job_ids_list = []
 data_dict_list = []
+# #########################################################
 df_i = df_jobs[[
-    "compenv", "bulk_id", "slab_id",
+    "job_type", "compenv", "bulk_id", "slab_id",
     "facet", "att_num", "rev_num", "ads", "active_site", ]]
+# #########################################################
 iterator = tqdm(df_i.index, desc="1st loop")
 for i_cnt, index_i in enumerate(iterator):
     # #####################################################
-    data_dict_i = dict()
-    # #####################################################
     row_i = df_i.loc[index_i]
     # #####################################################
+    job_type = row_i.job_type
     compenv = row_i.compenv
     bulk_id = row_i.bulk_id
     slab_id = row_i.slab_id
@@ -255,26 +213,47 @@ for i_cnt, index_i in enumerate(iterator):
     active_site = row_i.active_site
     # #####################################################
 
-    data_dict_i.update(row_i.to_dict())
 
     job_id_i = get_job_id(
+        job_type,
+
         compenv, bulk_id, slab_id, facet, att_num,
-        rev_num, ads, active_site, df_job_ids=df_job_ids)
+        rev_num, ads, active_site,
+
+        df_job_ids=df_job_ids)
 
     if job_id_i is None:
         # print(index_i)
         job_id_i = GetUniqueFriendlyID(used_ids)
         used_ids.add(job_id_i)
 
-    data_dict_i["job_id"] = job_id_i
-
-    data_dict_list.append(data_dict_i)
     job_ids_list.append(job_id_i)
+
+    # #####################################################
+    data_dict_i = dict()
+    # #####################################################
+    data_dict_i["job_id"] = job_id_i
+    # #####################################################
+    data_dict_i.update(row_i.to_dict())
+    # #####################################################
+    data_dict_list.append(data_dict_i)
+    # #####################################################
+
 
 
 # #########################################################
 df_job_ids_new = pd.DataFrame(data_dict_list)
+# #########################################################
+# -
 
+# ### Checking for duplicate job_ids
+
+# +
+df_job_ids_duplicates = df_job_ids_new[df_job_ids_new.job_id.duplicated(keep=False)]
+
+assert df_job_ids_duplicates.shape[0] == 0, "There are duplicate rows with the same job_id | NOT GOOD FIGURE IT OUT!"
+
+# +
 path_i = os.path.join(
     os.environ["PROJ_irox_oer"],
     "dft_workflow/job_processing",
@@ -291,11 +270,13 @@ if my_file.is_dir():
 
     # #########################################################
     df_job_ids_old = df_job_ids_old.set_index([
+        "job_type",
         "compenv", "bulk_id", "slab_id",
         "facet", "att_num", "rev_num",
         "ads", "active_site"], drop=False)
 
     df_job_ids_new = df_job_ids_new.set_index([
+        "job_type",
         "compenv", "bulk_id", "slab_id",
         "facet", "att_num", "rev_num",
         "ads", "active_site"], drop=False)
@@ -339,12 +320,6 @@ if my_file.is_dir():
         na_rep="NULL",
         )
 
-    # df_job_ids_new.to_csv(
-    #     path_i,
-    #     index=False,
-    #     quoting=csv.QUOTE_NONNUMERIC,
-    #     na_rep="NULL",
-    #     )
 else:
     if compenv_local == "wsl":
         for i in range(50): print(
@@ -368,6 +343,7 @@ df_jobs = df_jobs.set_index("job_id", drop=False)
 
 # +
 group_cols = [
+    "job_type",
     "bulk_id", "slab_id", "facet", "compenv",
     "ads", "active_site", "att_num",
     ]
@@ -384,8 +360,11 @@ else:
     df_jobs = pd.concat(groups, axis=0)
 
 
+# -
+
+# ### Create `path_short` variable
+
 # +
-#| - Adding short path column
 def method(row_i):
     """
     """
@@ -407,16 +386,36 @@ def method(row_i):
 df_i = df_jobs
 df_i["path_short"] = df_i.apply(method, axis=1)
 df_jobs = df_i
-#__|
 # -
 
-# # Create `df_jobs_paths`
+# ### Create `df_jobs_paths`
 
 # +
 path_cols = [i for i in df_jobs.columns.tolist() if "path" in i]
 
 cols = ["compenv", "compenv_origin", ] + path_cols
 df_jobs_paths = df_jobs[cols]
+
+# +
+new_col = []
+for job_id_i, row_paths_i in df_jobs_paths.iterrows():
+    path_rel_to_proj_i = row_paths_i.path_rel_to_proj
+
+
+    # compenvs = ["nersc", "slac", "sherlock", ]
+
+    new_path_list = []
+    for i in path_rel_to_proj_i.split("/"):
+        if i not in compenvs:
+            new_path_list.append(i)
+
+    new_path_i = "/".join(new_path_list)
+    new_col.append(new_path_i)
+
+df_jobs_paths["path_rel_to_proj__no_compenv"] = new_col
+# -
+
+# ### Misc final cleanup
 
 # +
 # #########################################################
@@ -435,32 +434,34 @@ df_jobs = df_jobs.drop(columns=cols_to_drop)
 
 # #########################################################
 # Sorting dataframe
-sort_list = ["compenv", "bulk_id", "slab_id", "att_num", "rev_num", "ads", "active_site"]
+sort_list = ["compenv", "bulk_id", "slab_id",
+    "att_num", "rev_num", "ads", "active_site"]
 df_jobs = df_jobs.sort_values(sort_list)
 # -
 
-# Pickling data ###########################################
-directory = os.path.join(
+# ### Saving `df_jobs` and `df_jobs_paths` to file
+
+# +
+root_dir = os.path.join(
     os.environ["PROJ_irox_oer"],
-    "dft_workflow/job_processing",
+    "dft_workflow/job_processing")
+
+directory = os.path.join(
+    root_dir,
     "out_data")
-if not os.path.exists(directory): os.makedirs(directory)
+
+if not os.path.exists(directory):
+    os.makedirs(directory)
+
+# +
+# #########################################################
 with open(os.path.join(directory, "df_jobs_combined.pickle"), "wb") as fle:
     pickle.dump(df_jobs, fle)
-# #########################################################
 
-# Pickling data ###########################################
-directory = os.path.join(
-    os.environ["PROJ_irox_oer"],
-    "dft_workflow/job_processing",
-    "out_data")
-if not os.path.exists(directory): os.makedirs(directory)
+# #########################################################
 with open(os.path.join(directory, "df_jobs_paths.pickle"), "wb") as fle:
     pickle.dump(df_jobs_paths, fle)
-# #########################################################
-
-if verbose:
-    print("df_jobs.shape:", df_jobs.shape)
+# -
 
 # #########################################################
 print(20 * "# # ")

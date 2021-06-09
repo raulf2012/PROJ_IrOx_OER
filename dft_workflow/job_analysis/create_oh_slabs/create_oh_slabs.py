@@ -6,11 +6,14 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.5.0
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
 #     name: conda-env-PROJ_irox_oer-py
+# ---
+
+# # Create OH slabs
 # ---
 
 # # Import Modules
@@ -39,13 +42,7 @@ from proj_data import metal_atom_symbol
 # #########################################################
 from methods import get_df_coord
 from methods import (
-    get_df_dft,
-    get_df_job_ids,
-    get_df_jobs,
-    get_df_jobs_data,
-    get_df_slab,
-    get_df_slab_ids,
-    get_df_jobs_data_clusters,
+get_df_jobs_data,
     get_df_jobs_anal,
     get_df_active_sites,
     get_df_atoms_sorted_ind,
@@ -57,16 +54,18 @@ from local_methods import get_ads_pos_oh
 from local_methods import M
 # -
 
-# # Script Inputs
+from methods import isnotebook    
+isnotebook_i = isnotebook()
+if isnotebook_i:
+    from tqdm.notebook import tqdm
+    verbose = True
+else:
+    from tqdm import tqdm
+    verbose = False
 
-verbose = True
-verbose = False
-
-# # Read data objects with methods
+# ### Read data objects with methods
 
 # +
-df_jobs = get_df_jobs(exclude_wsl_paths=True)
-
 df_jobs_data = get_df_jobs_data(exclude_wsl_paths=True)
 
 df_jobs_anal = get_df_jobs_anal()
@@ -74,6 +73,16 @@ df_jobs_anal = get_df_jobs_anal()
 df_active_sites = get_df_active_sites()
 
 df_atoms_sorted_ind = get_df_atoms_sorted_ind()
+# -
+
+# ### Filtering down to only `oer_adsorbate` jobs
+
+# +
+df_ind = df_jobs_anal.index.to_frame()
+
+df_jobs_anal = df_jobs_anal.loc[
+    df_ind[df_ind.job_type == "oer_adsorbate"].index
+    ]
 
 # +
 df_jobs_anal_i = df_jobs_anal[df_jobs_anal.job_completely_done == True]
@@ -86,14 +95,13 @@ df_jobs_anal_i = df_jobs_anal_i.query('active_site == @var')
 # -
 
 
-# # Picking slab to test on
+# ### Picking slab to test on
 
 # +
 job_ids__completely_done__ads_o = df_jobs_anal_i.job_id_max
 df_jobs_data_i = df_jobs_data.loc[job_ids__completely_done__ads_o]
 
 # #########################################################
-# directory = "out_data/finished_O_ads"
 directory = os.path.join(
     os.environ["PROJ_irox_oer"],
     "dft_workflow/job_analysis/create_oh_slabs",
@@ -102,51 +110,25 @@ if not os.path.exists(directory):
     os.makedirs(directory)
 
 for job_id_i, row_data_i in df_jobs_data_i.iterrows():
-
     # #####################################################
     final_atoms_i = row_data_i.final_atoms
     # #####################################################
-
     file_name_i = job_id_i + ".cif"
 
-    final_atoms_i.write(os.path.join(directory, file_name_i))
+    # final_atoms_i.write(os.path.join(directory, file_name_i))
 
     # final_atoms_i.write(os.path.join(
     #     "out_data",
     #     "finished_O_ads",
     #     file_name_i))
-
-
-# +
-# df_ind_i = df_jobs_anal_i.index.to_frame()
-
-# # ('slac', 'fodopilu_17', 'o', 24, 1)
-# df = df_ind_i
-# df = df[
-#     (df["compenv"] == "slac") &
-#     (df["slab_id"] == "fodopilu_17") &
-#     (df["ads"] == "o") &
-#     # # (df["active_site"] == 24.) &
-#     [True for i in range(len(df))]
-#     ]
-
-# print(20 * "TEMP | ")
-# df_jobs_anal_i = df_jobs_anal_i.loc[
-#     df.index
-#     ]
-
-# +
-# df_jobs_anal_i
-
-# +
-# assert False
 # -
 
-# # Main Loop
 
-
+# ### Main Loop
 
 # +
+df_jobs_anal_i = df_jobs_anal_i.droplevel(level=0)
+
 data_dict_list = []
 for name_i, row_i in df_jobs_anal_i.iterrows():
 
@@ -172,9 +154,13 @@ for name_i, row_i in df_jobs_anal_i.iterrows():
     active_sites_unique_i = row_sites_i.active_sites_unique
     # #####################################################
 
+    name_full_i = tuple(["oer_adsorbate", ] + list(name_i))
+
     # #####################################################
-    if name_i in df_atoms_sorted_ind.index:
-        row_atoms_i = df_atoms_sorted_ind.loc[name_i]
+    # if name_i in df_atoms_sorted_ind.index:
+    if name_full_i in df_atoms_sorted_ind.index:
+        # row_atoms_i = df_atoms_sorted_ind.loc[name_i]
+        row_atoms_i = df_atoms_sorted_ind.loc[name_full_i]
             # (compenv_i, slab_id_i, ads_i, active_site_i, att_num_i, )]
         # #####################################################
         atoms_sorted_good_i = row_atoms_i.atoms_sorted_good
@@ -230,25 +216,6 @@ df_slabs_oh = df_slabs_oh.set_index([
     "compenv", "slab_id", "ads",
     "active_site", "att_num", "att_num_oh", ])
 
-# +
-# df_ind_i = df_slabs_oh.index.to_frame()
-
-
-# # ('slac', 'fodopilu_17', 'o', 24, 1)
-
-# df = df_ind_i
-# df = df[
-#     (df["compenv"] == "slac") &
-#     (df["slab_id"] == "fodopilu_17") &
-#     (df["ads"] == "o") &
-#     (df["active_site"] == 24.) &
-#     [True for i in range(len(df))]
-#     ]
-# df
-
-# +
-# assert False
-
 # + active=""
 #
 #
@@ -258,34 +225,30 @@ df_slabs_oh = df_slabs_oh.set_index([
 # # Writing *OH Slabs to File
 
 # +
-# directory = "out_data/oh_slabs"
-
 directory = os.path.join(
     os.environ["PROJ_irox_oer"],
     "dft_workflow/job_analysis/create_oh_slabs",
     "out_data/oh_slabs")
-
 if not os.path.exists(directory):
     os.makedirs(directory)
 
 for name_i, row_i in df_slabs_oh.iterrows():
-
     # #####################################################
     slab_oh_i = row_i.slab_oh
     # #####################################################
 
     file_name_i = '__'.join(str(e) for e in list(name_i))
     file_name_i += ".cif"
-    slab_oh_i.write(os.path.join(directory, file_name_i))
 
-        # "out_data/oh_slabs",
+    # if True:
+    if False:
+        slab_oh_i.write(os.path.join(directory, file_name_i))
 # -
 
 # # Save to pickle
 
 # Pickling data ###########################################
 import os; import pickle
-# directory = "out_data"
 directory = os.path.join(
     os.environ["PROJ_irox_oer"],
     "dft_workflow/job_analysis/create_oh_slabs",

@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -46,11 +46,22 @@ from local_methods import get_files_exec_in_run_all
 # +
 black_listed_dirs = [
     "sandbox",
+    ".virtual_documents",
     ]
 
 
 # These notebooks are not intended to be run periodically, they are one-time use
 notebooks_to_ignore = [
+
+    "workflow/seoin_irox_data/analyze_dataset/trivial_eff_ox_state_model.ipynb",
+    "workflow/seoin_irox_data/compare_mine_seoin_oer/compare_mine_seoin.ipynb",
+    "workflow/seoin_irox_data/featurize_data/featurize_data.ipynb",
+    "workflow/seoin_irox_data/match_si_and_seoin_data.ipynb",
+    "workflow/seoin_irox_data/plot_data/eff_ox_vs_oer.ipynb",
+    "workflow/seoin_irox_data/process_SI_oer_table.ipynb",
+    "workflow/seoin_irox_data/process_bulk_data/process_bulk.ipynb",
+    "workflow/seoin_irox_data/process_init_final_slabs/process_init_final.ipynb",
+    "workflow/seoin_irox_data/read_seoin_irox_data.ipynb",
 
     # Only needs to be run manually, will set in motion many downstream jobs
     "dft_workflow/run_slabs/run_o_covered/setup_dft.ipynb",
@@ -110,11 +121,12 @@ notebooks_to_ignore = [
 
 
     # #####################################################
-    # Don't run these things
+    # Most scripts in scripts/ are meant to be run on a one-off basis
     "scripts/git_scripts/get_modified_py_files.ipynb",
     "scripts/git_scripts/git_check_size.ipynb",
     "scripts/repo_file_operations/clean_jup.ipynb",
     "scripts/repo_file_operations/jup_notebook_overview.ipynb",
+    "scripts/repo_file_operations/find_files.ipynb",
 
 
     # #####################################################
@@ -129,6 +141,7 @@ notebooks_to_ignore = [
     "collated_plots.ipynb",
     "dft_workflow/run_slabs/setup_jobs_from_oh/id_new_O_with_orig_OH/new_O_orig_OH.ipynb",
 
+
     ]
 
 
@@ -138,7 +151,8 @@ TEMP_FILES_TO_IGNORE = [
     "dft_workflow/job_analysis/slab_struct_drift/slab_struct_drift.ipynb",
     "dft_workflow/job_analysis/systems_fully_ready/sys_fully_ready.ipynb",
     "dft_workflow/job_processing/clean_dft_dirs.ipynb",
-    "workflow/oer_analysis/oer_scaling/oer_scaling.ipynb",
+
+    # "workflow/oer_analysis/oer_scaling/oer_scaling.ipynb",
     ]
 
 notebooks_to_ignore.extend(TEMP_FILES_TO_IGNORE)
@@ -164,6 +178,15 @@ df_run_all = get_files_exec_in_run_all()
 #
 # -
 
+# ## Printing notebooks that aren't being run in: `PROJ_irox_oer__comm_overnight`
+
+print(
+    "\n",
+    "Notebooks that aren't being run in PROJ_irox_oer__comm_overnight:",
+
+    "\n",
+    65 * "-",
+    sep="")
 # #########################################################
 for index_i, row_i in df_ipynb_i.iterrows():
     # #####################################################
@@ -172,7 +195,10 @@ for index_i, row_i in df_ipynb_i.iterrows():
     # #####################################################
 
     # Skipping certain rows
-    if "sandbox" in file_name_i:
+    # if "sandbox" in file_name_i:
+    if "sandbox" in file_path_short_i:
+        continue
+    if "old." in file_path_short_i:
         continue
     if file_path_short_i in notebooks_to_ignore:
         continue
@@ -189,6 +215,13 @@ for index_i, row_i in df_ipynb_i.iterrows():
     df_i = df_run_all[df_run_all.path_short == file_path_short_i]
     if df_i.shape[0] == 0:
         print(file_path_short_i)
+
+# + active=""
+# dft_workflow/job_analysis/prepare_oer_sets/write_oer_sets.ipynb
+#
+# -
+
+df_ipynb_i.head()
 
 # + active=""
 #

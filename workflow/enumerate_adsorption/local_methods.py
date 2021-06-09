@@ -134,10 +134,17 @@ def process_rdf(
     #| - Create out folders
     import os
 
-    directory = "out_data"
+    # directory = "out_data"
+    directory = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/enumerate_adsorption",
+        "out_data")
+
     if not os.path.exists(directory):
         os.makedirs(directory)
-    assert False, "Fix os.makedirs"
+
+    # assert False, "Fix os.makedirs"
+
     directory = "out_plot/rdf_figures"
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -739,8 +746,15 @@ def get_unique_active_sites_temp(
 
     # Saving df_rdf_dict
     # Pickling data ###########################################
-    directory = "out_data/df_rdf_dict"
-    assert False, "Fix os.makedirs"
+    # directory = "out_data/df_rdf_dict"
+
+    directory = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/enumerate_adsorption",
+        "out_data/df_rdf_dict",
+        )
+
+    # assert False, "Fix os.makedirs"
     if not os.path.exists(directory): os.makedirs(directory)
     with open(os.path.join(directory, custom_name_pre + ".pickle"), "wb") as fle:
         pickle.dump(df_rdf_dict, fle)
@@ -768,8 +782,15 @@ def get_unique_active_sites_temp(
     df_rdf_ij.index = active_sites
 
     # Pickling data ###########################################
-    directory = "out_data/df_rdf_ij"
-    assert False, "Fix os.makedirs"
+    # directory = "out_data/df_rdf_ij"
+
+    directory = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/enumerate_adsorption",
+        "out_data/df_rdf_ij",
+        )
+
+    # assert False, "Fix os.makedirs"
     if not os.path.exists(directory): os.makedirs(directory)
     with open(os.path.join(directory, custom_name_pre + ".pickle"), "wb") as fle:
         pickle.dump(df_rdf_ij, fle)
@@ -824,8 +845,15 @@ def get_unique_active_sites_temp(
 
         # fig.show()
 
-        directory = "out_plot/rdf_heat_maps_1"
-        assert False, "Fix os.makedirs"
+        # directory = "out_plot/rdf_heat_maps_1"
+
+        directory = os.path.join(
+            os.environ["PROJ_irox_oer"],
+            "workflow/enumerate_adsorption",
+            "out_data/rdf_heat_maps_1",
+            )
+
+        # assert False, "Fix os.makedirs"
         if not os.path.exists(directory):
             os.makedirs(directory)
 
@@ -833,12 +861,24 @@ def get_unique_active_sites_temp(
         # from plotting.my_plotly import my_plotly_plot
 
         # file_name = "rdf_heat_maps_1/" + custom_name_pre + "_rdf_diff_heat_map"
-        file_name = os.path.join(
+
+        # file_name = os.path.join(
+        #     "/".join(directory.split("/")[1:]),
+        #     custom_name_pre + "_rdf_diff_heat_map",
+        #     )
+
+        save_dir = os.path.join(
             "/".join(directory.split("/")[1:]),
-            custom_name_pre + "_rdf_diff_heat_map")
+            # custom_name_pre + "_rdf_diff_heat_map",
+            )
+
+        file_name = custom_name_pre + "_rdf_diff_heat_map"
+
         print(file_name)
         my_plotly_plot(
             figure=fig,
+            save_dir=save_dir,
+            place_in_out_plot=False,
             # plot_name="rdf_heat_maps/rdf_diff_heat_map",
             plot_name=file_name,
 

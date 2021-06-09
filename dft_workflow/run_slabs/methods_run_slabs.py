@@ -11,7 +11,7 @@ from methods import (
 
 
 
-def get_systems_to_run_bare_and_oh():
+def get_systems_to_run_bare_and_oh(df_jobs_anal):
     """
     Takes df_jobs_anal and filter to:
       * only *O slabs
@@ -20,7 +20,7 @@ def get_systems_to_run_bare_and_oh():
       * Only the first att_num, so that you don't start new sets of *OH and bare jobs from rerun *O jobs
     """
     #| - get_systems_to_run_bare_and_oh
-    df_jobs_anal = get_df_jobs_anal()
+    # df_jobs_anal = get_df_jobs_anal()
 
 
     df_jobs_anal_i = df_jobs_anal

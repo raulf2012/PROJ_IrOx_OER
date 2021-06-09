@@ -27,10 +27,17 @@ import pandas as pd
 # from local_methods import find_missing_O_neigh_with_init_df_coord
 #__|
 
+
+
+# df_jobs_anal=None,
+# df_atoms_sorted_ind=None,
+# df_active_sites=None,
+
 def get_df_feat_rows(
     df_jobs_anal=None,
     df_atoms_sorted_ind=None,
     df_active_sites=None,
+    ads_to_include=["o", "oh", ],
     ):
     """Get rows of df_features, to be used in feature generation.
 
@@ -54,9 +61,13 @@ def get_df_feat_rows(
     # Selecting *O and *OH systems to process
     df_index = df_jobs_anal_i.index.to_frame()
     df_index_i = df_index[
-        df_index.ads.isin(["o", "oh", ])
-        # df_index.ads.isin(["oh", ])
+        # df_index.ads.isin(["o", "oh", ])
+        df_index.ads.isin(
+            ads_to_include
+            )
         ]
+
+
     df_jobs_anal_i = df_jobs_anal_i.loc[
         df_index_i.index
         ]
@@ -108,6 +119,10 @@ def get_df_feat_rows(
         slab_id_i = name_i[1]
         active_site_i = name_i[3]
         # #################################################
+        # job_type_i = row_i.name[0]
+        # print("row_i.name:", row_i.name)
+        # ('dos_bader', 'nersc', 'hesegula_40', 'o', 92.0, 1)
+        # #################################################
         job_id_max_i = row_i.job_id_max
         # #################################################
         name_dict_i = dict(zip(
@@ -123,6 +138,7 @@ def get_df_feat_rows(
 
         data_dict_i["job_id_max"] = job_id_max_i
         data_dict_i["active_site_orig"] = active_site_i
+        # data_dict_i["job_type"] = job_type_i
         if active_site_i != "NaN":
             # #############################################
             data_dict_j = dict()

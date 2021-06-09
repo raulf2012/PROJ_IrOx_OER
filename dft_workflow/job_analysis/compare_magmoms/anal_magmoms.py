@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -72,39 +72,43 @@ for name_i, row_i in df_atoms_sorted_ind_i.iterrows():
     atoms_sorted_good_i = row_i.atoms_sorted_good
     # #####################################################
 
-    if magmoms_sorted_good_i is None:
-        magmoms_i = atoms_sorted_good_i.get_magnetic_moments()
-    else:
-        magmoms_i = magmoms_sorted_good_i
-
-    atoms = atoms_sorted_good_i
-
-    # Positions
-    z_positions = atoms.positions[:, 2]
-    z_max = z_positions.max()
+    if atoms_sorted_good_i is not None:
+        # print(name_i)
 
 
-    for atom_j in atoms:
-        # #################################################
-        data_dict_j = dict()
-        # #################################################
-        atom_index_j = atom_j.index
-        symbol_j = atom_j.symbol
-        # #################################################
+        if magmoms_sorted_good_i is None:
+            magmoms_i = atoms_sorted_good_i.get_magnetic_moments()
+        else:
+            magmoms_i = magmoms_sorted_good_i
 
-        magmom_j = magmoms_i[atom_index_j]
+        atoms = atoms_sorted_good_i
 
-        z_pos_j = atom_j.position[2]
-        dist_from_top = z_max - z_pos_j
+        # Positions
+        z_positions = atoms.positions[:, 2]
+        z_max = z_positions.max()
 
-        # #################################################
-        data_dict_j["symbol"] = symbol_j
-        data_dict_j["magmom"] = magmom_j
-        data_dict_j["dist_from_top"] = dist_from_top
-        # data_dict_j[""] = 
-        # #################################################
-        data_dict_list.append(data_dict_j)
-        # #################################################
+
+        for atom_j in atoms:
+            # #################################################
+            data_dict_j = dict()
+            # #################################################
+            atom_index_j = atom_j.index
+            symbol_j = atom_j.symbol
+            # #################################################
+
+            magmom_j = magmoms_i[atom_index_j]
+
+            z_pos_j = atom_j.position[2]
+            dist_from_top = z_max - z_pos_j
+
+            # #################################################
+            data_dict_j["symbol"] = symbol_j
+            data_dict_j["magmom"] = magmom_j
+            data_dict_j["dist_from_top"] = dist_from_top
+            # data_dict_j[""] = 
+            # #################################################
+            data_dict_list.append(data_dict_j)
+            # #################################################
 
 
 # #########################################################

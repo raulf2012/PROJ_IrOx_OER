@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.5.0
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -22,6 +22,9 @@
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
+
+import numpy as np
 
 from local_methods import remove_conflicted_path_dir
 # -
@@ -65,7 +68,6 @@ elif compenv == "nersc" or compenv == "sherlock" or compenv == "slac":
 # ## Cleanup Dropbox project dirs
 # ---
 
-# + jupyter={"outputs_hidden": true}
 for subdir, dirs, files in os.walk(os.environ["PROJ_irox_oer"]):
     for file_i in files:
         if "conflicted copy" in file_i:
@@ -73,6 +75,12 @@ for subdir, dirs, files in os.walk(os.environ["PROJ_irox_oer"]):
             if remove_files_folders:
                 print("Removing:", file_path_i)
                 os.remove(file_path_i)
+
+if verbose:
+    print(
+        "jobs_root_dir: ",
+        jobs_root_dir,
+        sep="")
 
 # +
 # assert False
@@ -107,6 +115,14 @@ for subdir, dirs, files in os.walk(jobs_root_dir):
 
 for subdir, dirs, files in os.walk(jobs_root_dir):
     remove_conflicted_path_dir(path=subdir, remove_files_folders=remove_files_folders)
+
+# #########################################################
+print(20 * "# # ")
+print("All done!")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
+print("fix_gdrive_conflicts.ipynb")
+print(20 * "# # ")
+# #########################################################
 
 # + active=""
 #

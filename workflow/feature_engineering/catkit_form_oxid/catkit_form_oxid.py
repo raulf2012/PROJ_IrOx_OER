@@ -567,24 +567,24 @@ assert False
 #
 #
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # row_atoms_i = df_atoms_sorted_ind[df_atoms_sorted_ind.job_id == job_id_i]
 # row_atoms_i = row_atoms_i.iloc[0]
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # df_atoms_sorted_ind[df_atoms_sorted_ind.job_id == job_id_i]
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # job_id_i
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # df_atoms_sorted_ind.job_id == job_id_i
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # from methods_features import original_slab_is_good
 # from methods_features import find_missing_O_neigh_with_init_df_coord
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # name = name_orig_i
 # active_site = active_site_i
 # df_coord_i = df_coord_i
@@ -807,30 +807,30 @@ assert False
 # # return(out_dict)
 # #__|
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # effective_ox_state
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # metal_index
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # df_coord_i.loc[26].nn_info
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # active_metal_in_nn_list = False
 # for i in df_coord_i.loc[22].nn_info:
 #     if i["site_index"] == metal_index:
 #         active_metal_in_nn_list = True
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # # row_coord_i
 # # row_coord_i.nn_info
 
 # nn_info_i
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # df_oxi_comp.loc[name_i].iloc[0]
 # df_oxi_comp.loc[name_i]
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # name_i

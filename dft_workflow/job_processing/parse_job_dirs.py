@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.5.0
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -44,9 +44,6 @@ from local_methods import (
     is_rev_dir,
     get_job_paths_info,
     )
-
-# +
-# assert False
 # -
 
 from methods import isnotebook    
@@ -100,8 +97,18 @@ def get_path_rel_to_proj(full_path):
 #
 #
 #
+# -
 
-# + jupyter={"outputs_hidden": true}
+if verbose:
+    print(
+        "Scanning for job dirs from the following dir:",
+        "\n",
+        jobs_root_dir,
+        sep="")
+
+# ### Initial scan of root dir
+
+# +
 data_dict_list = []
 for subdir, dirs, files in os.walk(jobs_root_dir):
 
@@ -117,13 +124,6 @@ for subdir, dirs, files in os.walk(jobs_root_dir):
 
 
 
-
-
-
-
-
-
-
     if "dft_jobs" not in subdir:
         continue
     if ".old" in subdir:
@@ -131,28 +131,27 @@ for subdir, dirs, files in os.walk(jobs_root_dir):
     if path_i == "":
         continue
 
+
     # # TEMP
     # # print("TEMP")
     # # frag_i = "slac/mwmg9p7s6o/11-20"
-    # frag_i = "slac/mwmg9p7s6o/11-20/bare/active_site__26/01_attempt"
+    # # frag_i = "slac/mwmg9p7s6o/11-20/bare/active_site__26/01_attempt"
+    # frag_i = "run_dos_bader"
     # if frag_i not in subdir:
+    #     # break
     #     continue
-    # print(10 * "Got through | ")
-    # print(subdir)
+
+    #     print(1 * "Got through | ")
+    #     print(subdir)
 
 
 
 
 
 
+    # if verbose:
+    #     print(path_i)
 
-
-
-
-
-
-    if verbose:
-        print(path_i)
 
     path_rel_to_proj = get_path_rel_to_proj(subdir)
     out_dict = get_job_paths_info(path_i)
@@ -194,72 +193,11 @@ else:
     df = df.reset_index(drop=True)
 
 assert df.index.is_unique, "Index must be unique here"
+
+
 # -
 
-# # DEPRECATED | Moved to fix_gdrive_conflicts.ipynb
-#
-# ### Removing paths that have the GDrive duplicate syntax in them ' (1)'
-
-# +
-# for ind_i, row_i in df.iterrows():
-#     path_full_i = row_i.path_full
-
-#     if " (" in path_full_i:
-#         print(
-#             path_full_i,
-#             sep="")
-
-#         # #################################################
-#         found_wrong_level = False
-#         path_level_list = []
-#         for i in path_full_i.split("/"):
-#             if not found_wrong_level:
-#                 path_level_list.append(i)
-#             if " (" in i:
-#                 found_wrong_level = True
-#         path_upto_error = "/".join(path_level_list)
-
-#         my_file = Path(path_full_i)
-#         if my_file.is_dir():
-#             size_i = os.path.getsize(path_full_i)
-#         else:
-#             continue
-
-
-#         # If it's a small file size then it probably just has the init files and we're good to delete the dir
-#         # Seems that all files are 512 bytes in size (I think it's bytes)
-#         if size_i < 550:
-#             my_file = Path(path_upto_error)
-#             if my_file.is_dir():
-#                 print("Removing dir:", path_upto_error)
-#                 # shutil.rmtree(path_upto_error)
-#         else:
-#             print(100 * "Issue | ")
-#             print(path_full_i)
-#             print(path_full_i)
-#             print(path_full_i)
-#             print(path_full_i)
-#             print(path_full_i)
-
-#         print("")
-
-# +
-# Removing files with ' (' in name (GDrive duplicates)
-
-# for subdir, dirs, files in os.walk(jobs_root_dir):
-#     for file_i in files:
-#         if " (" in file_i:
-#             file_path_i = os.path.join(subdir, file_i)
-
-#             print(
-#                 "Removing:",
-#                 file_path_i)
-#             # os.remove(file_path_i)
-
-# # os.path.join(subdir, file_i)
-
-# +
-# assert False
+# ### Get facet and bulk from path
 
 # +
 def get_facet_bulk_id(row_i):
@@ -419,19 +357,53 @@ df = df.apply(
     axis=1)
 
 # +
-# assert False
-
-# +
 df.att_num = df.att_num.astype(int)
 df.rev_num = df.rev_num.astype(int)
 
 # df["compenv"] = compenv
 # -
 
+# ### Get job type
+
+# +
+def get_job_type(row_i):
+    """
+    """
+    new_column_values_dict = {
+        "job_type":  None,
+        }
+
+    # #####################################################
+    path_job_root = row_i.path_job_root
+    # #####################################################
+
+    # print(path_job_root)
+
+    if "run_dos_bader" in path_job_root:
+        job_type_i = "dos_bader"
+    elif "dft_workflow/run_slabs" in path_job_root:
+        job_type_i = "oer_adsorbate"
+        
+
+    # #####################################################
+    new_column_values_dict["job_type"] = job_type_i
+    # #####################################################
+    for key, value in new_column_values_dict.items():
+        row_i[key] = value
+    # #####################################################
+    return(row_i)
+    # #####################################################
+
+df = df.apply(
+    get_job_type,
+    axis=1)
+# -
+
 # # Reorder columns
 
 # +
 new_col_order = [
+    "job_type",
     "compenv",
 
     "bulk_id",
@@ -452,12 +424,6 @@ new_col_order = [
     ]
 
 df = reorder_df_columns(new_col_order, df)
-
-# +
-# df
-
-# +
-# assert False
 # -
 
 # # Saving data and uploading to Dropbox
@@ -495,7 +461,6 @@ print("All done!")
 print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
 print("parse_job_dirs.ipynb")
 print(20 * "# # ")
-# assert False
 # #########################################################
 
 # + active=""
@@ -505,153 +470,72 @@ print(20 * "# # ")
 #
 
 # + jupyter={"source_hidden": true}
-# df.bulk_id
+# DEPRECATED | Moved to fix_gdrive_conflicts.ipynb
 
-# df[df.bulk_id == "64cg6j9any"]
+### Removing paths that have the GDrive duplicate syntax in them ' (1)'
 
-# + jupyter={"source_hidden": true}
-# groups = []
-# grouped = df.groupby(["path_job_root_w_att", ])
-# for name, group in grouped:
-#     num_revs = group.shape[0]
+# for ind_i, row_i in df.iterrows():
+#     path_full_i = row_i.path_full
 
-#     group["num_revs"] = num_revs
-#     groups.append(group)
+#     if " (" in path_full_i:
+#         print(
+#             path_full_i,
+#             sep="")
 
-# if len(groups) == 0:
-#     pass
-# else:
-#     df = pd.concat(groups, axis=0)
+#         # #################################################
+#         found_wrong_level = False
+#         path_level_list = []
+#         for i in path_full_i.split("/"):
+#             if not found_wrong_level:
+#                 path_level_list.append(i)
+#             if " (" in i:
+#                 found_wrong_level = True
+#         path_upto_error = "/".join(path_level_list)
 
-# + jupyter={"source_hidden": true}
-# jobs_root_dir = "/home/raulf2012/Dropbox/01_norskov/00_git_repos/PROJ_IrOx_OER/__test__/dft_workflow/run_slabs/run_oh_covered/"
+#         my_file = Path(path_full_i)
+#         if my_file.is_dir():
+#             size_i = os.path.getsize(path_full_i)
+#         else:
+#             continue
 
-# + jupyter={"source_hidden": true}
-# path_job_root = "dft_workflow/run_slabs/run_o_covered/out_data/dft_jobs/81meck64ba/110/active_site__63"
 
-# if "run_o_covered" in path_job_root or "run_o_covered" in jobs_root_dir:
+#         # If it's a small file size then it probably just has the init files and we're good to delete the dir
+#         # Seems that all files are 512 bytes in size (I think it's bytes)
+#         if size_i < 550:
+#             my_file = Path(path_upto_error)
+#             if my_file.is_dir():
+#                 print("Removing dir:", path_upto_error)
+#                 # shutil.rmtree(path_upto_error)
+#         else:
+#             print(100 * "Issue | ")
+#             print(path_full_i)
+#             print(path_full_i)
+#             print(path_full_i)
+#             print(path_full_i)
+#             print(path_full_i)
 
-#     path_split = path_job_root.split("/")
-
-#     ads_i = "o"
-#     if "active_site__" in path_job_root:
-
-#         facet_i = path_split[-2]
-#         bulk_id_i = path_split[-3]
-
-#         active_site_parsed = False
-#         for i in path_split:
-#             if "active_site__" in i:
-#                 active_site_path_seg = i.split("_")
-#                 active_site_i = active_site_path_seg[-1]
-#                 active_site_i = int(active_site_i)
-#                 active_site_parsed = True
-#         if not active_site_parsed:
-#             print("PROBLEM | Couldn't parse active site for following dir:")
-#             print(path_job_root)
-
-#     else:
-#         # path_split = path_job_root.split("/")
-
-#         facet_i = path_split[-1]
-#         bulk_id_i = path_split[-2]
-#         # active_site_i = None
-#         active_site_i = np.nan
-# + active=""
-#
-#
+#         print("")
 
 # + jupyter={"source_hidden": true}
-# assert False
+# Removing files with ' (' in name (GDrive duplicates)
 
-# + jupyter={"source_hidden": true}
-# path_full_i = "/mnt/f/GDrive/norskov_research_storage/00_projects/PROJ_irox_oer/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/ck638t75z3/020/bare (1)/active_site__59/01_attempt/_01"
-
-# # find_ind = path_full_i.find(" (")
-# # path_full_i[:find_ind + 4]
-
-# found_wrong_level = False
-# path_level_list = []
-# for i in path_full_i.split("/"):
-#     if not found_wrong_level:
-#         path_level_list.append(i)
-#     if " (" in i:
-#         found_wrong_level = True
-# path_upto_error = "/".join(path_level_list)
-
-# + jupyter={"source_hidden": true}
-# assert False
-
-# + jupyter={"source_hidden": true}
-# dft_workflow/run_slabs/run_oh_covered/out_data/dft_jobs/sherlock/bpc2nk6qz1/101/oh/active_site__37
-
-
-# + jupyter={"source_hidden": true}
-# path_i
-
-# + jupyter={"source_hidden": true}
-# df
-
-# + jupyter={"source_hidden": true}
-# ['dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/mwmg9p7s6o/11-20/bare/active_site__27/01_attempt',
-#  'dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/slac/mwmg9p7s6o/11-20/bare/active_site__27/01_attempt']
-
-# + jupyter={"source_hidden": true}
-# for i, row_i in df.iterrows():
-#     tmp = 42
-
-#     frag_i = "7h7yns937p/101/02_attempt"
-#     if frag_i in row_i.path_full:
-#         tmp = 42
-#         print(i)
-
-# + jupyter={"source_hidden": true}
-# assert False
-
-# + jupyter={"source_hidden": true}
-# print(20 * "TEMP | ")
-
-# data_dict_list = []
 # for subdir, dirs, files in os.walk(jobs_root_dir):
-#     data_dict_i = dict()
+#     for file_i in files:
+#         if " (" in file_i:
+#             file_path_i = os.path.join(subdir, file_i)
 
-#     data_dict_i["path_full"] = subdir
+#             print(
+#                 "Removing:",
+#                 file_path_i)
+#             # os.remove(file_path_i)
 
-#     last_dir = jobs_root_dir.split("/")[-1]
-#     path_i = os.path.join(last_dir, subdir[len(jobs_root_dir) + 1:])
-#     # path_i = subdir[len(jobs_root_dir) + 1:]
-
-#     print(subdir)
-
-#     if "dft_jobs" not in subdir:
-#         continue
-#     if ".old" in subdir:
-#         continue
-#     if path_i == "":
-#         continue
-
-# + jupyter={"source_hidden": true}
-# print("TEMP")
-# jobs_root_dir = "/media/raulf2012/research_backup/PROJ_irox_oer_gdrive/dft_workflow/run_slabs/run_bare_oh_covered/out_data/dft_jobs/slac/mwmg9p7s6o/11-20"
-
-# + jupyter={"source_hidden": true}
-# df = df[
-#     (df["compenv"] == "slac") &
-#     # (df["slab_id"] == "mwmg9p7s6o") &
-#     (df["bulk_id"] == "mwmg9p7s6o") &
-#     (df["ads"] == "bare") &
-#     (df["facet"] == "11-20") &
-#     (df["active_site"] == 27.) &
-#     [True for i in range(len(df))]
-#     ]
-
-# #     bare	48	
-# df.path_job_root_w_att.tolist()
-
-# # df
+# # os.path.join(subdir, file_i)
 
 # + jupyter={"source_hidden": true}
 # assert False
+
+# + jupyter={"source_hidden": true}
+# df[df.job_type == "dos_bader"]
 
 # + jupyter={"source_hidden": true}
 # assert False

@@ -16,7 +16,7 @@
 # # Collect feature data into master dataframe
 # ---
 
-# # Import Modules
+# ### Import Modules
 
 # +
 import os
@@ -24,6 +24,7 @@ print(os.getcwd())
 import sys
 import time; ti = time.time()
 
+import pickle
 from itertools import combinations
 from collections import Counter
 from functools import reduce
@@ -33,13 +34,24 @@ from IPython.display import display
 import numpy as np
 import pandas as pd
 pd.set_option("display.max_columns", None)
-pd.set_option('display.max_rows', None)
+# pd.set_option('display.max_rows', None)
 pd.options.display.max_colwidth = 100
 
 # #########################################################
-from methods import get_df_octa_vol, get_df_eff_ox
-from methods import get_df_dft
-from methods import get_df_job_ids
+from methods import (
+    get_df_job_ids,
+    get_df_atoms_sorted_ind,
+    get_df_jobs_paths,
+    get_df_dft,
+
+    get_df_octa_vol,
+    get_df_eff_ox,
+    get_df_angles,
+    get_df_pdos_feat,
+    get_df_bader_feat,
+
+    get_df_coord,
+    )
 # -
 
 from methods import isnotebook    
@@ -51,16 +63,38 @@ else:
     from tqdm import tqdm
     verbose = False
 
-# # Read feature dataframes
+# ### Read feature dataframes
 
 # +
+# Base dataframes
+df_dft = get_df_dft()
+
+df_job_ids = get_df_job_ids()
+
+df_atoms_sorted_ind = get_df_atoms_sorted_ind()
+
+df_jobs_paths = get_df_jobs_paths()
+
+
+# Features dataframes
 df_octa_vol = get_df_octa_vol()
 
 df_eff_ox = get_df_eff_ox()
 
-df_dft = get_df_dft()
+df_angles = get_df_angles()
 
-df_job_ids = get_df_job_ids()
+df_pdos_feat = get_df_pdos_feat()
+
+df_bader_feat = get_df_bader_feat()
+# -
+
+# ### Filtering down to `oer_adsorbate` jobs
+
+df_ind = df_atoms_sorted_ind.index.to_frame()
+df_atoms_sorted_ind = df_atoms_sorted_ind.loc[
+    df_ind[df_ind.job_type == "oer_adsorbate"].index
+    ]
+df_atoms_sorted_ind = df_atoms_sorted_ind.droplevel(level=0)
 
 # +
 from local_methods import combine_dfs_with_same_cols
@@ -68,6 +102,9 @@ from local_methods import combine_dfs_with_same_cols
 df_dict_i = {
     "df_eff_ox": df_eff_ox,
     "df_octa_vol": df_octa_vol,
+    "df_angles": df_angles,
+    "df_pdos_feat": df_pdos_feat,
+    "df_bader_feat": df_bader_feat,
     }
 
 df_features = combine_dfs_with_same_cols(
@@ -78,7 +115,7 @@ df_features = combine_dfs_with_same_cols(
 
 # -
 
-# # Adding in bulk data
+# ### Adding in bulk data
 
 # +
 def method(row_i):
@@ -132,7 +169,121 @@ if verbose:
 # df_features.head()
 # -
 
-# # Save data to pickle
+# ### Adding magmom data (Spin)
+
+# +
+data_dict_list = []
+index_list = []
+for i_cnt, (name_i, row_i) in enumerate(df_features.iterrows()):
+    index_list.append(name_i)
+    name_i_2 = name_i[0:-1]
+
+    # #####################################################
+    compenv_i = name_i[0]
+    slab_id_i = name_i[1]
+    ads_i = name_i[2]
+    active_site_i = name_i[3]
+    att_num_i = name_i[4]
+    from_oh_i = name_i[5]
+    # #####################################################
+    job_id_max_i = row_i["data"]["job_id_max"]
+    # #####################################################
+
+    if ads_i == "o" and not from_oh_i:
+        name_new_i = (
+            compenv_i, slab_id_i, ads_i, "NaN", att_num_i, )
+    else:
+        name_new_i = name_i_2
+
+
+    # #########################################################
+    row_paths_i = df_jobs_paths.loc[job_id_max_i]
+    # #########################################################
+    gdrive_path_i = row_paths_i.gdrive_path
+    # #########################################################
+
+    # #####################################################
+    row_atoms_i = df_atoms_sorted_ind.loc[name_new_i]
+    # #####################################################
+    magmoms_i = row_atoms_i.magmoms_sorted_good
+    atoms_i = row_atoms_i.atoms_sorted_good
+    # #####################################################
+
+    if magmoms_i is None:
+        magmoms_i = atoms_i.get_magnetic_moments()
+
+    magmom_active_site_i = magmoms_i[int(active_site_i)]
+
+
+
+
+    init_name_i = (compenv_i, slab_id_i, "o", "NaN", 1)
+
+    df_coord_i = get_df_coord(
+        mode='init-slab',
+        init_slab_name_tuple=init_name_i,
+        )
+
+    row_coord_i = df_coord_i.loc[active_site_i]
+
+    Ir_nn_found = False
+    nn_Ir = None
+    for nn_i in row_coord_i["nn_info"]:
+        symbol_i = nn_i["site"].specie.symbol
+        if symbol_i == "Ir":
+            nn_Ir = nn_i
+            Ir_nn_found = True
+
+    Ir_bader_charge_i = None
+    if Ir_nn_found:
+        Ir_index = nn_Ir["site_index"]
+    else:
+        print("Ir not found")
+
+    Ir_magmom_i = magmoms_i[int(Ir_index)]
+
+
+    # #####################################################
+    data_dict_i = dict()
+    # #####################################################
+    # data_dict_i["magmom_active_site"] = np.abs(magmom_active_site_i)
+    data_dict_i["O_magmom"] = np.abs(magmom_active_site_i)
+    data_dict_i["Ir_magmom"] = np.abs(Ir_magmom_i)
+    # #####################################################
+    data_dict_list.append(data_dict_i)
+    # #####################################################
+
+
+
+
+# #########################################################
+df_magmom_i = pd.DataFrame(
+    data_dict_list,
+    index=pd.MultiIndex.from_tuples(
+        index_list,
+        names=list(df_features.index.names),
+        )
+    )
+
+# Add level to column index to match `df_features`
+new_cols = []
+for col_i in df_magmom_i.columns:
+    new_col_i = ("features", col_i)
+    new_cols.append(new_col_i)
+df_magmom_i.columns = pd.MultiIndex.from_tuples(new_cols)
+
+df_features = pd.concat([
+    df_magmom_i,
+    df_features,
+    ], axis=1)
+
+df_features = df_features.reindex(
+    columns=list(df_features.columns.levels[0]),
+    level=0)
+# #########################################################
+# -
+
+# ### Save data to pickle
 
 # +
 root_path_i = os.path.join(
@@ -140,7 +291,6 @@ root_path_i = os.path.join(
     "workflow/feature_engineering")
 
 # Pickling data ###########################################
-import os; import pickle
 directory = os.path.join(root_path_i, "out_data")
 if not os.path.exists(directory): os.makedirs(directory)
 path_i = os.path.join(root_path_i, "out_data/df_features.pickle")
@@ -170,282 +320,3 @@ print(20 * "# # ")
 #
 #
 #
-
-# + jupyter={"source_hidden": true}
-# df_dict = df_dict_i
-# verbose = True
-
-# + jupyter={"source_hidden": true}
-# # def tmp_combine_dfs_with_same_cols_2(
-# #     df_dict=None,
-# #     verbose=False,
-# #     ):
-# """
-# """
-# #| - tmp_combine_dfs_with_same_cols
-
-
-# #| - I
-# # df_dict = {
-# #     "df_eff_ox": df_eff_ox,
-# #     "df_octa_vol": df_octa_vol,
-# #     }
-
-# all_data_columns = []
-# for df_name_i, df_i in df_dict.items():
-#     all_data_columns.extend(df_i["data"].columns.tolist())
-
-# repeated_data_cols = []
-# count_dict = dict(Counter(all_data_columns))
-# for key, val in count_dict.items():
-#     if val > 1:
-#         repeated_data_cols.append(key)
-
-# repated_cols_that_are_identical = []
-# for col_i in repeated_data_cols:
-
-#     if verbose:
-#         print(20 * "-")
-#         print("col_i:", col_i)
-
-#     dfs_with_col = []
-#     for df_name_i, df_i in df_dict.items():
-#         if col_i in df_i["data"].columns:
-#             temp_col_name = col_i + "__" + df_name_i
-#             df_tmp = df_i.rename(columns={col_i: temp_col_name, })
-#             df_tmp = df_tmp.loc[:, [("data", temp_col_name)]]
-#             dfs_with_col.append(df_tmp)
-
-
-#     df_one_col_comb = pd.concat(dfs_with_col, axis=1)
-#     df_one_col_comb = df_one_col_comb["data"]
-
-#     # #####################################################
-#     col_pair_equal_check_list = []
-#     all_col_pairs = list(combinations(df_one_col_comb.columns.tolist(), 2))
-#     for col_pair_i in all_col_pairs:
-#         df_one_col_comb_ij = df_one_col_comb[
-#             list(col_pair_i)
-#             ]
-#         df_one_col_comb_ij = df_one_col_comb_ij.dropna()
-
-
-#         col_vals_0 = df_one_col_comb_ij[
-#             df_one_col_comb_ij.columns[0]
-#             ]
-
-#         col_vals_1 = df_one_col_comb_ij[
-#             df_one_col_comb_ij.columns[1]
-#             ]
-
-#         col_comparison = (col_vals_0 == col_vals_1)
-
-#         all_values_the_same = col_comparison.all()
-#         col_pair_equal_check_list.append(all_values_the_same)
-
-#     # #####################################################
-#     all_columns_are_the_same = all(col_pair_equal_check_list)
-#     if all_columns_are_the_same:
-#         repated_cols_that_are_identical.append(col_i)
-#         # print(
-#         #     "all_columns_are_the_same:",
-#         #     all_columns_are_the_same
-#         #     )
-#     else:
-#         if verbose:
-#             print(
-#                 "The duplicated column ",
-#                 col_i,
-#                 " isn't identical across all dataframes",
-#                 sep="")
-
-
-# if verbose:
-#     print(
-#         "\n",
-#         "repated_cols_that_are_identical:",
-#         "\n",
-#         repated_cols_that_are_identical,
-#         sep="")
-# #__|
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # Renaming non-identical shared columns so that there are no duplicate column names
-# non_identical_repeated_cols = []
-# for col_i in repeated_data_cols:
-#     if col_i not in repated_cols_that_are_identical:
-#         non_identical_repeated_cols.append(col_i)
-
-
-# # #########################################################
-# for df_name_i, df_i in df_dict.items():
-
-#     new_df_columns = []
-#     for col_j in df_i.columns:
-
-#         if col_j[1] in non_identical_repeated_cols:
-#             col_new = col_j[1] + "__" + df_name_i
-#             col_new_tuple = (col_j[0], col_new)
-
-#             new_df_columns.append(col_new_tuple)
-#         else:
-#             new_df_columns.append(col_j)
-
-#     idx = pd.MultiIndex.from_tuples(new_df_columns)
-#     df_i.columns = idx
-
-#     df_dict[df_name_i] = df_i
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# #| - Collating all data for identical columns
-# collated_column_series_dict = dict()
-# for col_i in repated_cols_that_are_identical:
-#     dfs_with_col = []
-#     for df_name_i, df_i in df_dict.items():
-#         if col_i in df_i["data"].columns:
-#             temp_col_name = col_i + "__" + df_name_i
-#             df_tmp = df_i.rename(columns={col_i: temp_col_name, })
-#             df_tmp = df_tmp.loc[:, [("data", temp_col_name)]]
-#             dfs_with_col.append(df_tmp)
-
-#     df_one_col_comb = pd.concat(dfs_with_col, axis=1)
-#     df_one_col_comb = df_one_col_comb["data"]
-
-#     dfs = []
-#     for col_j in df_one_col_comb.columns:
-#         dfs.append(df_one_col_comb[col_j])
-
-#     series_i = reduce(lambda l,r: l.combine_first(r), dfs)
-
-#     name_i = series_i.name
-#     name_orig_i = name_i.split("__")[0]
-
-#     series_i.name = name_orig_i
-
-#     # print(series_i.shape)
-#     collated_column_series_dict[col_i] = series_i
-# #__|
-
-
-# #| - Deleting identical columns from all dataframes
-# for col_i in repated_cols_that_are_identical:
-
-#     found_col_in_df_cnt = 0
-#     for j_cnt, (df_name_j, df_j) in enumerate(df_dict.items()):
-
-#         if col_i in df_j["data"].columns:
-#             # if found_col_in_df_cnt > 0:
-#             df_j_new = df_j.drop([("data", col_i)], axis=1)
-#             df_dict[df_name_j] = df_j_new
-
-#             found_col_in_df_cnt += 1
-# #__|
-
-
-# # Combine dataframes
-# df_features = pd.concat(
-#     list(df_dict.values()),
-#     axis=1)
-
-
-# # Adding backin the processed identical columns
-# for col_i, series_i in collated_column_series_dict.items():
-#     # series_i = collated_column_series_dict["from_oh"]
-#     df_series_i = series_i.to_frame()
-#     df_series_i.columns = pd.MultiIndex.from_tuples([("data", col_i)])
-
-#     df_features = pd.concat([df_features, df_series_i], axis=1)
-
-# df_features = df_features.reindex(columns = ["data", "features", ], level=0)
-
-
-# # Sorting columns
-# columns_list_new = []
-# identical_cols = []
-# for col_i in sorted(df_features.columns):
-#     if col_i[1] in repated_cols_that_are_identical:
-#         identical_cols.append(col_i)
-#     else:
-#         columns_list_new.append(col_i)
-
-# identical_cols.extend(columns_list_new)
-# df_features = df_features.reindex(identical_cols, axis=1)
-
-
-# # df_features_data =
-# # df_features_data.reindex(sorted(df_features_data.columns), axis=1)
-
-# # sorted(df_features_data.columns)
-
-
-
-# # return(df_features)
-# #__|
-
-# + jupyter={"source_hidden": true}
-# dfs_with_col[1].shape
-
-# dfs_with_col[0].shape
-
-# df_tmp = dfs_with_col[0]
-
-# + jupyter={"source_hidden": true}
-# df_tmp.index.is_unique
-
-# + jupyter={"source_hidden": true}
-# # df_tmp[df_tmp.index.duplicated()]
-
-# df_tmp[
-#     df_tmp.index.duplicated(keep=False)
-#     ]
-
-# + jupyter={"source_hidden": true}
-# df_eff_ox
-# df_octa_vol
-
-# + jupyter={"source_hidden": true}
-# from local_methods import tmp_combine_dfs_with_same_cols
-# from local_methods import tmp_combine_dfs_with_same_cols_1
-# from local_methods import tmp_combine_dfs_with_same_cols_2
-
-# df_features_comb = tmp_combine_dfs_with_same_cols(
-# df_features_comb = tmp_combine_dfs_with_same_cols_1(
-# df_features_comb = tmp_combine_dfs_with_same_cols_2(
-
-# + jupyter={"source_hidden": true}
-# print(222 * "TEMP | ")
-# assert False

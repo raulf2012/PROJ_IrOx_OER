@@ -6,14 +6,17 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.5.0
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
 #     name: conda-env-PROJ_irox_oer-py
 # ---
 
-# # Import Modules
+# # Writing new completed *O slabs to file for analysis
+# ---
+
+# ### Import Modules
 
 # +
 import os
@@ -44,7 +47,7 @@ else:
     from tqdm import tqdm
     verbose = False
 
-# # Read Data
+# ### Read Data
 
 # +
 # #########################################################
@@ -65,7 +68,15 @@ df_slabs_to_run = df_slabs_to_run.set_index(
 df_jobs_paths = get_df_jobs_paths()
 # -
 
-# # Setup
+# ### Filtering down to `oer_adsorbate` jobs
+
+df_ind = df_jobs_anal.index.to_frame()
+df_jobs_anal = df_jobs_anal.loc[
+    df_ind[df_ind.job_type == "oer_adsorbate"].index
+    ]
+df_jobs_anal = df_jobs_anal.droplevel(level=0)
+
+# ### Setup
 
 # +
 directory = os.path.join(
@@ -120,7 +131,7 @@ df_jobs_anal_i = df_jobs_anal_i.loc[
     ]
 # -
 
-# # Writting *O slabs to file
+# ### Writting *O slabs to file
 
 for name_i, row_i in df_jobs_anal_i.iterrows():
     # #####################################################
@@ -159,7 +170,7 @@ for name_i, row_i in df_jobs_anal_i.iterrows():
 
         # compenv_i + "_" + slab_id_i + "_" + str(att_num_i).zfill(2) + ".cif")
 
-# # Write systems not manually processed to file
+# ### Write systems not manually processed to file
 
 # +
 df_index = df_jobs_anal_i.index.to_frame()
@@ -189,3 +200,8 @@ print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
 print("manually_analyze_slabs.ipynb")
 print(20 * "# # ")
 # #########################################################
+
+# + active=""
+#
+#
+#

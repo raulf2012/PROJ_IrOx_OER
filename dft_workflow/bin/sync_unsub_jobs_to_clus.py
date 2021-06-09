@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -16,7 +16,7 @@
 # # Sync recently created, unsubmitted jobs to GDrive
 # ---
 
-# # Import Modules
+# ### Import Modules
 
 # +
 import os
@@ -64,7 +64,7 @@ if compenv == "wsl":
         "dft_workflow")    
 # -
 
-# # Run sync script if on cluster
+# ### Run sync script if on cluster
 
 if compenv != "wsl":
     bash_file_path = os.path.join(
@@ -91,11 +91,7 @@ if compenv != "wsl":
         stdout=subprocess.PIPE,
         )
 
-# +
-# assert False
-# -
-
-# # Parse directories
+# ### Parse directories
 
 # +
 from dft_workflow_methods import parse_job_dirs
@@ -155,7 +151,7 @@ col_order = [
 df = reorder_df_columns(col_order, df)
 # -
 
-# # Preparing rclone commands to run on the cluster
+# ### Preparing rclone commands to run on the cluster
 
 # +
 df_i = df[df.is_submitted == False]
@@ -252,9 +248,6 @@ if compenv == "wsl":
     # os.chmod(out_file, 777)
     os.chmod(out_file, 0o777)
 
-# +
-# assert False
-
 # + active=""
 #
 #
@@ -262,12 +255,7 @@ if compenv == "wsl":
 #
 # -
 
-# # Rclone local dirs to gdrive
-
-# +
-# compenv
-
-# gdrive_daemon
+# ### Rclone local dirs to gdrive
 
 # +
 # gdrive_daemon = os.environ.get("GDRIVE_DAEMON", False)
@@ -332,3 +320,32 @@ print(20 * "# # ")
 #
 #
 #
+
+# + jupyter={"source_hidden": true}
+# df.path_full
+
+# + jupyter={"source_hidden": true}
+# # root_dir
+
+# for i_cnt, row_i in df.iterrows():
+#     tmp = 42
+
+#     path_full_i = row_i.path_full
+
+#     if "dos_bader" in path_full_i:
+#         print(i_cnt)
+#         print(path_full_i)
+
+# # i
+# # row_i
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# assert False
+
+# + jupyter={"source_hidden": true}
+# compenv
+
+# gdrive_daemon

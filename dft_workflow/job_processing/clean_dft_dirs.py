@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -28,10 +28,11 @@
 
 # # Import Modules
 
-# + jupyter={"source_hidden": true}
+# +
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
 
 import copy
 import shutil
@@ -53,6 +54,9 @@ from methods import (
     get_df_jobs_paths,
     get_df_jobs_anal,
     )
+from methods import (
+    get_other_job_ids_in_set,
+    )
 
 # #########################################################
 from local_methods import (
@@ -63,14 +67,19 @@ from local_methods import (
     )
 # -
 
-from methods import (
-    get_other_job_ids_in_set,
-    )
+from methods import isnotebook    
+isnotebook_i = isnotebook()
+if isnotebook_i:
+    from tqdm.notebook import tqdm
+    verbose = True
+else:
+    from tqdm import tqdm
+    verbose = False
 
 # # Script Inputs
 
 # +
-verbose = False
+# verbose = False
 
 job_out_size_limit = 5  # MB
 
@@ -107,6 +116,10 @@ if verbose:
 
 # # Iterate through rows
 
+# +
+# df_i.job_type == ""
+# -
+
 if compenv != "wsl":
 
     iterator = tqdm(df_i.index.tolist(), desc="1st loop")
@@ -114,6 +127,7 @@ if compenv != "wsl":
         # #####################################################
         row_i = df_i.loc[index_i]
         # #####################################################
+        job_type_i = row_i.job_type
         slab_id_i = row_i.slab_id
         ads_i = row_i.ads
         att_num_i = row_i.att_num
@@ -137,11 +151,17 @@ if compenv != "wsl":
         # #####################################################
 
         # #####################################################
-        in_index = df_jobs_anal.index.isin(
-            [(compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)]).any()
+
+        name_new_i = (job_type_i, compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)
+        in_index = df_jobs_anal.index.isin([name_new_i]).any()
+            # [(job_type_i, compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)]).any()
+
+        # in_index = df_jobs_anal.index.isin(
+        #     [(compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)]).any()
         if in_index:
-            row_anal_i = df_jobs_anal.loc[
-                compenv_i, slab_id_i, ads_i, active_site_i, att_num_i]
+            row_anal_i = df_jobs_anal.loc[name_new_i]
+            # row_anal_i = df_jobs_anal.loc[
+            #     compenv_i, slab_id_i, ads_i, active_site_i, att_num_i]
             # #################################################
             job_completely_done_i = row_anal_i.job_completely_done
             # #################################################
@@ -198,6 +218,7 @@ if compenv != "wsl":
                     path_i, job_out_size_limit=job_out_size_limit)
 
             # #########################################
+            # job_type_i
             rclone_sync_job_dir(
                 path_job_root_w_att_rev=path_job_root_w_att_rev,
                 path_rel_to_proj=path_rel_to_proj,
@@ -252,30 +273,41 @@ if compenv == "wsl":
                         process_large_job_out(
                             path_i, job_out_size_limit=job_out_size_limit)
 
+# +
+# print(
+#     10 * "NOT REMOVING JOBS AFTER RCLONE SYNC | TESTING DOS CALCULATIONS FIRST \n",
+#     sep="")
+
+# +
+# assert False
+# -
+
 # # Remove systems that are completely done
 
-print(5 * "\n")
-print(80 * "*")
-print(80 * "*")
-print(80 * "*")
-print(80 * "*")
-print("Removing job folders/data that are no longer needed")
-print("Removing job folders/data that are no longer needed")
-print("Removing job folders/data that are no longer needed")
-print("Removing job folders/data that are no longer needed")
-print("Removing job folders/data that are no longer needed")
-print("Removing job folders/data that are no longer needed")
-print(2 * "\n")
+if verbose:
+    print(5 * "\n")
+    print(80 * "*")
+    print(80 * "*")
+    print(80 * "*")
+    print(80 * "*")
+    print("Removing job folders/data that are no longer needed")
+    print("Removing job folders/data that are no longer needed")
+    print("Removing job folders/data that are no longer needed")
+    print("Removing job folders/data that are no longer needed")
+    print("Removing job folders/data that are no longer needed")
+    print("Removing job folders/data that are no longer needed")
+    print(2 * "\n")
 
 iterator = tqdm(df_i.index.tolist(), desc="1st loop")
 for job_id_i in iterator:
     # #####################################################
     row_i = df_i.loc[job_id_i]
     # #####################################################
+    job_type_i = row_i.job_type
+    compenv_i = row_i.compenv
     slab_id_i = row_i.slab_id
     ads_i = row_i.ads
     att_num_i = row_i.att_num
-    compenv_i = row_i.compenv
     active_site_i = row_i.active_site
     # #####################################################
 
@@ -295,11 +327,13 @@ for job_id_i in iterator:
     # #####################################################
 
     # #####################################################
-    in_index = df_jobs_anal.index.isin(
-        [(compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)]).any()
+    name_new_i = (job_type_i, compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)
+    in_index = df_jobs_anal.index.isin([name_new_i]).any()
+        # [(job_type_i, compenv_i, slab_id_i, ads_i, active_site_i, att_num_i)]).any()
     if in_index:
-        row_anal_i = df_jobs_anal.loc[
-            compenv_i, slab_id_i, ads_i, active_site_i, att_num_i]
+        row_anal_i = df_jobs_anal.loc[name_new_i]
+        # row_anal_i = df_jobs_anal.loc[
+        #     compenv_i, slab_id_i, ads_i, active_site_i, att_num_i]
         # #################################################
         job_completely_done_i = row_anal_i.job_completely_done
         # #################################################
@@ -372,7 +406,36 @@ for job_id_i in iterator:
                 print("Gdrive doesn't match local")
             print("")
 
+# #########################################################
+print(20 * "# # ")
+print("All done!")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
+print("clean_dft_dirs.ipynb")
+print(20 * "# # ")
+# #########################################################
+
 # + active=""
 #
 #
 #
+
+# + jupyter={"source_hidden": true}
+# df_jobs.job_type.unique()
+
+# + jupyter={"source_hidden": true}
+# df_ind = df_jobs_anal.index.to_frame()
+# df_jobs_anal = df_jobs_anal.loc[
+#     df_ind[df_ind.job_type == "oer_adsorbate"].index
+#     ]
+# df_jobs_anal = df_jobs_anal.droplevel(level=0)
+
+
+# df_ind = df_atoms_sorted_ind.index.to_frame()
+# df_atoms_sorted_ind = df_atoms_sorted_ind.loc[
+#     df_ind[df_ind.job_type == "oer_adsorbate"].index
+#     ]
+# df_atoms_sorted_ind = df_atoms_sorted_ind.droplevel(level=0)
+
+# + jupyter={"source_hidden": true}
+# print("COMBAK I'M STOPPING ALL SCRIPTS UNTIL DOS_BADER WF GET'S CORRECTED")
+# assert False

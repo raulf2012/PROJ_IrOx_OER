@@ -17,9 +17,18 @@ compenv = os.environ["COMPENV"]
 
 compenvs = ["nersc", "sherlock", "slac"]
 
+adsorbates = ["o", "oh", "bare", ]
 
+#| - OER Data *********************************************
+scaling_dict_mine = {
+    'oh':  {'m': 1.0,  'b': 0.0},
+    'o':   {'m': 2.0,  'b': 0.0},
+    'ooh': {'m': 1.16, 'b': 2.8},
+    }
 
-#| - Plot Formatting
+#__|
+
+#| - Plot Formatting **************************************
 
 #| - Stoich. colors
 
@@ -35,18 +44,36 @@ stoich_color_dict = {
 
 #__|
 
+font_axis_title_size = (4. / 3.) * 18
+#  font_axis_title_size = (4. / 3.) * 28
+
+font_tick_labels_size = (4. / 3.) * 15
+
+font_axis_title_size__pub = (4. / 3.) * 12
+font_tick_labels_size__pub = (4. / 3.) * 10
+
+
+font_family = "Arial"
+
+scatter_marker_size = 12
+#  scatter_marker_size = 8
+
+# scatter_marker_props = dict(
+scatter_marker_props = go.scatter.Marker(
+    size=scatter_marker_size,
+    # opacity=0.8,
+    symbol="circle",
+    line={
+        "color": "black",
+        "width": 1.0,
+        },
+    )
 
 #| - Plotly shared stuff
 scatter_shared_props = go.Scatter(
-    marker=go.scatter.Marker(
-        size=12,
-        opacity=0.8,
-        ),
+    marker=scatter_marker_props,
     )
 
-
-
-# shared_layout =
 
 #| - Main layout object
 layout_shared = go.Layout(
@@ -161,13 +188,13 @@ layout_shared = go.Layout(
     #     r=None,
     #     t=None,
     #     ),
-    # #########################################################################
+    # #####################################################
     paper_bgcolor="white",
     plot_bgcolor="white",
 
-    # #########################################################################
+    # #####################################################
 
-    # #########################################################################
+    # #####################################################
     # height=5.291667 * 37.795275591,
     # width=17.7 * 37.795275591,
 
@@ -178,12 +205,8 @@ layout_shared = go.Layout(
 
 #| - Axis Layout options
 
+
 #| - shared axis dict
-font_axis_title_size = (4. / 3.) * 14
-
-font_tick_labels_size = (4. / 3.) * 12
-
-font_family = "Arial"
 
 shared_axis_dict = dict(
 
@@ -330,6 +353,45 @@ layout_shared.yaxis = yaxis_layout
 
 #__|
 
+
+
+#__|
+
+
+
+#| - Systems to ignore
+
+# Final systems in df_features_targets to simply ignore, likely because they are outliers in some extreme ways
+
+sys_to_ignore__df_features_targets = [
+    # Fri May 28 14:22:28 PDT 2021
+    # These were removed because they had wrong octa_vol
+    # The unit cells were so small, one oxygen would serve the role of more than one oxygen, if that makes sense
+    ("sherlock", "hahesegu_39", 20.0, ),
+    ("sherlock", "hahesegu_39", 21.0, ),
+
+    # These were removed because their active_o_metal_dist was too large, outliers w.r.t. the rest of the data set
+    ('nersc', 'hevudeku_30', 74.0),
+    ('sherlock', 'wafitemi_24', 29.0),
+    ('sherlock', 'kapapohe_58', 29.0),
+    ('nersc', 'legofufi_61', 93.0),
+    ('nersc', 'legofufi_61', 91.0),
+    ('sherlock', 'ripirefu_15', 49.0),
+
+    ('slac', 'rapebiba_65', 64.0),
+    ('sherlock', 'kobehubu_94', 50.0),
+    ('sherlock', 'kapapohe_58', 29.0),
+    ('slac', 'fodopilu_17', 25.0),
+    ('sherlock', 'wafitemi_24', 29.0),
+    ('nersc', 'legofufi_61', 91.0),
+    ('nersc', 'legofufi_61', 93.0),
+    ('nersc', 'hevudeku_30', 74.0),
+    ('sherlock', 'vipikema_98', 48.0),
+    ('sherlock', 'ripirefu_15', 49.0),
+    ('sherlock', 'kapapohe_58', 34.0),
+    ('sherlock', 'wafitemi_24', 34.0),
+
+    ]
 
 
 #__|

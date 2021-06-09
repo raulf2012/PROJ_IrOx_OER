@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.4.2
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -16,7 +16,7 @@
 # # Analyze neighbor environments for post-DFT optimized slabs
 # ---
 
-# # Import Modules
+# ### Import Modules
 
 # +
 import os
@@ -37,28 +37,29 @@ from methods import (
     )
 # -
 
-# # Script Inputs
+from methods import isnotebook    
+isnotebook_i = isnotebook()
+if isnotebook_i:
+    from tqdm.notebook import tqdm
+    verbose = True
+else:
+    from tqdm import tqdm
+    verbose = False
 
-# verbose = True
-verbose = False
-
-# # Read data
+# ### Read data
 
 df_jobs_anal = get_df_jobs_anal()
 df_atoms_sorted_ind = get_df_atoms_sorted_ind()
 
-# + active=""
-#
-#
-#
-
 # +
-# print("TEMP")
+# Filtering to only completed jobs
+df_jobs_anal_i = df_jobs_anal[df_jobs_anal.job_completely_done == True]
 
-# TEMP
-# df_jobs_anal_i = df_jobs_anal_i.iloc[0:3]
-
-# df_jobs_anal = df_jobs_anal[df_jobs_anal.job_id_max == "kefehobo_84"]
+# Filtering down to only include oer_adsorbate type jobs
+df_ind = df_jobs_anal_i.index.to_frame()
+df_jobs_anal_i = df_jobs_anal_i.loc[
+    df_ind[df_ind.job_type == "oer_adsorbate"].index
+    ]
 # -
 
 directory = os.path.join(
@@ -68,41 +69,7 @@ directory = os.path.join(
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-df_jobs_anal_i = df_jobs_anal[df_jobs_anal.job_completely_done == True]
-
-# +
-# df_jobs_anal.loc[
-#     [('nersc', 'fosurufu_23', 'o', 43, 1)]
-#     ]
-
-df_index = df_jobs_anal_i.index.to_frame()
-
-df = df_index
-df = df[
-    (df["compenv"] == "nersc") &
-    (df["slab_id"] == "fosurufu_23") &
-    (df["ads"] == "o") &
-    [True for i in range(len(df))]
-    ]
-
-# df_jobs_anal[
-#     df.index
-#     ]
-
-df_jobs_anal_i.loc[df.index]
-# -
-
-# # Main Loop
-
-# +
-# import pandas as pd
-
-# print(180 * "TEMP | ")
-# idx = pd.IndexSlice
-# df_jobs_anal_i = df_jobs_anal_i.loc[idx["sherlock", "kipatalo_90", "o", "NaN", 2, :], :]
-# -
-
-df_jobs_anal_i
+# ### Main Loop
 
 # +
 index_to_process = []
@@ -122,39 +89,52 @@ if len(index_to_not_process) > 0:
         "",
         sep="\n")
     tmp = [print(i) for i in index_to_not_process]
+
+# +
+# # TEMP
+# print(222 * "TEMP | ")
+# df_ind = df_jobs_anal_i_2.index.to_frame()
+
+# df = df_ind
+# df = df[
+#     (df["compenv"] == "slac") &
+#     (df["slab_id"] == "relovalu_12") &
+#     (df["active_site"] == 24) &
+#     (df["ads"] == "oh") &
+#     (df["att_num"] == 2) &
+#     [True for i in range(len(df))]
+#     ]
+
+# df_jobs_anal_i_2 = df_jobs_anal_i_2.loc[
+#     df.index
+#     ]
 # -
+
+df_jobs_anal_i_2
 
 # #########################################################
 for name_i, row_i in df_jobs_anal_i_2.iterrows():
-    # print(name_i)
 
-    # if verbose:
-    #     print(40 * "=")
-
-    if name_i[3] != "NaN":
-        active_site_new = int(name_i[3])
+    if name_i[4] != "NaN":
+        active_site_new = int(name_i[4])
     else:
         active_site_new = "NaN"
 
     name_new_i = (
-        name_i[0],
         name_i[1],
         name_i[2],
-
+        name_i[3],
         active_site_new,
-        # int(name_i[3]),
-
-        name_i[4],
+        name_i[5],
         )
 
     # #####################################################
-    compenv_i = name_i[0]
-    slab_id_i = name_i[1]
-    ads_i = name_i[2]
-    active_site_i = name_i[3]
-    att_num_i = name_i[4]
+    compenv_i = name_i[1]
+    slab_id_i = name_i[2]
+    ads_i = name_i[3]
+    active_site_i = name_i[4]
+    att_num_i = name_i[5]
     # #####################################################
-    # name_dict_i = dict(zip(list(df_jobs_anal_i.index.names), name_i))
     name_dict_i = dict(zip(list(df_jobs_anal_i_2.index.names), name_i))
     # #####################################################
 
@@ -165,35 +145,36 @@ for name_i, row_i in df_jobs_anal_i_2.iterrows():
     failed_to_sort_i = row_atoms_sorted_i.failed_to_sort
     # #####################################################
 
+    file_name_i = "_".join([str(i) for i in list(name_new_i)]) + ".pickle"
+    file_path_i = os.path.join(directory, file_name_i)
+
     if not failed_to_sort_i:
 
         df_coord_i = get_df_coord(
             mode="post-dft",  # 'bulk', 'slab', 'post-dft'
-            post_dft_name_tuple=name_i,
+            post_dft_name_tuple=name_i[1:],
             )
+
         if df_coord_i is None:
+
             if verbose:
                 print("No df_coord found, running")
+            print(file_path_i)
+
             # #################################################
             # Get df_coord for post-dft, sorted slab
             df_coord_i = get_structure_coord_df(
                 atoms_sorted_good_i,
-                porous_adjustment=True,
-                )
+                porous_adjustment=True)
 
             # Pickling data ###################################
-            file_name_i = "_".join([str(i) for i in list(name_new_i)]) + ".pickle"
-            file_path_i = os.path.join(directory, file_name_i)
-            print(file_path_i)
             with open(file_path_i, "wb") as fle:
                 pickle.dump(df_coord_i, fle)
-            # #################################################
 
         if "H" in df_coord_i.element.unique():
-        # if True:
             df_coord_porous_adj_False_i = get_df_coord(
                 mode="post-dft",  # 'bulk', 'slab', 'post-dft'
-                post_dft_name_tuple=name_i,
+                post_dft_name_tuple=name_i[1:],
                 porous_adjustment=False,
                 )
 
@@ -218,9 +199,8 @@ for name_i, row_i in df_jobs_anal_i_2.iterrows():
 #
 # -
 
-# # Running through df and reading df_coord to test
+# ### Running through df and reading df_coord to test
 
-# for name_i, row_i in df_jobs_anal_i.iterrows():
 for name_i, row_i in df_jobs_anal_i_2.iterrows():
     tmp = get_df_coord(
         slab_id=None,
@@ -234,6 +214,20 @@ for name_i, row_i in df_jobs_anal_i_2.iterrows():
 print(20 * "# # ")
 print("All done!")
 print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
-print("analyse_jobs.ipynb")
+print("coord_env_for_post_dft.ipynb")
 print(20 * "# # ")
 # #########################################################
+
+# + active=""
+#
+#
+#
+
+# + jupyter={"source_hidden": true}
+# file_name_i
+
+# + jupyter={"source_hidden": true}
+# failed_to_sort_i
+
+# + jupyter={"source_hidden": true}
+# assert False
