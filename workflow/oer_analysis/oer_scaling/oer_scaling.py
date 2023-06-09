@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.13.0
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -49,6 +49,8 @@ from proj_data import (
     stoich_color_dict,
     shared_axis_dict,
     font_tick_labels_size,
+    font_axis_title_size__pub,
+    font_tick_labels_size__pub,
     )
 
 # #########################################################
@@ -56,6 +58,16 @@ from methods import get_df_features_targets
 
 # #########################################################
 from layout import layout
+
+# +
+# # TEMP
+# print(111 * "TEMP | ")
+
+# stoich_color_dict = {
+#     'AB2': '#24588c',
+#     'AB3': '#242424',
+#     'None': 'red',
+#     }
 # -
 
 root_dir = os.path.join(
@@ -194,6 +206,11 @@ df_m["diff_abs"] = np.abs(df_m["diff"])
 
 MAE_1 = df_m["diff_abs"].sum() / df_m.shape[0]
 R2_1 = r2_score(df_m["y"], df_m["y_pred"])
+# -
+
+MAE_1
+
+R2_1
 
 # +
 z_2 = np.polyfit(
@@ -305,6 +322,9 @@ coeff = [np.round(i, 3) for i in list(z_1)]
 linear_fit_eqn_str = "ΔG<sub>O</sub> = {}⋅ΔG<sub>OH</sub> + {}".format(*coeff)
 MAE_str = "MAE: {}".format(np.round(MAE_1, 3))
 R2_str = "R<sup>2</sup>: {} eV".format(np.round(R2_1, 3))
+# -
+
+font_tick_labels_size
 
 # +
 annotations = [
@@ -707,6 +727,9 @@ df_concat.columns = new_cols
 df_concat.head()
 
 # +
+# # px.scatter?
+
+# +
 fig = px.scatter(df_concat,
     x="g_oh",
     y="g_o",
@@ -718,6 +741,62 @@ fig = px.scatter(df_concat,
 
 
 # fig.show()
+
+# +
+# fig.layout
+
+0.7363 - 0.7426
+
+# +
+# dd = 0.005
+# # x_dom_R = 0.7363
+# x_dom_R = 0.5
+
+# fig.layout.xaxis.domain = [0, x_dom_R]
+# fig.layout.xaxis3.domain = [0, x_dom_R]
+
+# fig.layout.yaxis.domain = [0, x_dom_R]
+# fig.layout.yaxis2.domain = [0, x_dom_R]
+
+# fig.layout.xaxis2.domain = [x_dom_R + dd, 1.]
+# fig.layout.xaxis4.domain = [x_dom_R + dd, 1.]
+
+# # tmp_dom = 0.7426
+# tmp_dom = x_dom_R + 0.0063
+# fig.layout.yaxis3.domain = [tmp_dom, 1.]
+# fig.layout.yaxis4.domain = [tmp_dom, 1.]
+
+# fig.show()
+
+# +
+# dd = 0.005
+dd = 0.00
+
+# x_dom_R = 0.7363
+# x_dom_R = 0.7
+x_dom_R = 0.7
+
+# x_dom_2 = 0.7
+# x_dom_2 = 0.705
+x_dom_2 = 0.7
+# x_dom_2 = 0.5
+
+fig.layout.xaxis.domain = [0, x_dom_2]
+fig.layout.xaxis3.domain = [0, x_dom_2]
+
+fig.layout.yaxis.domain = [0, x_dom_R]
+fig.layout.yaxis2.domain = [0, x_dom_R]
+
+fig.layout.xaxis2.domain = [x_dom_2 + dd, 1.]
+fig.layout.xaxis4.domain = [x_dom_R + dd, 1.]  # Doesn't do anything
+
+# tmp_dom = 0.7426
+# tmp_dom = x_dom_R + 0.0063
+tmp_dom = x_dom_R + 0.
+fig.layout.yaxis3.domain = [tmp_dom, 1.]
+fig.layout.yaxis4.domain = [tmp_dom, 1.]
+
+# fig.show()
 # -
 
 tmp = fig.layout.update(
@@ -727,7 +806,26 @@ tmp = fig.layout.update(
     layout
     )
 
+# + active=""
+# Adding the linear fit trace
+
+# +
+trace_poly_1.line.color = "black"
+
+fig.add_trace(trace_poly_1)
+
+tmp = 42
+# -
+
 fig.layout.showlegend = False
+
+# +
+shared_axis_dict["title"]["font"]["size"] = font_axis_title_size__pub
+
+shared_axis_dict["tickfont"]["size"] = font_tick_labels_size__pub
+
+# +
+# assert False
 
 # +
 layout_keys_0 = list(fig.layout.to_plotly_json().keys())
@@ -772,17 +870,58 @@ for x_axis_i in xaxis_keys:
             row=y_axis_num_int,
             col=x_axis_num_int,
             )
+
+# +
+# fig.layout.width = 560
+# fig.layout.width = 550
+fig.layout.width = 530
+
+# fig.layout.height = 520
+# fig.layout.height = 505
+fig.layout.height = 510
+
+# +
+fig.data[0]
+
+fig.update_traces(
+    marker=dict(
+        size=6,
+        line=dict(
+            width=1,
+            color="black",
+            ),
+        ),
+    selector=dict(mode='markers'),
+    )
+# fig.show()
+
+tmp = 42
 # -
+
+fig.layout.xaxis.dtick = 0.5
+fig.layout.xaxis3.dtick = 0.5
+
+# +
+fig.layout.xaxis2.ticks = None
+
+fig.layout.yaxis3.ticks = None
+
+# +
+
+# fig.layout.xaxis3.ticks = None
+# -
+
+fig
 
 my_plotly_plot(
     figure=fig,
     save_dir=root_dir,
     place_in_out_plot=True,
-    plot_name="oer_scaling_w_histogram",
+    plot_name="oer_scaling_w_histogram__v5",
     write_html=True,
     write_png=False,
     png_scale=6.0,
-    write_pdf=False,
+    write_pdf=True,
     write_svg=False,
     try_orca_write=False,
     verbose=False,
@@ -804,13 +943,13 @@ print(20 * "# # ")
 #
 #
 
-# + jupyter={"source_hidden": true}
-# color_array
+# +
+# import plotly.graph_objects as go
 
-# # go.scatter.marker.ColorBar?
+# # go.Histogram?
 
-# + jupyter={"source_hidden": true}
-# df_features_targets[("data", "SE__area_J_m2", "")]
+# # go.histogram.Marker?
 
-# + jupyter={"source_hidden": true}
-# assert False
+# +
+# len(list(fig.data))
+# list(fig.data)[5]

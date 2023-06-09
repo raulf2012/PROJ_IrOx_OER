@@ -56,7 +56,7 @@ from methods_model_building import (
     run_kfold_cv_wf__TEMP,
     process_feature_targets_df,
     process_pca_analysis,
-    pca_analysis,
+    # pca_analysis,
     run_regression_wf,
     )
 # -
@@ -245,7 +245,7 @@ if True:
         out_dict = run_kfold_cv_wf__TEMP(
             df_features_targets=df_j,
             cols_to_use=cols_to_use,
-            df_format=df_format,
+            # df_format=df_format,
             run_pca=True,
             num_pca_comp=num_pca_i,
             # k_fold_partition_size=40,
@@ -305,6 +305,9 @@ if True:
         data_dict[num_pca_i] = data_dict_i
         # #####################################################
 
+# +
+# run_gp_workflow?
+
 # + active=""
 #
 #
@@ -358,7 +361,7 @@ trace_i = go.Scatter(
     opacity=1.,
 
     marker=dict(
-        color=df_target_pred["color"],
+        # color=df_target_pred["color"],
         # color="grey",
         **scatter_marker_props.to_plotly_json(),
         ),
@@ -543,7 +546,7 @@ trace_i = go.Scatter(
     opacity=1.,
 
     marker=dict(
-        color=df_target_pred["color"],
+        # color=df_target_pred["color"],
         # color="grey",
         **scatter_marker_props.to_plotly_json(),
         ),
@@ -614,7 +617,7 @@ trace_j = go.Scatter(
     name="In-fold Regression",
 
     marker=dict(
-        color=df_target_pred["color"],
+        # color=df_target_pred["color"],
         **scatter_marker_props.to_plotly_json(),
         ),
 
@@ -657,7 +660,7 @@ print(20 * "# # ")
 #
 #
 
-# + jupyter={"source_hidden": true}
+# +
 # # | - Import  Modules
 # import os
 # import copy
@@ -681,10 +684,10 @@ print(20 * "# # ")
 # from IPython.display import display
 # # __|
 
-# + jupyter={"source_hidden": true}
+# +
 # from methods_models import run_SVR_workflow
 
-# + jupyter={"source_hidden": true}
+# +
 # df_features_targets=df_j
 # cols_to_use=cols_to_use
 # df_format=df_format
@@ -910,7 +913,7 @@ print(20 * "# # ")
 # # #####################################################
 # # __|
 
-# + jupyter={"source_hidden": true}
+# +
 # MAE
 # MAE_2
 
@@ -1108,7 +1111,7 @@ print(20 * "# # ")
 # + jupyter={"source_hidden": true}
 # df_test_features.to_numpy()
 
-# +
+# + jupyter={"source_hidden": true}
 
 # # 'bounds': 
 
@@ -1118,7 +1121,7 @@ print(20 * "# # ")
 
 # # (0.0001, 10.)
 
-# +
+# + jupyter={"source_hidden": true}
 # gp_settings = {
 #     "noise": 0.02542,
 #     # "noise": 0.12542,

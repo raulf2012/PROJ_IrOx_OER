@@ -84,10 +84,12 @@ df_atoms = df_atoms.set_index("job_id")
 # # TEMP
 # print(111 * "TEMP | ")
 
-# # df_features_targets.index[329]
-
 # indices = [
-#     ('slac', 'relovalu_12', 24.0),
+#     # ('slac', 'relovalu_12', 24.0),
+
+#     ('sherlock', 'sifebelo_94', 61.0),
+#     # ('sherlock', 'sifebelo_94', 62.0),
+
 #     ]
 
 # df_features_targets = df_features_targets.loc[indices]
@@ -182,6 +184,14 @@ for i_cnt, index_i in enumerate(iterator):
         df_jobs_paths=df_jobs_paths,
         df_jobs_data=df_jobs_data,
         )
+# -
+
+import ase
+ase.__version__
+
+atoms__o
+
+assert False
 
 # + active=""
 #

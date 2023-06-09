@@ -8,7 +8,7 @@ import sys
 import copy
 
 import numpy as np
-#  import pandas as pd
+import pandas as pd
 
 from scipy.spatial import ConvexHull
 
@@ -17,7 +17,9 @@ import math
 from methods import unit_vector, angle_between
 from methods import (
      get_df_coord,
+     translate_position_to_image,
      )
+
 #__|
 
 from pymatgen import Lattice, Structure, Molecule
@@ -416,6 +418,8 @@ def get_octa_geom(
     #__|
 
 
+# from scipy.spatial import ConvexHull
+#
 # df_coord_i=df_coord_i
 # active_site_j=active_site
 # octahedra_atoms=octahedra_atoms
@@ -447,49 +451,29 @@ def get_octa_vol(
     process_sys = all_good_i
 
 
-
     from pymatgen.io.ase import AseAtomsAdaptor
     structure = AseAtomsAdaptor.get_structure(atoms)
-
-
 
 
     volume = None
     if process_sys and octahedra_atoms is not None:
 
-
-
-
         metal_active_site = int(metal_active_site)
 
         if metal_active_site in octahedra_atoms:
             octahedra_atoms.remove(metal_active_site)
-
-
-
-
-        # for atom_index_i in octahedra_atoms:
-        #     if atoms[atom_index_i].symbol != "Ir":
-        #         pos_i = atoms[atom_index_i].position
-        #         coord_list.append(pos_i)
-
-
-
+        else:
+            print("This is basically always an issue right?")
 
 
         coord_list = []
         coord_list_orig = []
 
-        # octahedra_atoms = [87, ]
         for atom_index_i in octahedra_atoms:
             atom_index_i = int(atom_index_i)
 
             if atoms[atom_index_i].symbol != "Ir":
-
                 pos_i = atoms[atom_index_i].position
-                # print(11 * "-")
-                # print(atom_index_i)
-                # print(pos_i)
 
                 coord_list_orig.append(pos_i)
 
@@ -499,12 +483,6 @@ def get_octa_vol(
 
                 dist_i = dist_image_i[0]
                 image_i = dist_image_i[1]
-
-                # image_trans = image_i * atoms.cell.tolist()
-                # pos_new_i = pos_i
-                # for i in image_trans:
-                #     pos_new_i = pos_new_i + i
-                # print(pos_new_i)
 
                 pos_new_i = pos_i
                 for i_cnt, image_j in enumerate(image_i):
@@ -551,42 +529,8 @@ def get_octa_vol(
         # __|
 
 
-
-
         volume = ConvexHull(coord_list).volume
         volume
-
-
-
-
-    # if process_sys:
-    #     # nn_info_i = nn_info_non_H[0]
-    #     # metal_index_i = nn_info_i["site_index"]
-
-    #     row_coord_i = df_coord_i[df_coord_i.structure_index == metal_index_i]
-    #     row_coord_i = row_coord_i.iloc[0]
-
-    #     nn_info = row_coord_i.nn_info
-
-    #     if len(nn_info) != 6:
-    #         process_sys = False
-    #         if verbose:
-    #             print("This active site Ir doesn't have 6 nearest neighbors")
-    #         # return(None)
-
-
-    # #| - Compute volume of octahedra
-    # volume = None
-    # if process_sys:
-    #     coord_list = []
-    #     for nn_j in nn_info:
-    #         site_j = nn_j["site"]
-    #         coords_j = site_j.coords
-    #         coord_list.append(coords_j)
-    #     volume = ConvexHull(coord_list).volume
-    # else:
-    #     tmp = 42
-    # # __|
 
     return(volume)
     # __|
@@ -635,4 +579,366 @@ def get_angle_between_surf_normal_and_O_Ir(
 
 
     return(angle_deg)
+    # __|
+
+
+
+
+
+
+
+
+
+
+
+
+def get_octahedral_oxygens_A(
+    df_coord=None,
+    metal_active_site=None,
+    ):
+    """
+    """
+    # | - get_octahedra_atoms
+
+    # #####################################################
+    octahedral_oxygens_indices = []
+    octahedral_oxygens_images = []
+    # #####################################################
+
+    row_coord_i = df_coord[
+        df_coord.structure_index == metal_active_site]
+    row_coord_ir_i = row_coord_i.iloc[0]
+    octahedral_oxygens = row_coord_ir_i.to_dict()["nn_info"]
+
+    for nn_i in octahedral_oxygens:
+        if nn_i["site"].specie.symbol == "O":
+            octahedral_oxygens_indices.append(nn_i["site_index"])
+            octahedral_oxygens_images.append(nn_i["image"])
+
+    return(octahedral_oxygens_indices, octahedral_oxygens_images)
+    # __|
+
+
+
+# from methods import get_df_coord_wrap
+# from methods import get_df_coord
+# from methods import get_octahedra_oxy_neigh
+#
+# df_coord=df_coord_i
+# atoms=atoms_i
+# active_site=active_site_i
+# metal_active_site=metal_active_site_i
+# ads=ads_i
+
+def get_octahedra_atoms(
+    octahedral_oxygens=None,
+    df_coord=None,
+    atoms=None,
+    active_site=None,
+    metal_active_site=None,
+    ads=None,
+    ):
+    """
+    """
+    # | - get_octahedra_atoms
+
+    octahedral_oxygens_indices = octahedral_oxygens
+    # octahedral_oxygens_images = octahedral_oxygens_images
+
+    # #####################################################
+    error_i = False
+    note_i = ""
+    octahedral_oxygens = None
+    octahedra_atoms = None
+    images_from_init = None
+    # octahedral_oxygens_indices = []
+    # octahedral_oxygens_images = []
+    missing_oxy_neigh = False
+    too_many_oxy_neigh = False
+    missing_active_Ir = False
+    num_oxy_neigh = None
+    metal_active_site_image = None
+    missing_active_site = None
+    # #####################################################
+
+
+    from methods import get_df_dist_images
+    df = get_df_dist_images(
+        atom_A=active_site,
+        atom_B=metal_active_site,
+        atoms=atoms,
+        )
+    metal_active_site_image = df.iloc[0].name
+
+
+    # row_coord_i = df_coord[
+    #     df_coord.structure_index == metal_active_site]
+    # row_coord_ir_i = row_coord_i.iloc[0]
+    # octahedral_oxygens = row_coord_ir_i.to_dict()["nn_info"]
+    # # octahedral_oxygens_tmp = octahedral_oxygens
+    #
+    #
+    #
+    # # oxygens_nn = []
+    # for nn_i in octahedral_oxygens:
+    #     if nn_i["site"].specie.symbol == "O":
+    #         # oxygens_nn.append(nn_i)
+    #         octahedral_oxygens_indices.append(nn_i["site_index"])
+    #         octahedral_oxygens_images.append(nn_i["image"])
+
+
+    # Checking if there are the correct number of oxygen neighbors about the active Ir atom
+    num_oxy_neigh = len(octahedral_oxygens_indices)
+
+    if ads != "bare":
+        if num_oxy_neigh < 6:
+            missing_oxy_neigh = True
+            error_i = True
+    elif ads == "bare":
+        if num_oxy_neigh < 5:
+            missing_oxy_neigh = True
+            error_i = True
+        elif num_oxy_neigh > 5:
+            too_many_oxy_neigh = True
+            error_i = True
+    else:
+        print("Woops, not good sikdjfijsdif987y98sd78978978")
+
+
+
+    missing_active_site = int(active_site) not in octahedral_oxygens_indices
+
+    octahedra_atoms = octahedral_oxygens_indices + [metal_active_site, ]
+
+    # | - __old__
+    # octahedral_oxygens_from_init, images_from_init = get_octahedral_oxygens_from_init(
+    #     compenv=compenv,
+    #     slab_id=slab_id,
+    #     metal_active_site=metal_active_site,
+    #     df_init_slabs=df_init_slabs,
+    #     atoms=atoms,
+    #     )
+    # octahedral_oxygens = octahedral_oxygens_from_init
+
+    # oxy_images = get_oxy_images()
+
+    # #####################################################
+    # data_dict_out = dict(
+    #     octahedral_oxygens=octahedral_oxygens_indices,
+    #     octahedra_atoms=octahedra_atoms,
+    #     num_oxy_neigh=num_oxy_neigh,
+    #     missing_oxy_neigh=missing_oxy_neigh,
+    #     too_many_oxy_neigh=too_many_oxy_neigh,
+    #     missing_active_Ir=missing_active_Ir,
+    #     missing_active_site=missing_active_site,
+    #     error=error_i,
+    #     note=note_i,
+    #     )
+    # __|
+
+    # #####################################################
+    out_dict = dict()
+    # #####################################################
+    out_dict["octahedral_oxygens"] = octahedral_oxygens_indices
+    out_dict["octahedra_atoms"] = octahedra_atoms
+    out_dict["num_oxy_neigh"] = num_oxy_neigh
+
+    out_dict["missing_oxy_neigh"] = missing_oxy_neigh
+    out_dict["too_many_oxy_neigh"] = too_many_oxy_neigh
+    out_dict["missing_active_Ir"] = missing_active_Ir
+    out_dict["missing_active_site"] = missing_active_site
+
+    out_dict["error"] = error_i
+    out_dict["note"] = note_i
+    # #####################################################
+    return(out_dict)
+    # #####################################################
+    # __|
+
+
+# from methods import angle_between
+# from local_methods import get_df_oxy_vect, get_df_oxy_cross_prod, get_oxygen_opposite_of_active_site
+#
+# atoms=atoms_i
+# oxy_images=oxy_images_i
+# active_site=active_site_i
+# metal_active_site=metal_active_site
+# octahedral_oxygens=octahedral_oxygens
+
+def get_more_octahedra_data(
+    atoms=None,
+    oxy_images=None,
+    active_site=None,
+    metal_active_site=None,
+    octahedral_oxygens=None,
+    ):
+    """
+    """
+    # | - get_more_octahedra_data
+    df_oxy_vect = get_df_oxy_vect(
+        atoms=atoms,
+        oxy_images=oxy_images,
+        metal_active_site=metal_active_site,
+        octahedral_oxygens=octahedral_oxygens,
+        )
+
+    df_oxy_cross_prod = get_df_oxy_cross_prod(
+        df_oxy_vect=df_oxy_vect,
+        )
+
+    oxy_opposite_as = get_oxygen_opposite_of_active_site(
+        active_site=active_site,
+        df_oxy_cross_prod=df_oxy_cross_prod,
+        )
+
+    # Oxygen opposite to the active site bond length
+    oxy_opp_as_bl = df_oxy_vect.loc[
+        oxy_opposite_as
+        ].bond_length
+
+
+
+
+
+
+
+
+
+
+
+
+    vect_opp_as = df_oxy_vect.loc[oxy_opposite_as].vector
+    vect_as = df_oxy_vect.loc[active_site].vector
+
+    angle_ij = angle_between(
+        vect_opp_as,
+        vect_as,
+        )
+
+    degrees_off_of_straight__as_opp = 180 - math.degrees(angle_ij)
+
+
+
+
+
+    out_dict = dict()
+    out_dict["oxy_opp_as_bl"] = oxy_opp_as_bl
+    out_dict["oxy_opposite_as"] = oxy_opposite_as
+    out_dict["degrees_off_of_straight__as_opp"] = degrees_off_of_straight__as_opp
+    return(out_dict)
+    # __|
+
+
+# from methods import translate_position_to_image
+#
+# atoms=atoms
+# metal_active_site=metal_active_site
+# octahedral_oxygens=octahedral_oxygens
+# oxy_images=oxy_images
+
+def get_df_oxy_vect(
+    atoms=None,
+    oxy_images=None,
+    metal_active_site=None,
+    octahedral_oxygens=None,
+    ):
+    """
+    """
+    # | - get_df_oxy_vect
+
+    # print(30 * "-")
+    # print("metal_active_site:", metal_active_site)
+    # print("atoms:", atoms)
+    # print(30 * "-")
+
+    position_metal = atoms[metal_active_site].position
+
+    data_dict_list = []
+    # for oxygen_i, image_i in zip(octahedral_oxygens, octahedral_oxygens_images):
+    for  oxygen_i, image_i in oxy_images.items():
+        position_oxy_i = translate_position_to_image(atoms, oxygen_i, image_i)
+
+
+        vector = position_oxy_i - position_metal
+
+        # print(oxygen_i, image_i)
+        # print(position_oxy_i, position_metal)
+        # print(vector)
+        # print(np.linalg.norm(vector))
+        # print("")
+
+        metal_O_bl = np.linalg.norm(vector)
+
+        data_dict_i = dict()
+        data_dict_i["oxy_ind"] = oxygen_i
+        data_dict_i["vector"] = vector
+        data_dict_i["bond_length"] = metal_O_bl
+        data_dict_i["image"] = image_i
+        data_dict_list.append(data_dict_i)
+
+    df_oxy_vect = pd.DataFrame(data_dict_list)
+    df_oxy_vect = df_oxy_vect.set_index("oxy_ind")
+
+
+    return(df_oxy_vect)
+    # __|
+
+def get_df_oxy_cross_prod(
+    df_oxy_vect=None,
+    ):
+    """
+    """
+    # | - get_df_oxy_cross_prod
+    data_dict_list = []
+    for oxy_ind_i, row_i in df_oxy_vect.iterrows():
+        for oxy_ind_j, row_j in df_oxy_vect.iterrows():
+            if oxy_ind_i == oxy_ind_j:
+                break
+
+            cross_prod_vector = np.cross(row_i.vector, row_j.vector)
+            cp_magnitude = np.linalg.norm(cross_prod_vector)
+
+            data_i = dict()
+            data_i["oxy_ind_i"] = oxy_ind_i
+            data_i["oxy_ind_j"] = oxy_ind_j
+            data_i["cross_product"] = cross_prod_vector
+            data_i["cp_magnitude"] = cp_magnitude
+            data_dict_list.append(data_i)
+
+    df_oxy_cross_prod = pd.DataFrame(data_dict_list)
+
+    return(df_oxy_cross_prod)
+    # __|
+
+def get_oxygen_opposite_of_active_site(
+    active_site=None,
+    df_oxy_cross_prod=None,
+    ):
+    """
+    """
+    # | - get_oxygen_opposite_of_active_site
+    df = df_oxy_cross_prod
+    df = df[
+        (df["oxy_ind_i"] == active_site) |
+        (df["oxy_ind_j"] == active_site) &
+        [True for i in range(len(df))]
+        ]
+    df_oxy_cross_prod_as = df
+
+    # df_oxy_cross_prod_as.sort_values("cp_magnitude")
+
+    row_opposite_as = df_oxy_cross_prod_as.loc[
+        df_oxy_cross_prod_as.cp_magnitude.idxmin()
+        ]
+
+    oxy_indices = [
+        row_opposite_as.oxy_ind_i,
+        row_opposite_as.oxy_ind_j,
+        ]
+
+    oxy_indices.remove(active_site)
+
+    oxy_opposite_as = oxy_indices[0]
+
+    return(oxy_opposite_as)
     # __|

@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.11.4
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -213,19 +213,6 @@ data_dict_list = []
 groupby_cols = ["compenv", "slab_id", "active_site", ]
 grouped = df_jobs_anal_no_o.groupby(groupby_cols)
 for name_i, group in grouped:
-
-
-
-# # #########################################################
-# for i in range(1):
-#     # name_i = ('sherlock', 'kamevuse_75', 49.0)
-#     # name_i = ('nersc', 'kererape_22', 88.0, )
-#     name_i = ('nersc', 'dakoputu_58', 74.0)
-#     # #####################################################
-#     group = grouped.get_group(name_i)
-# # #########################################################
-
-    # print(name_i)
 
     # #####################################################
     ads_e_o_i = None; ads_e_oh_i = None

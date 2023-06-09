@@ -1,0 +1,66 @@
+* 10 PCA components are ideal with an MAE of 0.1685
+
+[('o', 'Ir*O_bader'),
+ ('o', 'active_o_metal_dist'),
+ ('o', 'ir_o_mean'),
+ ('o', 'ir_o_std'),
+ ('o', 'octa_vol'),
+ ('o', 'p_band_center'),
+ ('o', 'closest_O_dist'),
+ ('dH_bulk', ''),
+ ('volume_pa', ''),
+ ('bulk_oxid_state', ''),
+ ('effective_ox_state', ''),
+ ('surf_area', '')]
+
+* 9 PCA components are ideal with an MAE of 0.1716
+  - I removed 'closest_O_dist'
+
+[('o', 'Ir*O_bader'),
+ ('o', 'active_o_metal_dist'),
+ ('o', 'ir_o_mean'),
+ ('o', 'ir_o_std'),
+ ('o', 'octa_vol'),
+ ('o', 'p_band_center'),
+ ('dH_bulk', ''),
+ ('volume_pa', ''),
+ ('bulk_oxid_state', ''),
+ ('effective_ox_state', ''),
+ ('surf_area', '')]
+
+* 10 PCA components are ideal with an MAE of 0.1757
+  - I added closest_Ir_dist
+
+[('o', 'Ir*O_bader'),
+ ('o', 'active_o_metal_dist'),
+ ('o', 'ir_o_mean'),
+ ('o', 'ir_o_std'),
+ ('o', 'octa_vol'),
+ ('o', 'p_band_center'),
+ ('o', 'closest_Ir_dist'),
+ ('o', 'closest_O_dist'),
+ ('dH_bulk', ''),
+ ('volume_pa', ''),
+ ('bulk_oxid_state', ''),
+ ('effective_ox_state', ''),
+ ('surf_area', '')]
+
+
+
+
+
+
+* 10 PCA components are ideal with an MAE of 0.1703
+  - Good baseline here
+
+Num features: 12
+Adsorbates features: active_o_metal_dist, closest_O_dist, Ir*O_bader, ir_o_mean, ir_o_std, octa_vol, p_band_center
+O features: bulk_oxid_state, dH_bulk, effective_ox_state, surf_area, volume_pa
+
+
+* 9 PCA components are ideal with an MAE of 0.1661
+  - Took off surf_area
+
+Num features: 11
+Adsorbates features: active_o_metal_dist, closest_O_dist, Ir*O_bader, ir_o_mean, ir_o_std, octa_vol, p_band_center
+O features: bulk_oxid_state, dH_bulk, effective_ox_state, volume_pa

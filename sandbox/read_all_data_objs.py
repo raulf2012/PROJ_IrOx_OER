@@ -6,14 +6,14 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.13.0
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
 #     name: conda-env-PROJ_irox_oer-py
 # ---
 
-# + jupyter={"source_hidden": true}
+# + jupyter={"source_hidden": true} tags=[]
 import os
 import sys
 
@@ -80,13 +80,14 @@ from methods import (
     get_df_features,
     get_df_jobs_on_clus__all,
     get_df_octa_info,
+    get_df_features_targets_seoin,
     )
 from methods import get_df_bader_feat
 from methods import get_df_struct_drift
 
 from misc_modules.pandas_methods import reorder_df_columns
 
-# + jupyter={"source_hidden": true}
+# + tags=[] jupyter={"source_hidden": true}
 df_dft = get_df_dft()
 df_job_ids = get_df_job_ids()
 df_jobs = get_df_jobs(exclude_wsl_paths=True)
@@ -113,9 +114,10 @@ df_jobs_on_clus = get_df_jobs_on_clus__all()
 df_bader_feat = get_df_bader_feat()
 df_struct_drift = get_df_struct_drift()
 df_octa_info = get_df_octa_info()
+df_seoin = get_df_features_targets_seoin()
 
 
-# + jupyter={"source_hidden": true}
+# + jupyter={"source_hidden": true} tags=[]
 def display_df(df, df_name, display_head=True, num_spaces=3):
     print(40 * "*")
     print(df_name)
@@ -163,177 +165,266 @@ df_list = [
 #
 #
 #
-#
-#
-#
+# -
+df_features_targets.features.columns.tolist()
+
+assert False
+
 # +
-# slac	dotivela_46	26.0
+df_features_targets
+
+df = df_features_targets
+df = df[
+    (df.targets.g_o_m_oh > 0.8) &
+    (df.targets.g_o_m_oh < 0.9) &
+    [True for i in range(len(df))]
+    ]
+    # (df[""] == "") &
+    # (df[""] == "") &
+
+df
 # -
 
-df_jobs.loc["henasifu_78"]
+assert False
+
+df_features_targets[
+    df_features_targets.data.from_oh__o == False
+    ]
+    # ].index.tolist()
+
+assert False
 
 # +
-index_i = ("slac", "dotivela_46", 26.0)
-row_i = df_features_targets.loc[[index_i]]
+# df_features_targets.format.color.norm_sum_norm_abs_magmom_diff.max()
 
-row_i
-
-# +
-index_i = ("sherlock", "vipikema_98", 47.0)
-row_i = df_features_targets.loc[[index_i]]
-
-
-row_i
-# -
-
-df_jobs.loc["pekukele_64"]
-
-for index_i, row_i in df_features_targets.iterrows():
-    slab_id_i = index_i[1]
-
-    job_id_o = row_i[("data", "job_id_o", "", )]
-
-    row_jobs_i = df_jobs.loc[job_id_o]
-    bulk_id_i = row_jobs_i["bulk_id"]
-
-    if bulk_id_i == "cqbrnhbacg":
-        tmp = 42
-        print(index_i)
-
-df_features_targets.loc[[
-    ('sherlock', 'kobehubu_94', 52.0),
-    ('sherlock', 'kobehubu_94', 60.0),
-    ('sherlock', 'vipikema_98', 47.0),
-    ('sherlock', 'vipikema_98', 53.0),
-    ('sherlock', 'vipikema_98', 60.0),
-    ('slac', 'dotivela_46', 26.0),
-    ('slac', 'dotivela_46', 32.0),
-    ('slac', 'ladarane_77', 15.0),
-    ]]
-
-
-
-df_features_targets[("data", "norm_sum_norm_abs_magmom_diff", "", )].sort_values(ascending=False).iloc[0:10].index.tolist()
-
-# +
-# df_features_targets.describe()
 
 import plotly.graph_objs as go
 
-data = []
 trace = go.Scatter(
     mode="markers",
-    y=df_features_targets[("data", "norm_sum_norm_abs_magmom_diff", "", )].sort_values(ascending=False),
-    # x=np.abs(df_target_pred_i["err_pred"]),
+    # x=x_array,
+    y=np.sort(df_features_targets.format.color.norm_sum_norm_abs_magmom_diff),
     )
-data.append(trace)
-# trace = go.Scatter(
-#     # mode="markers",
-#     y=np.arange(0, 2, 0.1),
-#     x=np.arange(0, 2, 0.1),
-#     )
-# data.append(trace)
-
-# data = [trace]
+data = [trace]
 
 fig = go.Figure(data=data)
 fig.show()
 # -
 
+
+
+df_features_targets.shape
+
+df_features_targets[df_features_targets.format.color.norm_sum_norm_abs_magmom_diff > 0.148725].shape
+
+1 - 15/368
+
+# +
+k = 0.94
+n = df_features_targets.shape[0]
+
+index = int(np.round(k * n))
+
+np.mean(
+    df_features_targets.format.color.norm_sum_norm_abs_magmom_diff.sort_values()[index:index+2]
+    )
+# -
+
+df_features_targets.format.color.norm_sum_norm_abs_magmom_diff.min()
+df_features_targets.format.color.norm_sum_norm_abs_magmom_diff.max()
+
+df_features_targets[
+    df_features_targets.data.from_oh__o == False
+    ]
+    # ].index.tolist()
+
+job_id_x = "labavobe_95"
+get_other_job_ids_in_set(
+    job_id_x,
+    df_jobs=df_jobs,
+    oer_set=True,
+    only_last_rev=True,
+    )
+
+# +
+df_features_targets
+
+df = df_features_targets
+df = df[
+    (df.targets.g_o_m_oh > 2.9) &
+    (df.targets.g_o_m_oh < 3.1) &
+    [True for i in range(len(df))]
+    ]
+    # (df[""] == "") &
+    # (df[""] == "") &
+
+df
+# -
+
+
+
+df.index.tolist()
+
+df.targets.g_o_m_oh
+
 assert False
+
+cols_A = [
+
+    ('targets', 'g_o', ''),
+    ('data', 'stoich', ''),
+    ('features', 'bulk_oxid_state', ''),
+    ('features', 'dH_bulk', ''),
+    ('features', 'effective_ox_state', ''),
+    ('features', 'volume_pa', ''),
+    ('features', 'o', 'active_o_metal_dist'),
+    ('features', 'o', 'angle_O_Ir_surf_norm'),
+    ('features', 'o', 'ir_o_mean'),
+    ('features', 'o', 'ir_o_std'),
+    ('features', 'o', 'octa_vol'),
+    ('features', 'o', 'degrees_off_of_straight__as_opp'),
+    ('features', 'o', 'oxy_opp_as_bl'),
+
+    ]
+
+cols_B = [
+
+    ('targets', 'g_o', ''),
+    # ('data', 'job_id_o', ''),
+    # ('data', 'job_id_oh', ''),
+    # ('data', 'job_id_bare', ''),
+    ('data', 'stoich', ''),
+    ('features', 'o', 'active_o_metal_dist'),
+    ('features', 'o', 'ir_o_mean'),
+    ('features', 'o', 'octa_vol'),
+    ('features', 'o', 'oxy_opp_as_bl'),
+    ('features', 'o', 'degrees_off_of_straight__as_opp'),
+    ('features', 'dH_bulk', ''),
+    ('features', 'bulk_oxid_state', ''),
+    ('features', 'effective_ox_state', ''),
+    ('features_pre_dft', 'active_o_metal_dist__pre', ''),
+    ('features_pre_dft', 'ir_o_mean__pre', ''),
+    ('features_pre_dft', 'ir_o_std__pre', ''),
+    ('features_pre_dft', 'octa_vol__pre', ''),
+
+    ]
+
+# +
+print("Shared columns")
+print("-------------------")
+
+for col_i in cols_A:
+    if col_i in cols_B:
+        print(col_i)
+
+# +
+print("Cols in A not in B")
+print("-------------------")
+
+for col_i in cols_A:
+    if col_i not in cols_B:
+        print(col_i)
+
+# +
+print("Cols in B not in A")
+print("-------------------")
+
+for col_i in cols_B:
+    if col_i not in cols_A:
+        print(col_i)
+# -
+
+assert False
+
+# +
+df_jobs[df_jobs.bulk_id == "926dnunrxf"]
+
+df = df_jobs
+df = df[
+    (df["bulk_id"] == "926dnunrxf") &
+    (df["facet"] == "010") &
+    # (df[""] == "") &
+    [True for i in range(len(df))]
+    ]
+df
+
+# +
+df_ind = df_features_targets.index.to_frame()
+
+df = df_ind
+df = df[
+    (df["slab_id"] == "tesameli_14") &
+    # (df[""] == "") &
+    # (df[""] == "") &
+    [True for i in range(len(df))]
+    ]
+df.index.tolist()
+# -
+
+df_features_targets.loc[[
+    ('sherlock', 'tesameli_14', 50.0)
+    ]]
+
+cols_0
+
+df_features_targets
+
+assert False
+
+# +
+# import plotly.io as pio
+# scope = pio.kaleido.scope
+
+# +
+# scope
+# scope._shutdown_kaleido()
+
+# +
+# ('sherlock', 'kagekiha_49', 'o', 96.0, 1, False)
+# -
+
+df_jobs_paths.loc["lebuvana_28"].gdrive_path
+
+df = df_jobs
+df = df[
+    (df["compenv"] == "sherlock") &
+    (df["slab_id"] == "kagekiha_49") &
+    # (df[""] == "") &
+    [True for i in range(len(df))]
+    ]
+df
+
+df_jobs_paths.loc["businipu_97"].gdrive_path
+
+# +
+df_ind = df_features_targets.index.to_frame()
+
+df = df_ind
+df = df[
+    (df["compenv"] == "sherlock") &
+    # (df["slab_id"] == "kagekiha_49") &
+    # (df[""] == "") &
+    [True for i in range(len(df))]
+    ]
+df
+# -
+
+assert False
+
+# +
+
+
+for i in df_seoin.columns.to_list():
+    print(i)
+# -
 
 df_octa_info
 
-assert False
+df_features_targets.features.o
 
 # +
-# df_features_targets
+name_i = ('sherlock', 'kamevuse_75', 49.0)
 
-# +
-# df_features_targets[("data", "job_id_o", "", )]
+row = df_features_targets.loc[name_i]
 
-df_features_targets_i = df_features_targets.loc[[
-    ('sherlock', 'kamevuse_75', 49.0)
-    ]]
-
-for name_i, row_i in df_features_targets_i.iterrows():
-    job_id_o_i = row_i[("data", "job_id_o", "", )]
-
-    df_octa_info_i = df_octa_info[df_octa_info.job_id_max == job_id_o_i]
-    row_octa_i = df_octa_info_i.iloc[0]
-
-    if row_octa_i.error:
-        print(name_i)
-# -
-
-df_octa_info_i
-
-df_features_targets.loc[
-    ('sherlock', 'momaposi_60', 50.0)
-    ]
-
-# +
-# (df[("data", "found_active_Ir__oh", "", )] == True) &
-
-# df_features_targets["data"]
-# df_features_targets.columns.tolist()
-
-df_features_targets[
-    ('data', 'found_active_Ir', '')
-    ].unique()
-# -
-
-assert False
-
-# +
-job_ids = ['novofide_69', 'solalenu_64', 'huriwara_92', 'bevadofo_80']
-
-df_jobs_paths.loc[
-    job_ids
-    ]
-
-
-df_tmp = df_atoms_sorted_ind[df_atoms_sorted_ind.job_id.isin(job_ids)]
-
-for name_i, row_i in df_tmp.iterrows():
-    atoms_i = row_i.atoms_sorted_good
-    job_id_i = row_i.job_id
-
-    file_path_no_ext_i = os.path.join(
-        os.environ["PROJ_irox_oer"],
-        "sandbox",
-        "__temp__/20210530_atoms_write_temp",
-        job_id_i)
-
-        # job_id_i + ".traj")
-    # atoms_i.write(file_path_i)
-
-    atoms_i.write(file_path_no_ext_i + ".traj")
-
-    atoms_i.write(file_path_no_ext_i + ".cif")
-# -
-
-assert False
-
-# + jupyter={"source_hidden": true}
-df_octa_info[df_octa_info.missing_oxy_neigh == True]
-
-# df_octa_info.index.tolist()
-
-# + jupyter={"source_hidden": true}
-assert False
-
-# + jupyter={"source_hidden": true}
-from proj_data import sys_to_ignore__df_features_targets
-
-sys_to_ignore__df_features_targets
-
-df_features_targets = df_features_targets.drop(
-    index=sys_to_ignore__df_features_targets)
-
-# + jupyter={"source_hidden": true}
-# df_features_targets
-# df_features_targets["features"]["o"]["active_o_metal_dist"].sort_values(ascending=False).iloc[0:6].index.tolist()
-
-# df_features_targets["features"]["o"]["p_band_center"].sort_values(ascending=False).iloc[0:6].index.tolist()
-df_features_targets["features"]["o"]["p_band_center"].sort_values(ascending=True).iloc[0:12].index.tolist()
+row.data

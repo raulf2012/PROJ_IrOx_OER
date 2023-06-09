@@ -53,6 +53,11 @@ black_listed_dirs = [
 # These notebooks are not intended to be run periodically, they are one-time use
 notebooks_to_ignore = [
 
+    # Trivial model copies
+    "workflow/model_building/predict_mean_of_pop/trivial_models-Copy1.ipynb",
+    "workflow/model_building/predict_mean_of_pop/trivial_models-Copy2.ipynb",
+    "workflow/model_building/predict_mean_of_pop/trivial_models-Copy3.ipynb",
+
     "workflow/seoin_irox_data/analyze_dataset/trivial_eff_ox_state_model.ipynb",
     "workflow/seoin_irox_data/compare_mine_seoin_oer/compare_mine_seoin.ipynb",
     "workflow/seoin_irox_data/featurize_data/featurize_data.ipynb",
@@ -132,7 +137,7 @@ notebooks_to_ignore = [
     # #####################################################
     # Don't run these things
     "workflow/__misc__/analysis_for_jens/analysis.ipynb",
-    "workflow/feature_engineering/catkit_form_oxid/catkit_form_oxid.ipynb",
+    "workflow/feature_engineering/generate_features/catkit_form_oxid/catkit_form_oxid.ipynb",
 
 
     # #####################################################

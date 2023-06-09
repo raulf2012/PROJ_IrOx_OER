@@ -36,8 +36,15 @@ stoich_color_dict = {
 
     # "AB2": "orange",
     # "AB3": "blue",
-    "AB2": "#46cf44",
-    "AB3": "#42e3e3",
+
+    # "AB2": "#46cf44",
+    # "AB3": "#42e3e3",
+
+    # "AB2": "#96272c",
+    # "AB3": "#6c94b6",
+
+    "AB2": "#42bd3e",
+    "AB3": "#242424",
 
     "None": "red",
     }
@@ -391,7 +398,28 @@ sys_to_ignore__df_features_targets = [
     ('sherlock', 'kapapohe_58', 34.0),
     ('sherlock', 'wafitemi_24', 34.0),
 
-    ]
 
+    # These are systems that belong have bulk_id=cqbrnhbacg
+    ('sherlock', 'kobehubu_94', 52.0),
+    ('sherlock', 'kobehubu_94', 60.0),
+    ('sherlock', 'vipikema_98', 47.0),
+    ('sherlock', 'vipikema_98', 53.0),
+    ('sherlock', 'vipikema_98', 60.0),
+    ('slac', 'dotivela_46', 26.0),
+    ('slac', 'dotivela_46', 32.0),
+    ('slac', 'ladarane_77', 15.0),
+
+    # Something wrong with this one, don't remember
+    ("sherlock", "telibose_95", 35.0),
+
+    # These were removed because they were duplicates
+    ("slac", "gesumule_22", 32.0),
+    ("slac", "fokigemi_06", 32.0),
+
+    # These are two outlier systems, they don't have an *OH derived *O calc, 2 of 5 such systems
+    # These systems also have high magmom mismatch, they are outside the 94th percentile
+    ('sherlock', 'sifebelo_94', 61.0),
+    ('sherlock', 'sifebelo_94', 62.0),
+    ]
 
 #__|

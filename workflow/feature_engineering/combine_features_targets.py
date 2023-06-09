@@ -45,10 +45,8 @@ from methods import (
     get_df_slab,
     get_df_jobs,
     get_df_jobs_data,
-
     get_df_ads,
     get_df_features,
-    
     get_df_octa_vol_init,
     )
 # -
@@ -173,14 +171,6 @@ dos_bader_feature_cols = [
     ]
 
 # +
-# # TEMP
-# print(111 * "TEMP | ")
-
-# df_ads = df_ads.loc[[("sherlock", "lufinanu_76", 46., )]]
-
-# +
-# print("df_ads.shape[0]:", df_ads.shape[0])
-
 # #########################################################
 o_rows_list = []
 o_index_list = []
@@ -190,8 +180,6 @@ oh_index_list = []
 # #########################################################
 failed_indices_oh = []
 for index_i, row_i in df_ads.iterrows():
-
-    # print("SIDJFIJSDIFJIDSIFJISDIFJSDIOFJIODS867tr86r7t86867876t8t76")
 
     # #####################################################
     index_dict_i = dict(zip(list(df_ads.index.names), index_i))
@@ -240,17 +228,6 @@ for index_i, row_i in df_ads.iterrows():
 
         # print("Replaced row_feat_i with the row that has the dos/bader info")
         row_feat_i = df_feat_i.iloc[max_key]
-
-    # elif num_nan == 0:
-    #     tmp = 42
-
-
-
-
-
-
-
-
 
 
 
@@ -304,22 +281,6 @@ idx = pd.MultiIndex.from_tuples(oh_index_list, names=df_features.index.names)
 df_oh = pd.DataFrame(oh_rows_list, idx)
 df_oh.index = df_oh.index.droplevel(level=[2, 4, ])
 # #########################################################
-
-# +
-# df = df_o.index.to_frame()
-# df = df[
-#     (df["slab_id"] == "lufinanu_76") &
-#     (df["active_site"] == 46.) &
-#     # (df[""] == "") &
-#     [True for i in range(len(df))]
-#     ]
-
-# df_o.loc[
-#     df.index
-#     ]
-
-# +
-# assert False
 # -
 
 # ### Checking failed_indices_oh against systems that couldn't be processed
@@ -407,6 +368,9 @@ df_features_comb = pd.concat([
     df_features_o,
     df_features_oh,
     ], axis=1)
+# -
+
+# ### Rounding `effective_ox_state` to deal with groupby floating point issues
 
 # +
 eff_ox_state_list = []
@@ -417,31 +381,18 @@ for name_i, row_i in df_features_comb.iterrows():
     eff_ox_state_i = eff_ox_state_oh_i
     if eff_ox_state_oh_i != eff_ox_state_oh_i:
 
-        # print(name_i)
-        # print(20 * "-")
-        # print(eff_ox_state_oh_i)
-        # print(eff_ox_state_o_i)
-        # print("")
-
-
-        
         if np.isnan(eff_ox_state_oh_i):
-            # print(eff_ox_state_o_i)
             if not np.isnan(eff_ox_state_o_i):
                 eff_ox_state_i = eff_ox_state_o_i
 
 
         elif np.isnan(eff_ox_state_o_i):
-            # print(eff_ox_state_o_i)
             if not np.isnan(eff_ox_state_oh_i):
                 eff_ox_state_i = eff_ox_state_oh_i
 
-    # if np.isnan(eff_ox_state_i):
-    #     print(eff_ox_state_i)
 
     eff_ox_state_list.append(
         np.round(eff_ox_state_i, 6),
-        # eff_ox_state_i
         )
 
 
@@ -463,16 +414,11 @@ non_ads_features = [
 
 # +
 cols_to_drop = []
-
 new_cols = []
 
-# for col_i in df_features_comb["features"].columns:
 for col_i in df_features_comb.columns:
-    # print(col_i)
 
     if col_i[0] == "features":
-        tmp = 42
-        # print(col_i)
 
         if col_i[2] in non_ads_features:
             print(col_i)
@@ -528,7 +474,7 @@ df_ads.columns = idx
 
 # ### Combining all dataframes
 
-df_all_comb = pd.concat([
+df_features_targets = pd.concat([
     df_features_comb,
     df_data_comb,
     df_ads,
@@ -538,19 +484,19 @@ df_all_comb = pd.concat([
 # ### Removing the p-band center feature for *OH (there are none)
 
 # +
-df_all_comb = df_all_comb.drop(columns=[
+df_features_targets = df_features_targets.drop(columns=[
     ('features', 'oh', 'p_band_center'),
     ])
 
-df_all_comb = df_all_comb.drop(columns=[
+df_features_targets = df_features_targets.drop(columns=[
     ('features', 'oh', 'Ir_bader'),
     ])
 
-df_all_comb = df_all_comb.drop(columns=[
+df_features_targets = df_features_targets.drop(columns=[
     ('features', 'oh', 'O_bader'),
     ])
 
-df_all_comb = df_all_comb.drop(columns=[
+df_features_targets = df_features_targets.drop(columns=[
     ('features', 'oh', 'Ir*O_bader'),
     ])
 
@@ -573,7 +519,7 @@ def method(row_i):
 
     return(name_i)
 
-df_all_comb["data", "name_str", ""] = df_all_comb.apply(
+df_features_targets["data", "name_str", ""] = df_features_targets.apply(
     method,
     axis=1)
 
@@ -584,7 +530,7 @@ for i in target_cols:
     df_ads_columns.remove(i)
 
 # +
-data_columns_all = [i[0] for i in df_all_comb["data"].columns]
+data_columns_all = [i[0] for i in df_features_targets["data"].columns]
 
 df_ads_columns_to_add = []
 df_ads_columns_to_drop = []
@@ -597,11 +543,11 @@ for col_i in df_ads_columns:
 
 # #########################################################
 for col_i in df_ads_columns_to_drop:
-    df_all_comb.drop(columns=(col_i, "", ""), inplace=True)
+    df_features_targets.drop(columns=(col_i, "", ""), inplace=True)
 
 # #########################################################
 new_columns = []
-for col_i in df_all_comb.columns:
+for col_i in df_features_targets.columns:
     if col_i[0] in df_ads_columns_to_add:
         new_columns.append(
             ("data", col_i[0], "", )
@@ -614,7 +560,61 @@ for col_i in df_all_comb.columns:
         new_columns.append(col_i)
 
 idx = pd.MultiIndex.from_tuples(new_columns)
-df_all_comb.columns = idx
+df_features_targets.columns = idx
+# -
+
+# ### Adding surface area as a coverage-type descriptor
+
+df_slab
+
+# +
+from methods import get_df_magmoms, read_magmom_comp_data
+
+df_magmoms = get_df_magmoms()
+
+
+data_dict_list = []
+for name_i, row_i in df_features_targets.iterrows():
+    # #####################################################
+    data_dict_i = dict()
+    # #####################################################
+    index_dict_i = dict(zip(df_features_targets.index.names, name_i))
+    # #####################################################
+
+
+    slab_id_i = name_i[1]
+
+    # #########################################################
+    row_slab_i = df_slab.loc[slab_id_i]
+    # #########################################################
+    surf_area_i = row_slab_i.surf_area
+    # #########################################################
+
+
+
+    # #################################################
+    data_dict_i.update(index_dict_i)
+    # #################################################
+    data_dict_i["surf_area"] = surf_area_i
+    # #################################################
+    data_dict_list.append(data_dict_i)
+    # #################################################
+
+
+
+# #########################################################
+df_tmp = pd.DataFrame(data_dict_list)
+df_tmp = df_tmp.set_index(["compenv", "slab_id", "active_site", ])
+
+# #########################################################
+new_cols = []
+for col_i in df_tmp.columns:
+    new_col_i = ("features", col_i, "")
+    new_cols.append(new_col_i)
+idx = pd.MultiIndex.from_tuples(new_cols)
+df_tmp.columns = idx
+
+df_features_targets = pd.concat([df_features_targets, df_tmp], axis=1)
 
 
 # -
@@ -660,11 +660,11 @@ df_magmoms = get_df_magmoms()
 
 
 data_dict_list = []
-for name_i, row_i in df_all_comb.iterrows():
+for name_i, row_i in df_features_targets.iterrows():
     # #####################################################
     data_dict_i = dict()
     # #####################################################
-    index_dict_i = dict(zip(df_all_comb.index.names, name_i))
+    index_dict_i = dict(zip(df_features_targets.index.names, name_i))
     # #####################################################
 
     magmom_data_i = read_magmom_comp_data(name=name_i)
@@ -716,7 +716,7 @@ for col_i in df_tmp.columns:
 idx = pd.MultiIndex.from_tuples(new_cols)
 df_tmp.columns = idx
 
-df_all_comb = pd.concat([df_all_comb, df_tmp], axis=1)
+df_features_targets = pd.concat([df_features_targets, df_tmp], axis=1)
 # -
 
 # ### Add OER overpotential data
@@ -744,8 +744,8 @@ for col_i in df_overpot.columns:
 df_overpot.columns = pd.MultiIndex.from_tuples(new_cols)
 # -
 
-df_all_comb = pd.concat([
-    df_all_comb,
+df_features_targets = pd.concat([
+    df_features_targets,
     df_overpot,
     ], axis=1)
 
@@ -765,12 +765,12 @@ df_SE.columns = pd.MultiIndex.from_tuples(new_cols)
 
 cols_to_remove = []
 for col_i in df_SE.columns.tolist():
-    if col_i in df_all_comb.columns.tolist():
+    if col_i in df_features_targets.columns.tolist():
         cols_to_remove.append(col_i)
 
 
-df_all_comb = pd.concat([
-    df_all_comb,
+df_features_targets = pd.concat([
+    df_features_targets,
     # df_SE,
     df_SE.drop(columns=cols_to_remove),
     ], axis=1)
@@ -785,11 +785,11 @@ from proj_data import stoich_color_dict
 data_dict_list = []
 # #########################################################
 # for index_i, row_i in df_features_targets.iterrows():
-for index_i, row_i in df_all_comb.iterrows():
+for index_i, row_i in df_features_targets.iterrows():
     # #####################################################
     data_dict_i = dict()
     # #####################################################
-    index_dict_i = dict(zip(list(df_all_comb.index.names), index_i))
+    index_dict_i = dict(zip(list(df_features_targets.index.names), index_i))
     # #####################################################
     row_data_i = row_i["data"]
     # #####################################################
@@ -824,9 +824,9 @@ df_format.columns = pd.MultiIndex.from_tuples(df_format.columns)
 # #########################################################
 # -
 
-df_all_comb = pd.concat(
+df_features_targets = pd.concat(
     [
-        df_all_comb,
+        df_features_targets,
         df_format,
         ],
     axis=1,
@@ -835,27 +835,27 @@ df_all_comb = pd.concat(
 # ### Mixing Bader charges with bond lengths
 
 # +
-# df_all_comb["features"][""]
-# df_all_comb[("features", "o", "Ir*O_bader", )]
+# df_features_targets["features"][""]
+# df_features_targets[("features", "o", "Ir*O_bader", )]
 
-df_all_comb[("features", "o", "Ir*O_bader/ir_o_mean", )] = \
-    df_all_comb[("features", "o", "Ir*O_bader", )] / df_all_comb[("features", "o", "ir_o_mean", )]
+df_features_targets[("features", "o", "Ir*O_bader/ir_o_mean", )] = \
+    df_features_targets[("features", "o", "Ir*O_bader", )] / df_features_targets[("features", "o", "ir_o_mean", )]
 # -
 
 # ### Calculating ΔG_OmOH target column
 
 # +
 # Computing ΔG_O-OH
-g_o = df_all_comb[("targets", "g_o", "")]
-g_oh = df_all_comb[("targets", "g_oh", "")]
+g_o = df_features_targets[("targets", "g_o", "")]
+g_oh = df_features_targets[("targets", "g_oh", "")]
 
-df_all_comb[("targets", "g_o_m_oh", "")] = g_o - g_oh
+df_features_targets[("targets", "g_o_m_oh", "")] = g_o - g_oh
 
 # Computing ΔE_O-OH
-e_o = df_all_comb[("targets", "e_o", "")]
-e_oh = df_all_comb[("targets", "e_oh", "")]
+e_o = df_features_targets[("targets", "e_o", "")]
+e_oh = df_features_targets[("targets", "e_oh", "")]
 
-df_all_comb[("targets", "e_o_m_oh", "")] = e_o - e_oh
+df_features_targets[("targets", "e_o_m_oh", "")] = e_o - e_oh
 # -
 
 # ### Adding in pre-DFT features
@@ -864,7 +864,7 @@ df_all_comb[("targets", "e_o_m_oh", "")] = e_o - e_oh
 # #########################################################
 data_dict_list = []
 # #########################################################
-for name_i, row_i in df_all_comb.iterrows():
+for name_i, row_i in df_features_targets.iterrows():
     # #####################################################
     compenv_i = name_i[0]
     slab_id_i = name_i[1]
@@ -913,15 +913,15 @@ df_feat_pre.columns = idx
 
 
 
-df_all_comb = pd.concat([
-    df_all_comb,
+df_features_targets = pd.concat([
+    df_features_targets,
     df_feat_pre,
     ], axis=1)
 # -
 
 # ### Reindexing multiindex to get order columns
 
-df_all_comb = df_all_comb.reindex(columns=[
+df_features_targets = df_features_targets.reindex(columns=[
     'targets',
     'data',
     'format',
@@ -939,8 +939,8 @@ df_slabs_to_not_run = df_slabs_to_run[df_slabs_to_run.status == "bad"]
 
 slab_ids_to_not_include = df_slabs_to_not_run.slab_id.tolist()
 
-df_index = df_all_comb.index.to_frame()
-df_all_comb = df_all_comb.loc[
+df_index = df_features_targets.index.to_frame()
+df_features_targets = df_features_targets.loc[
     ~df_index.slab_id.isin(slab_ids_to_not_include)
     ]
 # -
@@ -953,27 +953,31 @@ df_all_comb = df_all_comb.loc[
 # Getting rid of NERSC jobs
 
 # indices_to_keep = []
-# for i in df_all_comb.index:
+# for i in df_features_targets.index:
 #     if i[0] != "nersc":
 #         indices_to_keep.append(i)
 
-# df_all_comb = df_all_comb.loc[
+# df_features_targets = df_features_targets.loc[
 #     indices_to_keep
 #     ]
 
-df_all_comb = df_all_comb[df_all_comb["data"]["phase"] > 1]
+df_features_targets = df_features_targets[df_features_targets["data"]["phase"] > 1]
 # -
 
 # ### Printing how many `NaN` rows there are for each feature
 
-for col_i in df_all_comb.features.columns:
+for col_i in df_features_targets.features.columns:
     if verbose:
-        df_tmp_i = df_all_comb[df_all_comb["features"][col_i].isna()]
+        df_tmp_i = df_features_targets[df_features_targets["features"][col_i].isna()]
         print(col_i, ":", df_tmp_i.shape[0])
+
+# +
+# assert False
+# -
 
 # ### Write data to pickle
 
-df_features_targets = df_all_comb
+# df_features_targets = df_features_targets
 # Pickling data ###########################################
 directory = os.path.join(
     os.environ["PROJ_irox_oer"],
@@ -992,6 +996,8 @@ from methods import get_df_features_targets
 df_features_targets_tmp = get_df_features_targets()
 df_features_targets_tmp.head()
 # -
+
+df_features_targets.features
 
 # #########################################################
 print(20 * "# # ")

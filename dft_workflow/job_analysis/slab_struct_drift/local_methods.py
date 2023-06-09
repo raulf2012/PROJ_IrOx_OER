@@ -473,7 +473,7 @@ def get_mean_displacement_octahedra(
             num_neighbors = row_coord_i.num_neighbors
 
 
-        active_metal_index = None
+        metal_active_site = None
         if ads_0 == "bare" or row_coord_i.num_neighbors == 0:
             df_other_jobs = get_other_job_ids_in_set(
                 job_id_0, df_jobs=df_jobs,
@@ -512,16 +512,16 @@ def get_mean_displacement_octahedra(
 
             assert num_metal_neigh < 2, "IDJFSD"
 
-            active_metal_index = nn_metal_i["site_index"]
+            metal_active_site = nn_metal_i["site_index"]
 
-            active_metal_index = row_coord.nn_info[0]["site_index"]
+            metal_active_site = row_coord.nn_info[0]["site_index"]
         # __|
 
 
         octahedra_data = get_octahedra_oxy_neigh(
             df_coord=df_coord_0,
             active_site=active_site,
-            metal_active_site=active_metal_index,
+            metal_active_site=metal_active_site,
 
             compenv=compenv,
             slab_id=slab_id,

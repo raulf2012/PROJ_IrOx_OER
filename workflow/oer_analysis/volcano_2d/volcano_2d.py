@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.13.0
 #   kernelspec:
 #     display_name: Python [conda env:PROJ_irox_oer] *
 #     language: python
@@ -71,6 +71,18 @@ from proj_data import scatter_marker_props, scatter_shared_props
 # #########################################################
 
 from methods import get_ORR_PLT
+
+# +
+# # TEMP
+# print(111 * "TEMP | ")
+
+# stoich_color_dict = {
+#     # 'AB2': '#24588c',
+#     # 'AB2': '#33a36f',
+#     'AB2': '#42bd3e',
+#     'AB3': '#242424',
+#     'None': 'red',
+#     }
 # -
 
 from methods import isnotebook    
@@ -269,18 +281,25 @@ my_plotly_plot(
     )
 # -
 
+font_axis_title_size__pub
+
+font_tick_labels_size__pub
+
 fig.write_json(
     os.path.join(
         os.environ["PROJ_irox_oer"],
         "workflow/oer_analysis/volcano_2d",
         "out_plot/volcano_2d.json"))
 
+fig_cpy
+
+fig_cpy.data[3]
+
+assert False
+
 # + active=""
 #
 #
-
-# +
-# assert False
 # -
 
 # # Replotting with test formatting (SANDBOX)

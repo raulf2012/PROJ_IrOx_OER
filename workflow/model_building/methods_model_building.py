@@ -11,6 +11,8 @@ from sklearn.decomposition import PCA
 # __|
 
 
+from methods_models import process_pca_analysis
+
 
 # df_features_targets=df_comb
 # target_ads="oh"
@@ -90,6 +92,7 @@ def simplify_df_features_targets(
 # num_pca_comp=3
 # k_fold_partition_size=100
 # model_workflow=run_gp_workflow
+# model_settings=model_settings
 
 def run_kfold_cv_wf(
     df_features_targets=None,
@@ -137,9 +140,11 @@ def run_kfold_cv_wf(
             num_pca_comp=num_pca_comp,
             )
         # #####################################################
-        df_pca = out_dict["df_pca"]
-        pca = out_dict["pca"]
+        df_pca = out_dict["df_pca_train"]
+        pca = out_dict["PCA"]
         # #####################################################
+
+
 
         df_data = df_pca
     else:
@@ -344,9 +349,14 @@ def run_regression_wf(
             df_features_targets=df_j,
             num_pca_comp=num_pca_comp,
             )
+
+        # print("IDJFIDSIFD")
+        # print(out_dict.keys())
+
         # #####################################################
-        df_pca = out_dict["df_pca"]
-        pca = out_dict["pca"]
+        # df_pca = out_dict["df_pca"]
+        df_pca = out_dict["df_pca_train"]
+        pca = out_dict["PCA"]
         # #####################################################
         df_data = df_pca
     else:
@@ -485,125 +495,6 @@ def process_feature_targets_df(
     #__|
 
 
-def process_pca_analysis(
-    df_features_targets=None,
-    num_pca_comp=None,
-    ):
-    """
-    """
-    #| - pca_analysis
-    df_j = df_features_targets
-
-    # #####################################################
-    out_dict = pca_analysis(
-        df_j["features"],
-        pca_mode="num_comp",  # 'num_comp' or 'perc'
-        pca_comp=num_pca_comp,
-        verbose=False,
-        )
-    # #####################################################
-    pca = out_dict["pca"]
-    df_feat_pca = out_dict["df_pca"]
-    # #####################################################
-
-
-
-    cols_new = []
-    for col_i in df_feat_pca.columns:
-        col_new_i = ("features", col_i)
-        cols_new.append(col_new_i)
-    df_feat_pca.columns = pd.MultiIndex.from_tuples(cols_new)
-
-    df_pca = pd.concat([
-        df_feat_pca,
-        df_j[["targets"]],
-        ], axis=1)
-
-
-    # #####################################################
-    out_dict = dict()
-    # #####################################################
-    out_dict["pca"] = pca
-    out_dict["df_pca"] = df_pca
-    # #####################################################
-    return(out_dict)
-    # #####################################################
-
-    # return(df_pca)
-    # __|
-
-
-# pca_mode = "num_comp"  # 'num_comp' or 'perc'
-# pca_comp = 5
-
-def pca_analysis(
-    df_features,
-    pca_mode="num_comp",  # 'num_comp' or 'perc'
-    pca_comp=5,
-    verbose=True,
-    ):
-    """
-    """
-    # | - pca_analysis
-
-    df = df_features
-
-    shared_pca_attributes = dict(
-        svd_solver="auto",
-        whiten=True,
-        )
-
-    if pca_mode == "num_comp":
-        num_data_points = df.shape[0]
-        if num_data_points < pca_comp:
-            pca_comp = num_data_points
-
-        pca = PCA(
-            n_components=pca_comp,
-            **shared_pca_attributes)
-
-    elif pca_mode == "perc":
-        pca = PCA(
-            n_components=pca_perc,
-            **shared_pca_attributes)
-
-    else:
-        print("ISDJFIESIFJ NO GOODD")
-
-    pca.fit(df)
-
-
-    # | - Transforming the training data set
-    pca_features_cleaned = pca.transform(df)
-
-    num_pca_comp = pca_features_cleaned.shape[-1]
-
-    if verbose:
-        print("num_pca_comp: ", num_pca_comp)
-        print(df.shape)
-
-    df_pca = pd.DataFrame(
-        pca_features_cleaned,
-        columns=['PCA%i' % i for i in range(num_pca_comp)],
-        index=df.index)
-
-    if verbose:
-        print(df_pca.shape)
-    #__|
-
-    # #####################################################
-    out_dict = dict()
-    # #####################################################
-    out_dict["pca"] = pca
-    out_dict["df_pca"] = df_pca
-    # #####################################################
-    return(out_dict)
-    # #####################################################
-
-    # return(df_pca)
-    #__|
-
-
 
 
 
@@ -652,13 +543,11 @@ def pca_analysis(
 def run_kfold_cv_wf__TEMP(
     df_features_targets=None,
     cols_to_use=None,
-    # df_format=None,
     run_pca=True,
     num_pca_comp=3,
     k_fold_partition_size=20,
     model_workflow=None,
     model_settings=None,
-    # kdict=None,
     ):
     """
 
@@ -694,8 +583,12 @@ def run_kfold_cv_wf__TEMP(
             num_pca_comp=num_pca_comp,
             )
         # #####################################################
-        df_pca = out_dict["df_pca"]
-        pca = out_dict["pca"]
+
+        # print("kisjdfijsdf8934yt89eruoidsff8s")
+        # print(out_dict.keys())
+
+        df_pca = out_dict["df_pca_train"]
+        pca = out_dict["PCA"]
         # #####################################################
 
         df_data = df_pca

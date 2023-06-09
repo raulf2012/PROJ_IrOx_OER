@@ -1,4 +1,5 @@
 # Mine
+log_files*
 old.*
 *.kate-swp
 in_data
@@ -26,6 +27,12 @@ __bkp__
 
 .dropbox
 desktop.ini
+
+CatHub_Upload/
+
+
+# Visual studio stuff
+.vs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

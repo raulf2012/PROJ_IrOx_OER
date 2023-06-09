@@ -36,6 +36,53 @@ from proj_data import compenvs
 #__|
 
 
+# from pymatgen.io.ase import AseAtomsAdaptor
+#
+# atom_A=metal_active_site
+# atom_B=oxy_i
+# atoms=atoms
+
+def get_df_dist_images(
+    atom_A=None,
+    atom_B=None,
+    atoms=None,
+    ):
+    """Get a dataframe with the distance between atom_A and atom_B for all the surrounding images of atom_B.
+    """
+    #| - get_df_dist_images
+    structure = AseAtomsAdaptor().get_structure(atoms)
+
+    data_dict_list = []
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            for k in range(-1, 2):
+
+    # if True:
+    #     if True:
+    #         if True:
+    #             # TEMP
+    #             print(33 * "TEMP | ")
+    #             i = -1; j = 1; k = 0
+
+                dist_ijk, image_ijk = structure[int(atom_A)].distance_and_image(
+                    structure[atom_B],
+                    [i, j, k, ])
+
+                data_dict_i = dict()
+                data_dict_i["i"] = i
+                data_dict_i["j"] = j
+                data_dict_i["k"] = k
+                data_dict_i["dist_ijk"] = dist_ijk
+                data_dict_list.append(data_dict_i)
+
+    df = pd.DataFrame(data_dict_list)
+    df = df.set_index(["i", "j", "k", ], drop=False)
+    df = df.sort_values("dist_ijk")
+
+    return(df)
+    #__|
+
+
 
 
 # #########################################################
@@ -817,7 +864,7 @@ def get_df_eff_ox():
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
         # "workflow/feature_engineering",
-        "workflow/feature_engineering/oxid_state",
+        "workflow/feature_engineering/generate_features/oxid_state",
         "out_data/df_eff_ox.pickle")
     with open(path_i, "rb") as fle:
         df_eff_ox = pickle.load(fle)
@@ -835,7 +882,7 @@ def get_df_octa_vol():
     import pickle; import os
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
-        "workflow/feature_engineering/octahedra_volume",
+        "workflow/feature_engineering/generate_features/octahedra_volume",
         "out_data/df_octa_vol.pickle")
     with open(path_i, "rb") as fle:
             df_octa_vol = pickle.load(fle)
@@ -853,7 +900,7 @@ def get_df_octa_vol_init():
     import pickle; import os
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
-        "workflow/feature_engineering/octahedra_volume",
+        "workflow/feature_engineering/generate_features/octahedra_volume",
         "out_data/df_octa_vol_init.pickle")
     with open(path_i, "rb") as fle:
             df_octa_vol_init = pickle.load(fle)
@@ -871,25 +918,7 @@ def get_df_angles():
     import pickle; import os
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
-        "workflow/feature_engineering/active_site_angles",
-        "out_data/df_AS_angles.pickle")
-    with open(path_i, "rb") as fle:
-            df_angles = pickle.load(fle)
-    # #########################################################
-
-    return(df_angles)
-    #__|
-
-def get_df_angles():
-    """
-    """
-    #| - get_df_angles
-
-    # #########################################################
-    import pickle; import os
-    path_i = os.path.join(
-        os.environ["PROJ_irox_oer"],
-        "workflow/feature_engineering/active_site_angles",
+        "workflow/feature_engineering/generate_features/active_site_angles",
         "out_data/df_AS_angles.pickle")
     with open(path_i, "rb") as fle:
             df_angles = pickle.load(fle)
@@ -906,8 +935,7 @@ def get_df_pdos_feat():
     import pickle; import os
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
-        "workflow/feature_engineering/pdos_features",
-        # "workflow/feature_engineering/active_site_angles",
+        "workflow/feature_engineering/generate_features/pdos_features",
         "out_data/df_pdos_feat.pickle")
     with open(path_i, "rb") as fle:
             df_pdos_feat = pickle.load(fle)
@@ -924,7 +952,7 @@ def get_df_bader_feat():
     import pickle; import os
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
-        "workflow/feature_engineering/pdos_features",
+        "workflow/feature_engineering/generate_features/pdos_features",
         "out_data/df_bader_feat.pickle")
     with open(path_i, "rb") as fle:
             df_bader_feat = pickle.load(fle)
@@ -941,7 +969,7 @@ def get_df_SOAP_AS():
     import pickle; import os
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
-        "workflow/feature_engineering/SOAP_QUIP",
+        "workflow/feature_engineering/generate_features/SOAP_QUIP",
         "out_data/df_SOAP_AS.pickle")
     with open(path_i, "rb") as fle:
             df_SOAP_AS = pickle.load(fle)
@@ -958,7 +986,7 @@ def get_df_SOAP_MS():
     import pickle; import os
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
-        "workflow/feature_engineering/SOAP_QUIP",
+        "workflow/feature_engineering/generate_features/SOAP_QUIP",
         "out_data/df_SOAP_MS.pickle")
     with open(path_i, "rb") as fle:
             df_SOAP_MS = pickle.load(fle)
@@ -975,7 +1003,7 @@ def get_df_SOAP_ave():
     import pickle; import os
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
-        "workflow/feature_engineering/SOAP_QUIP",
+        "workflow/feature_engineering/generate_features/SOAP_QUIP",
         "out_data/df_SOAP_ave.pickle")
     with open(path_i, "rb") as fle:
             df_SOAP_ave = pickle.load(fle)
@@ -1053,9 +1081,7 @@ def get_df_coord(
     slab=None,
     post_dft_name_tuple=None,
     porous_adjustment=True,
-
     init_slab_name_tuple=None,
-
     verbose=False,
     ):
     """
@@ -1078,7 +1104,10 @@ def get_df_coord(
             "workflow/creating_slabs",
             "out_data/df_coord_files")
         path_i = os.path.join(root_path, file_name_i)
-        print(path_i)
+
+        if verbose:
+            print(path_i)
+
         with open(path_i, "rb") as fle:
             df_coord_slab_i = pickle.load(fle)
             df_coord_i = df_coord_slab_i
@@ -1111,6 +1140,11 @@ def get_df_coord(
             "workflow/process_bulk_dft",
             "out_data/df_coord_files",
             bulk_id + ".pickle")
+
+        if verbose:
+            print(path_i)
+
+
         with open(path_i, "rb") as fle:
             df_coord_bulk_i = pickle.load(fle)
             df_coord_i = df_coord_bulk_i
@@ -1148,6 +1182,9 @@ def get_df_coord(
             os.environ["PROJ_irox_oer"],
             "dft_workflow/job_analysis/df_coord_for_post_dft",
             "out_data/df_coord_files", file_name_i)
+
+        if verbose:
+            print(path_i)
 
         from pathlib import Path
         my_file = Path(path_i)
@@ -1189,6 +1226,9 @@ def get_df_coord(
 
         path_i = os.path.join(directory, file_name_i)
 
+        if verbose:
+            print(path_i)
+
         # #################################################
         with open(path_i, "rb") as fle:
             df_coord_i = pickle.load(fle)
@@ -1212,7 +1252,8 @@ def get_df_coord_wrap(
     name=None,
     active_site=None,
     ):
-    """
+    """Get df_coord object for post-dft slabs.
+
     name:
         ex.) ('nersc', 'fosurufu_23',    'o',    'NaN',       1)
               compenv      slab_id       ads   active_site att_num
@@ -1271,136 +1312,24 @@ def get_df_coord_wrap(
     #__|
 
 
-# from methods import get_octahedra_oxygens_from_init
-#
-# df_coord=df_coord_0
-# ads=ads_0
-# active_site=active_site
-# metal_active_site=active_metal_index
-# compenv=compenv
-# slab_id=slab_id
+# from methods import match_atoms
+# compenv=compenv_i
+# slab_id=slab_id_i
+# metal_active_site=metal_active_site_i
 # df_init_slabs=df_init_slabs
-# atoms_0=atoms_0
+# # atoms=atoms_i
+# atoms=atoms_init_i
 
-def get_octahedra_oxy_neigh(
-    df_coord=None,
-    ads=None,
-    active_site=None,
-    metal_active_site=None,
-    compenv=None,
-    slab_id=None,
-    df_init_slabs=None,
-    atoms_0=None,
-    ):
-    """
-    """
-    # | - get_octahedra_oxy_neigh
-    # #####################################################
-    df_coord_i = df_coord
-    # #####################################################
-    error_i = False
-    note_i = ""
-    octahedral_oxygens = None
-    octahedral_oxygens_2 = []
-    missing_oxy_neigh = False
-    too_many_oxy_neigh = False
-    missing_active_Ir = False
-    # #####################################################
-
-
-    if metal_active_site is None:
-        row_coord_i = df_coord_i[
-            df_coord_i.structure_index == active_site]
-        row_coord_i = row_coord_i.iloc[0]
-
-        # metal_active_site = None
-        for nn_j in row_coord_i.nn_info:
-            if nn_j["site"].specie.symbol == metal_atom_symbol:
-                metal_active_site = nn_j["site_index"]
-
-        if metal_active_site is None:
-            missing_active_Ir = True
-            error_i = True
-
-
-    if metal_active_site is not None:
-        row_coord_i = df_coord_i[
-            df_coord_i.structure_index == metal_active_site]
-        row_coord_ir_i = row_coord_i.iloc[0]
-        octahedral_oxygens = row_coord_ir_i.to_dict()["nn_info"]
-        octahedral_oxygens_tmp = octahedral_oxygens
-
-
-
-        oxygens_nn = []
-        for nn_i in octahedral_oxygens_tmp:
-            if nn_i["site"].specie.symbol == "O":
-                oxygens_nn.append(nn_i)
-                octahedral_oxygens_2.append(nn_i["site_index"])
-
-        num_oxy_neigh = len(oxygens_nn)
-
-        if ads != "bare":
-            if num_oxy_neigh < 6:
-                missing_oxy_neigh = True
-                error_i = True
-        elif ads == "bare":
-            if num_oxy_neigh < 5:
-                missing_oxy_neigh = True
-                error_i = True
-            elif num_oxy_neigh > 5:
-                too_many_oxy_neigh = True
-                error_i = True
-        else:
-            print("Woops, not good sikdjfijsdif987y98sd78978978")
-
-
-        octahedra_oxygens_from_init = get_octahedra_oxygens_from_init(
-            compenv=compenv,
-            slab_id=slab_id,
-            metal_active_site=metal_active_site,
-            df_init_slabs=df_init_slabs,
-            atoms_0=atoms_0,
-            )
-        octahedral_oxygens = octahedra_oxygens_from_init
-
-
-    # #####################################################
-    data_dict_out = dict(
-        metal_active_site=metal_active_site,
-        octahedral_oxygens=octahedral_oxygens,
-        octahedral_oxygens_2=octahedral_oxygens_2,
-        num_oxy_neigh=num_oxy_neigh,
-        missing_oxy_neigh=missing_oxy_neigh,
-        too_many_oxy_neigh=too_many_oxy_neigh,
-        missing_active_Ir=missing_active_Ir,
-        error=error_i,
-        note=note_i,
-        )
-    # #####################################################
-    return(data_dict_out)
-    # #####################################################
-
-    # __|
-
-
-# compenv=None,
-# slab_id=None,
-# metal_active_site=None,
-# df_init_slabs=None,
-# atoms_0=None,
-
-def get_octahedra_oxygens_from_init(
+def get_octahedral_oxygens_from_init(
     compenv=None,
     slab_id=None,
     metal_active_site=None,
     df_init_slabs=None,
-    atoms_0=None,
+    atoms=None,
     ):
     """
     """
-    #| - get_octahedra_oxygens_from_init
-
+    #| - get_octahedral_oxygens_from_init
     row_init_slab = df_init_slabs.loc[
         (
             compenv, slab_id,
@@ -1411,12 +1340,25 @@ def get_octahedra_oxygens_from_init(
     init_atoms_i = row_init_slab.init_atoms
 
     # init_atoms_i.write("__temp__/init_atoms.traj")
-    # atoms_0.write("__temp__/atoms_0.traj")
+    # atoms.write("__temp__/atoms.traj")
 
     df_match_init = match_atoms(
-        atoms_0,
+        atoms,
         init_atoms_i,
         )
+
+
+    # Calculating the average drift across the atoms and atoms_init
+    ave_match_dist = df_match_init.closest_distance.sum() / df_match_init.shape[0]
+
+    df_i = df_match_init[df_match_init.closest_distance > 1e-6]
+    # ave_match_dist_non_constrained = df_i.closest_distance.sum() / df_i.shape[0]
+
+    df_i = df_match_init[df_match_init.closest_distance > 1e-6]
+    if df_i.shape[0] > 0:
+        ave_match_dist_non_constrained = df_i.closest_distance.sum() / df_i.shape[0]
+    else:
+        ave_match_dist_non_constrained = 0.
 
     init_slab_name_tuple = \
         (
@@ -1435,9 +1377,11 @@ def get_octahedra_oxygens_from_init(
     row_coord_init_i = row_coord_init_i.iloc[0]
 
     oxy_indices_from_init = []
+    images_from_init = []
     for nn_j in row_coord_init_i.nn_info:
         if nn_j["site"].specie.symbol == "O":
             oxy_indices_from_init.append(nn_j["site_index"])
+            images_from_init.append(nn_j["image"])
 
     oxy_indices_mapped = []
     for oxy_i in oxy_indices_from_init:
@@ -1448,7 +1392,13 @@ def get_octahedra_oxygens_from_init(
             atom_ind_0_i = row_match_init_i.iloc[0].atom_ind_0
             oxy_indices_mapped.append(atom_ind_0_i)
 
-    return(oxy_indices_mapped)
+
+    out_dict = dict()
+    out_dict["ave_match_dist"] = ave_match_dist
+    out_dict["ave_match_dist_non_constrained"] = ave_match_dist_non_constrained
+    out_dict["images_from_init"] = images_from_init
+    out_dict["oxy_indices_mapped"] = oxy_indices_mapped
+    return(out_dict)
     #__|
 
 
@@ -1817,8 +1767,6 @@ def get_ORR_PLT():
     """
     """
     # | - get_ORR_PLT
-    # import pickle; import os
-
     directory = os.path.join(
         os.environ["PROJ_irox_oer"],
         "workflow/oer_analysis",
@@ -1908,15 +1856,19 @@ def get_df_octa_info():
     PROJ_IrOx_OER/workflow/octahedra_info/get_octahedra_atoms.ipynb
     """
     #| - get_df_octa_info
-    # #####################################################
-    # Reading df_jobs dataframe from pickle
     import pickle; import os
     path_i = os.path.join(
         os.environ["PROJ_irox_oer"],
         "workflow/octahedra_info",
         "out_data/df_octa_info.pickle")
-    with open(path_i, "rb") as fle:
-        get_df_octa_info = pickle.load(fle)
+
+    my_file = Path(path_i)
+    if my_file.is_file():
+        with open(path_i, "rb") as fle:
+            get_df_octa_info = pickle.load(fle)
+    else:
+        get_df_octa_info = pd.DataFrame()
+
 
     return(get_df_octa_info)
     #__|
@@ -1935,6 +1887,37 @@ def get_df_features_targets_seoin():
         df_seoin = pickle.load(fle)
 
     return(df_seoin)
+    #__|
+
+def get_df_octa_steric():
+    """
+    """
+    #| - get_df_octa_steric
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/feature_engineering/generate_features/steric_environment",
+        "out_data/df_octa_steric.pickle")
+    with open(path_i, "rb") as fle:
+        df_octa_steric = pickle.load(fle)
+
+    return(df_octa_steric)
+    #__|
+
+
+def get_df_octa_steric_init():
+    """
+    """
+    #| - get_df_octa_steric_init
+    import pickle; import os
+    path_i = os.path.join(
+        os.environ["PROJ_irox_oer"],
+        "workflow/feature_engineering/generate_features/steric_environment",
+        "out_data/df_octa_steric_init.pickle")
+    with open(path_i, "rb") as fle:
+        df_octa_steric_init = pickle.load(fle)
+
+    return(df_octa_steric_init)
     #__|
 
 
@@ -2172,6 +2155,12 @@ def get_other_job_ids_in_set(
 #__|
 # #########################################################
 # #########################################################
+
+
+
+
+
+
 
 
 
@@ -2682,6 +2671,94 @@ def remove_protruding_bottom_Os(
     return(atoms_new)
     #__|
 
+
+def translate_position_to_image(atoms, atom_index, image):
+    """
+    """
+    # | - translate_position_to_image
+    position_orig = atoms[atom_index].position
+
+    position_i = position_orig
+    for i_cnt, image_i in enumerate(image):
+        position_i = position_i + image_i * atoms.cell[i_cnt]
+
+    return(position_i)
+    # __|
+
+
+# structure=structure
+# atom_A=atom_A
+# atom_B=atom_i.index
+# atom_M=atom_M
+# df_coord=df_coord
+# df_octa_info=df_octa_info
+# name=name
+# active_site_original=active_site_orig
+# init_or_final=init_or_final
+
+def get_dist_of_atom_in_octahedra(
+    atoms=None,
+    atom_A=None,
+    atom_B=None,
+    atom_M=None,
+    df_coord=None,
+    df_octa_info=None,
+    name=None,
+    active_site_original=None,
+    init_or_final=None,
+    ):
+    """Get the distance between atom_A and atom_B in a slab structure.
+
+    Get the distance between atom_A and atom_B in a slab structure but where atom_B is is a part of the octahedra that atom_A also resides in. In this case, it's necessary to find the smallest distance between atom_A and all other images of atom_B.
+    """
+    #| - get_dist_of_atom_in_octahedra
+    if active_site_original == "NaN":
+        from_oh = False
+    else:
+        from_oh = True
+
+    image_of_atom_in_octahedra = None
+
+    name_new = (
+        init_or_final,
+        name[0], name[1], name[2],
+        atom_A, name[4], from_oh, )
+    row_octa = df_octa_info.loc[name_new]
+    octahedral_oxygens = row_octa.octahedral_oxygens
+    octahedral_oxygens_images = row_octa.octahedral_oxygens_images
+
+
+    if int(atom_B) == int(atom_M):
+        image_of_atom_in_octahedra = row_octa.metal_active_site_image
+    else:
+        ind_in_list = octahedral_oxygens.index(atom_B)
+        image_of_atom_in_octahedra = octahedral_oxygens_images[ind_in_list]
+
+
+    # from methods import get_df_dist_images
+    df = get_df_dist_images(
+        atom_A=atom_A,
+        atom_B=atom_B,
+        atoms=atoms,
+        )
+
+    if image_of_atom_in_octahedra is not None:
+        df = df.drop(labels=[
+            image_of_atom_in_octahedra
+            ])
+    else:
+        # If the image of atom_B is not available, just assume that it's the first entry in df
+        # Probably a pretty good assumption
+        df = df.drop(labels=[
+            df.iloc[0].name
+            ])
+
+    dist = df.sort_values("dist_ijk").iloc[0].dist_ijk
+    image_of_nearest_nonoctahedra_atom = df.iloc[0].name
+
+    return(dist, image_of_nearest_nonoctahedra_atom)
+    #__|
+
 #__|
 
 # #########################################################
@@ -3084,3 +3161,364 @@ def nearest_atom_mine(
         )
     return(out_dict)
     #__|
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def get_metal_active_site(
+    df_coord=None,
+    active_site=None,
+    metal_atom_symbol=None,
+
+    # Optional parameters
+    job_id=None,
+    ads=None,
+    df_jobs=None,
+    ):
+    """Get the index of metal atom bonded to the active oxygen atom, tries two different methods.
+    """
+    # | - get_metal_active_site
+    metal_active_site = get_metal_active_site_A(
+        df_coord=df_coord,
+        active_site=active_site,
+        metal_atom_symbol=metal_atom_symbol,
+        )
+
+    metal_active_site_alt = None
+    if job_id is not None and ads is not None and df_jobs is not None:
+        metal_active_site_alt = get_metal_active_site_alt(
+            job_id=job_id,
+            ads=ads,
+            active_site=active_site,
+            df_coord=df_coord,
+            df_jobs=df_jobs,
+            )
+
+    if metal_active_site is None:
+        metal_active_site = metal_active_site_alt
+
+    if metal_active_site is not None and metal_active_site_alt is not None:
+        same_index = metal_active_site == metal_active_site_alt
+        print("same_index:", same_index)
+
+    return(metal_active_site)
+    # __|
+
+def get_metal_active_site_A(
+    df_coord=None,
+    active_site=None,
+    metal_atom_symbol=None,
+    ):
+    """Get the index of metal atom bonded to the active oxygen atom, found by checking df_coord.
+    """
+    # | - get_metal_active_site
+    df_coord_i = df_coord
+
+    metal_active_site = None
+    metal_active_site_image = None
+
+
+    row_coord_i = df_coord_i[
+        df_coord_i.structure_index == active_site]
+    row_coord_i = row_coord_i.iloc[0]
+
+    for nn_j in row_coord_i.nn_info:
+        if nn_j["site"].specie.symbol == metal_atom_symbol:
+            metal_active_site = nn_j["site_index"]
+            metal_active_site_image = nn_j["image"]
+
+
+    return(metal_active_site)
+    # __|
+
+def get_metal_active_site_alt(
+    job_id=None,
+    ads=None,
+    active_site=None,
+    df_coord=None,
+    df_jobs=None,
+    ):
+    """
+    """
+    # | - metal_active_site_alt
+    job_id_0 = job_id
+    ads_0 = ads
+    active_site_0 = active_site
+    df_coord_0 = df_coord
+
+
+
+    num_neighbors = None
+    if ads_0 != "bare":
+        row_coord_i = df_coord_0[
+            df_coord_0.structure_index == active_site]
+        row_coord_i = row_coord_i.iloc[0]
+        num_neighbors = row_coord_i.num_neighbors
+
+
+    metal_active_site = None
+    if ads_0 == "bare" or num_neighbors == 0:
+
+        # print("TEMP TEMP jisd8uyusdf908yhsdf098yh")
+
+        df_other_jobs = get_other_job_ids_in_set(
+            job_id_0, df_jobs=df_jobs,
+            oer_set=True, only_last_rev=True,
+            )
+
+        df = df_other_jobs
+        df = df[
+            (df["ads"] == "o") &
+            (df["active_site"] == "NaN") &
+            [True for i in range(len(df))]
+            ]
+        row_o_jobs = df.iloc[0]
+
+
+
+        name_tmp_i = (
+            row_o_jobs["compenv"], row_o_jobs["slab_id"],
+            row_o_jobs["ads"], row_o_jobs["active_site"],
+            row_o_jobs["att_num"], )
+        df_coord_o = get_df_coord_wrap(name=name_tmp_i, active_site=active_site_0)
+        row_coord = df_coord_o.loc[active_site_0]
+
+        mess_i = "TMP TMP"
+        assert row_coord.neighbor_count[metal_atom_symbol] == 1, mess_i
+
+        # mess_i = "TMP TMP 2"
+        # assert len(row_coord.nn_info) == 1, mess_i
+
+        nn_metal_i = None
+        num_metal_neigh = 0
+        for nn_i in row_coord.nn_info:
+            if nn_i["site"].specie.symbol == metal_atom_symbol:
+                nn_metal_i = nn_i
+                num_metal_neigh += 1
+
+        assert num_metal_neigh < 2, "IDJFSD"
+
+        metal_active_site = nn_metal_i["site_index"]
+
+        metal_active_site = row_coord.nn_info[0]["site_index"]
+
+
+    return(metal_active_site)
+    # __|
+
+
+def get_oxy_images(
+    atoms=None,
+    octahedral_oxygens=None,
+    metal_active_site=None,
+    ):
+    """
+    """
+    # | - get_oxy_images
+    # Creating dictionary mapping each oxygen atom to the image that reconstructs the octahedra
+    # The Iridium atom is assumed to be in the original image (0, 0, 0, )
+    from methods import nearest_atom_mine, get_df_dist_images
+
+    oxy_images = dict()
+    for oxy_i in octahedral_oxygens:
+
+        df_dist_i = get_df_dist_images(
+            atom_A=metal_active_site,
+            atom_B=oxy_i,
+            atoms=atoms,
+            )
+
+        row_dist_i = df_dist_i.loc[
+            df_dist_i.dist_ijk.idxmin()
+            ]
+
+        image_i = row_dist_i.name
+        oxy_images[oxy_i] = image_i
+
+    return(oxy_images)
+    # __|
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # from proj_data import metal_atom_symbol
+# # from methods import get_octahedral_oxygens_from_init, get_df_dist_images
+# #
+# # df_coord=df_coord_0
+# # ads=ads_0
+# # active_site=active_site
+# # metal_active_site=metal_active_site
+# # compenv=compenv
+# # slab_id=slab_id
+# # df_init_slabs=df_init_slabs
+# # atoms=atoms
+#
+# def get_octahedra_oxy_neigh(
+#     # octahedral_oxygens=None,
+#
+#     df_coord=None,
+#     ads=None,
+#     active_site=None,
+#     metal_active_site=None,
+#     compenv=None,
+#     slab_id=None,
+#     att_num=None,
+#     df_init_slabs=None,
+#     atoms=None,
+#     active_site_orig=None,
+#     init_or_final=None,
+#     ):
+#     """
+#     """
+#     # | - get_octahedra_oxy_neigh
+#     # #####################################################
+#     df_coord_i = df_coord
+#     # #####################################################
+#     error_i = False
+#     note_i = ""
+#     # octahedral_oxygens = None
+#     images_from_init = None
+#     octahedral_oxygens_2 = []
+#     octahedral_oxygens_images = []
+#     missing_oxy_neigh = False
+#     too_many_oxy_neigh = False
+#     missing_active_Ir = False
+#
+#     num_oxy_neigh = None
+#     metal_active_site_image = None
+#     missing_active_site = None
+#     oxy_images = dict()
+#     # #####################################################
+#
+#
+#     if metal_active_site is None:
+#         row_coord_i = df_coord_i[
+#             df_coord_i.structure_index == active_site]
+#         row_coord_i = row_coord_i.iloc[0]
+#
+#         for nn_j in row_coord_i.nn_info:
+#             if nn_j["site"].specie.symbol == metal_atom_symbol:
+#                 metal_active_site = nn_j["site_index"]
+#                 metal_active_site_image = nn_j["image"]
+#
+#         if metal_active_site is None:
+#             missing_active_Ir = True
+#             error_i = True
+#
+#     if metal_active_site is not None and metal_active_site_image is None:
+#         from methods import get_df_dist_images
+#         df = get_df_dist_images(
+#             atom_A=active_site,
+#             atom_B=metal_active_site,
+#             atoms=atoms,
+#             )
+#
+#         metal_active_site_image = df.iloc[0].name
+#
+#
+#     # if metal_active_site_image != metal_active_site_image_tmp:
+#     #     print(metal_active_site_image, metal_active_site_image_tmp)
+#
+#     if metal_active_site is not None:
+#         # if octahedral_oxygens is None:
+#         row_coord_i = df_coord_i[
+#             df_coord_i.structure_index == metal_active_site]
+#         row_coord_ir_i = row_coord_i.iloc[0]
+#         octahedral_oxygens = row_coord_ir_i.to_dict()["nn_info"]
+#         octahedral_oxygens_tmp = octahedral_oxygens
+#
+#
+#
+#         oxygens_nn = []
+#         # for nn_i in octahedral_oxygens_tmp:
+#         for nn_i in octahedral_oxygens:
+#             if nn_i["site"].specie.symbol == "O":
+#                 oxygens_nn.append(nn_i)
+#                 octahedral_oxygens_2.append(nn_i["site_index"])
+#                 octahedral_oxygens_images.append(nn_i["image"])
+#
+#         num_oxy_neigh = len(oxygens_nn)
+#
+#         if ads != "bare":
+#             if num_oxy_neigh < 6:
+#                 missing_oxy_neigh = True
+#                 error_i = True
+#         elif ads == "bare":
+#             if num_oxy_neigh < 5:
+#                 missing_oxy_neigh = True
+#                 error_i = True
+#             elif num_oxy_neigh > 5:
+#                 too_many_oxy_neigh = True
+#                 error_i = True
+#         else:
+#             print("Woops, not good sikdjfijsdif987y98sd78978978")
+#
+#
+#         # octahedral_oxygens_from_init, images_from_init = get_octahedral_oxygens_from_init(
+#         #     compenv=compenv,
+#         #     slab_id=slab_id,
+#         #     metal_active_site=metal_active_site,
+#         #     df_init_slabs=df_init_slabs,
+#         #     atoms=atoms,
+#         #     )
+#         # octahedral_oxygens = octahedral_oxygens_from_init
+#
+#         missing_active_site = int(active_site) not in octahedral_oxygens
+#
+#     # oxy_images = get_oxy_images()
+#
+#     # #####################################################
+#     data_dict_out = dict(
+#         oxy_images=oxy_images,
+#         metal_active_site=metal_active_site,
+#         octahedral_oxygens=octahedral_oxygens_2,
+#         num_oxy_neigh=num_oxy_neigh,
+#         missing_oxy_neigh=missing_oxy_neigh,
+#         too_many_oxy_neigh=too_many_oxy_neigh,
+#         missing_active_Ir=missing_active_Ir,
+#         missing_active_site=missing_active_site,
+#         error=error_i,
+#         note=note_i,
+#         )
+#     # #####################################################
+#     return(data_dict_out)
+#     # #####################################################
+#
+#     # __|

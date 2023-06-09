@@ -49,6 +49,7 @@
 import os
 print(os.getcwd())
 import sys
+import time; ti = time.time()
 
 import pickle
 from pathlib import Path
@@ -63,7 +64,15 @@ from methods_features import get_angle_between_surf_normal_and_O_Ir
 # #########################################################
 from local_methods import get_df_coord_local
 from local_methods import get_effective_ox_state
+
+from methods_features import get_octahedra_atoms
+from methods_features import get_octahedral_oxygens_A
+from methods import get_metal_active_site
+
+from proj_data import metal_atom_symbol
 # -
+
+from methods_features import get_more_octahedra_data
 
 pd.set_option("display.max_columns", None)
 # pd.set_option('display.max_rows', None)
@@ -99,10 +108,21 @@ df_bulk = df_bulk.set_index("crystal")
 # print(111 * "TEMP | ")
 
 # df_ads_e = df_ads_e.dropna(axis=0, subset=["active_site__o", "active_site__oh", "active_site__ooh"])
+# -
+
+df_ads_e.shape
+
+# +
+# # TEMP
+# print(111 * "TEMP | ")
+# df_ads_e = df_ads_e.sample(n=10)
 
 # +
 data_dict_list = []
 for name_i, row_i in df_ads_e.iterrows():
+    # print(name_i)
+
+
     # #####################################################
     name_dict_i = dict(zip(
         df_ads_e.index.names,
@@ -165,11 +185,6 @@ for name_i, row_i in df_ads_e.iterrows():
     for key_i in octa_geom_out.keys():
         octa_geom_out[key_i + "__o"] = octa_geom_out.pop(key_i)
 
-    octa_vol_i = get_octa_vol(
-        df_coord_i=df_coord_o_final_i,
-        active_site_j=active_site_o_i,
-        verbose=True,
-        )
 
 
     # #####################################################
@@ -179,6 +194,98 @@ for name_i, row_i in df_ads_e.iterrows():
         df_coord=df_coord_o_final_i,
         active_site=active_site_o_i,
         )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    metal_active_site_i = get_metal_active_site(
+        df_coord=df_coord_o_final_i,
+        active_site=active_site_o_i,
+        metal_atom_symbol=metal_atom_symbol,
+        )
+
+    octahedral_oxygens, octahedral_oxygens_images = get_octahedral_oxygens_A(
+        df_coord=df_coord_o_final_i,
+        metal_active_site=metal_active_site_i,
+        )
+
+    data_out = get_octahedra_atoms(
+        octahedral_oxygens=octahedral_oxygens,
+        df_coord=df_coord_o_final_i,
+        atoms=atoms_o_i,
+        active_site=active_site_o_i,
+        metal_active_site=metal_active_site_i,
+        ads="o",
+        )
+    octahedral_oxygens = data_out["octahedral_oxygens"]
+    missing_active_site = data_out["missing_active_site"]
+
+
+    from methods import get_oxy_images
+    oxy_images_i = get_oxy_images(
+        atoms=atoms_o_i,
+        octahedral_oxygens=octahedral_oxygens,
+        metal_active_site=metal_active_site_i,
+        )
+
+
+    process_further = True
+    if missing_active_site is None:
+        process_further = False
+
+    data_out_2 = dict()
+    if process_further :
+        data_out_2 = get_more_octahedra_data(
+            atoms=atoms_o_i,
+            oxy_images=oxy_images_i,
+            active_site=active_site_o_i,
+            metal_active_site=metal_active_site_i,
+            octahedral_oxygens=octahedral_oxygens,
+            )
+
+
+
+
+
+
+
+
+
+    verbose = True
+    octa_vol_i = get_octa_vol(
+        df_coord_i=df_coord_o_final_i,
+        active_site_j=active_site_o_i,
+
+        octahedra_atoms=octahedral_oxygens,
+        metal_active_site=metal_active_site_i,
+
+        atoms=atoms_o_i,
+        verbose=verbose,
+        )
+
+
+
+
+
 
 
     # #####################################################
@@ -193,9 +300,12 @@ for name_i, row_i in df_ads_e.iterrows():
     # #####################################################
     data_dict_i.update(octa_geom_out)
     data_dict_i.update(name_dict_i)
+    data_dict_i.update(data_out_2)
     # #####################################################
     data_dict_list.append(data_dict_i)
     # #####################################################
+
+    # print("")
 
 # #########################################################
 df_feat = pd.DataFrame(data_dict_list)
@@ -206,6 +316,10 @@ df_features_targets = pd.concat([
     df_ads_e.drop(columns=["O_Ir_frac_ave", ])
     ], axis=1)
 # #########################################################
+
+# +
+# for i in df_features_targets.columns.to_list():
+#     print(i)
 # -
 
 # ### Processing columns
@@ -231,6 +345,9 @@ multicolumn_assignments = {
     "dH_bulk":                 ("features", "dH_bulk", "", ),
     "volume_pa":               ("features", "volume_pa", "", ),
 
+    "oxy_opp_as_bl":                   ("features", "o", "oxy_opp_as_bl", ),
+    "degrees_off_of_straight__as_opp": ("features", "o", "degrees_off_of_straight__as_opp", ),
+
 
     # #######################
     # Targets ###############
@@ -240,6 +357,7 @@ multicolumn_assignments = {
     "g_o":   ("targets", "g_o", "", ),
     "g_oh":  ("targets", "g_oh", "", ),
     "g_ooh": ("targets", "g_ooh", "", ),
+
 
     # #######################
     # Data ##################
@@ -251,6 +369,7 @@ multicolumn_assignments = {
     "active_site__o":      ("data", "active_site__o", "", ),
     "active_site__oh":     ("data", "active_site__oh", "", ),
     "active_site__ooh":    ("data", "active_site__ooh", "", ),
+    "oxy_opposite_as":     ("data", "oxy_opposite_as", "", ),
 
     "stoich":    ("data", "stoich", "", ),
 
@@ -260,6 +379,10 @@ multicolumn_assignments = {
 new_cols = []
 for col_i in df_features_targets.columns:
     new_col_i = multicolumn_assignments.get(col_i, col_i)
+    if col_i not in multicolumn_assignments.keys():
+        print("Oh no, this column needs to be added multicolumn_assignments")
+        print(col_i)
+
     new_cols.append(new_col_i)
 
 idx = pd.MultiIndex.from_tuples(new_cols)
@@ -277,25 +400,23 @@ df_features_targets = df_features_targets.reindex(columns=[
 
 df_features_targets = df_features_targets.sort_index(axis=1)
 
-# new_cols = []
 other_cols = []
 other_feature_cols = []
 ads_feature_cols = []
 for col_i in df_features_targets.columns:
-
     if col_i[0] == "features":
         if col_i[1] in ["o", "oh", "ooh", ]:
-            # print(col_i)
             ads_feature_cols.append(col_i)
         else:
             other_feature_cols.append(col_i)
-
     else:
         other_cols.append(col_i)
 
 df_features_targets = df_features_targets[
     other_cols + other_feature_cols + ads_feature_cols
     ]
+
+df_features_targets
 
 # ### Write data to file
 
@@ -312,77 +433,22 @@ path_i = os.path.join(directory, "df_features_targets.pickle")
 with open(path_i, "wb") as fle:
     pickle.dump(df_features_targets, fle)
 # #########################################################
-# -
+
+# +
+print("df_features_targets.shape:", df_features_targets.shape)
 
 df_features_targets.head()
+# -
+
+# #########################################################
+print(20 * "# # ")
+print("All done!")
+print("Run time:", np.round((time.time() - ti) / 60, 3), "min")
+print("featurize_data.ipynb")
+print(20 * "# # ")
+# #########################################################
 
 # + active=""
 #
 #
 #
-
-# + jupyter={"source_hidden": true}
-# df_features_targets
-
-# + jupyter={"source_hidden": true}
-# # df_features_targets.sort_values([("features", ) ])
-# df_features_targets.columns = df_features_targets.columns.sortlevel()[0]
-
-# + jupyter={"source_hidden": true}
-# df_features_targets
-
-# + jupyter={"source_hidden": true}
-# # df_features_targets = 
-# df_features_targets.reindex(columns=[
-#     # "targets",
-#     # "data",
-#     # "format",
-#     "features",
-#     # "features_pre_dft",
-#     # "features_stan",
-#     ], level=0)
-
-# + jupyter={"source_hidden": true}
-# df_ads_e.index.to_frame().crystal.unique().tolist()
-
-# + jupyter={"source_hidden": true}
-# row_i
-# -
-
-
-
-# + jupyter={"source_hidden": true}
-# assert False
-
-# + jupyter={"source_hidden": true}
-# df_features_targets.columns = df_features_targets.columns.sortlevel()[0]
-
-# + jupyter={"source_hidden": true}
-# df_features_targets
-
-# + jupyter={"source_hidden": true}
-# assert False
-
-# + jupyter={"source_hidden": true}
-# df_features_targets.columns
-
-# + jupyter={"source_hidden": true}
-# df_features_targets["features"]
-
-# + jupyter={"source_hidden": true}
-# assert False
-
-# +
-# df_ads_e
-
-# +
-# df_features_targets
-
-# +
-# assert False
-
-# +
-# df_features_targets["effective_ox_state__o"].tolist()
-
-# +
-# df_features_targets

@@ -139,14 +139,14 @@ shared_axis_dict = dict(
 xaxis_layout = go.layout.XAxis(shared_axis_dict)
 xaxis_layout.update(go.layout.XAxis(
     title=dict(
-        text="ΔG<sub>OH</sub>",
+        text="ΔG<sub>OH</sub> (eV)",
         ),
     ))
 
 yaxis_layout = go.layout.YAxis(shared_axis_dict)
 yaxis_layout.update(go.layout.YAxis(
     title=dict(
-        text="ΔG<sub>O</sub>",
+        text="ΔG<sub>O</sub> (eV)",
         ),
     ))
 

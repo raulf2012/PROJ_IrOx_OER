@@ -2,6 +2,7 @@
 
 
 
+#| - __old__
 
 
 
@@ -95,22 +96,7 @@ echo verbose $verbose
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# __|
 
 
 
@@ -356,12 +342,12 @@ if [[ "$COMPENV" == "wsl" ]]; then
     echo ""
     echo ""
 
-    if [[ $GDRIVE_DAEMON == False ]]; then
-        bash $PROJ_irox_oer/scripts/rclone_commands/rclone_gdrive_dell.sh to_local no_verbose
-    else
-        echo "Skipping $PROJ_irox_oer/scripts/rclone_commands/rclone_gdrive_dell.sh"
-        echo "GDrive is running"
-    fi
+    # if [[ $GDRIVE_DAEMON == False ]]; then
+    #     bash $PROJ_irox_oer/scripts/rclone_commands/rclone_gdrive_dell.sh to_local no_verbose
+    # else
+    #     echo "Skipping $PROJ_irox_oer/scripts/rclone_commands/rclone_gdrive_dell.sh"
+    #     echo "GDrive is running"
+    # fi
 
     end_time_i="$(date -u +%s)"
     elapsed_i="$(($end_time_i-$start_time))"
@@ -1223,40 +1209,40 @@ PROJ_irox_oer__comm_features_update()
 
   # 5jfds7u8ik | Parser Start
 
-  # | - $PROJ_irox_oer/workflow/feature_engineering/octahedra_volume/octa_volume.ipynb
+  # | - $PROJ_irox_oer/workflow/feature_engineering/generate_features/octahedra_volume/octa_volume.ipynb
   echo ""
   echo ""
   echo ""
   echo ""
   echo ""
   echo "****************************************"
-  echo "python $PROJ_irox_oer/workflow/feature_engineering/octahedra_volume/octa_volume.ipynb"
+  echo "python $PROJ_irox_oer/workflow/feature_engineering/generate_features/octahedra_volume/octa_volume.ipynb"
   echo "****************************************"
-  python $PROJ_irox_oer/workflow/feature_engineering/octahedra_volume/octa_volume.py
+  python $PROJ_irox_oer/workflow/feature_engineering/generate_features/octahedra_volume/octa_volume.py
   # __|
 
-  # | - $PROJ_irox_oer/workflow/feature_engineering/oxid_state/oxid_state.ipynb
+  # | - $PROJ_irox_oer/workflow/feature_engineering/generate_features/oxid_state/oxid_state.ipynb
   echo ""
   echo ""
   echo ""
   echo ""
   echo ""
   echo "****************************************"
-  echo "python $PROJ_irox_oer/workflow/feature_engineering/oxid_state/oxid_state.ipynb"
+  echo "python $PROJ_irox_oer/workflow/feature_engineering/generate_features/oxid_state/oxid_state.ipynb"
   echo "****************************************"
-  python $PROJ_irox_oer/workflow/feature_engineering/oxid_state/oxid_state.py
+  python $PROJ_irox_oer/workflow/feature_engineering/generate_features/oxid_state/oxid_state.py
   # __|
 
-  # | - $PROJ_irox_oer/workflow/feature_engineering/active_site_angles/AS_angles.ipynb
+  # | - $PROJ_irox_oer/workflow/feature_engineering/generate_features/active_site_angles/AS_angles.ipynb
   echo ""
   echo ""
   echo ""
   echo ""
   echo ""
   echo "****************************************"
-  echo "python $PROJ_irox_oer/workflow/feature_engineering/active_site_angles/AS_angles.ipynb"
+  echo "python $PROJ_irox_oer/workflow/feature_engineering/generate_features/active_site_angles/AS_angles.ipynb"
   echo "****************************************"
-  python $PROJ_irox_oer/workflow/feature_engineering/active_site_angles/AS_angles.py
+  python $PROJ_irox_oer/workflow/feature_engineering/generate_features/active_site_angles/AS_angles.py
   # __|
 
   # | - $PROJ_irox_oer/workflow/dos_analysis/collect_dos_data.ipynb
@@ -1271,30 +1257,30 @@ PROJ_irox_oer__comm_features_update()
   python $PROJ_irox_oer/workflow/dos_analysis/collect_dos_data.py
   # __|
 
-  # | - $PROJ_irox_oer/workflow/feature_engineering/pdos_features/pdos_feat.ipynb
+  # | - $PROJ_irox_oer/workflow/feature_engineering/generate_features/pdos_features/pdos_feat.ipynb
   echo ""
   echo ""
   echo ""
   echo ""
   echo ""
   echo "****************************************"
-  echo "python $PROJ_irox_oer/workflow/feature_engineering/pdos_features/pdos_feat.ipynb"
+  echo "python $PROJ_irox_oer/workflow/feature_engineering/generate_features/pdos_features/pdos_feat.ipynb"
   echo "****************************************"
-  python $PROJ_irox_oer/workflow/feature_engineering/pdos_features/pdos_feat.py
+  python $PROJ_irox_oer/workflow/feature_engineering/generate_features/pdos_features/pdos_feat.py
   # __|
 
-  # | - $PROJ_irox_oer/workflow/feature_engineering/bader_features/bader_feat.ipynb
+  # | - $PROJ_irox_oer/workflow/feature_engineering/generate_features/bader_features/bader_feat.ipynb
   echo ""
   echo ""
   echo ""
   echo ""
   echo ""
   echo "****************************************"
-  echo "python $PROJ_irox_oer/workflow/feature_engineering/bader_features/bader_feat.ipynb"
+  echo "python $PROJ_irox_oer/workflow/feature_engineering/generate_features/bader_features/bader_feat.ipynb"
   echo "****************************************"
-  python $PROJ_irox_oer/workflow/feature_engineering/bader_features/bader_feat.py
+  python $PROJ_irox_oer/workflow/feature_engineering/generate_features/bader_features/bader_feat.py
 
-  # workflow/feature_engineering/bader_features/bader_feat.py
+  # workflow/feature_engineering/generate_features/bader_features/bader_feat.py
   # __|
 
 
@@ -1396,16 +1382,16 @@ PROJ_irox_oer__comm_plotting_update()
   python $PROJ_irox_oer/workflow/oer_vs_features/oer_lin_model.py
   # __|
 
-  # | - $PROJ_irox_oer/workflow/feature_engineering/scatter_plot_matrix/scatter_plot_matrix.ipynb
+  # | - $PROJ_irox_oer/workflow/feature_engineering/analyse_features/scatter_plot_matrix/scatter_plot_matrix.ipynb
   echo ""
   echo ""
   echo ""
   echo ""
   echo ""
   echo "****************************************"
-  echo "python $PROJ_irox_oer/workflow/feature_engineering/scatter_plot_matrix/scatter_plot_matrix.ipynb"
+  echo "python $PROJ_irox_oer/workflow/feature_engineering/analyse_features/scatter_plot_matrix/scatter_plot_matrix.ipynb"
   echo "****************************************"
-  python $PROJ_irox_oer/workflow/feature_engineering/scatter_plot_matrix/scatter_plot_matrix.py
+  python $PROJ_irox_oer/workflow/feature_engineering/analyse_features/scatter_plot_matrix/scatter_plot_matrix.py
   # __|
 
   # | - $PROJ_irox_oer/workflow/oer_analysis/volcano_1d/volcano_1d.ipynb
@@ -1432,40 +1418,16 @@ PROJ_irox_oer__comm_plotting_update()
   python $PROJ_irox_oer/workflow/oer_analysis/volcano_2d/volcano_2d.py
   # __|
 
-  # | - $PROJ_irox_oer/workflow/feature_engineering/feature_covariance/feat_correlation.ipynb
+  # | - $PROJ_irox_oer/workflow/feature_engineering/analyse_features/feature_covariance/feat_correlation.ipynb
   echo ""
   echo ""
   echo ""
   echo ""
   echo ""
   echo "****************************************"
-  echo "python $PROJ_irox_oer/workflow/feature_engineering/feature_covariance/feat_correlation.ipynb"
+  echo "python $PROJ_irox_oer/workflow/feature_engineering/analyse_features/feature_covariance/feat_correlation.ipynb"
   echo "****************************************"
-  python $PROJ_irox_oer/workflow/feature_engineering/feature_covariance/feat_correlation.py
-  # __|
-
-  # | - $PROJ_irox_oer/workflow/model_building/linear_models/linear_model.ipynb
-  echo ""
-  echo ""
-  echo ""
-  echo ""
-  echo ""
-  echo "****************************************"
-  echo "python $PROJ_irox_oer/workflow/model_building/linear_models/linear_model.ipynb"
-  echo "****************************************"
-  python $PROJ_irox_oer/workflow/model_building/linear_models/linear_model.py
-  # __|
-
-  # | - $PROJ_irox_oer/workflow/model_building/gaussian_process/gaussian_proc.ipynb
-  echo ""
-  echo ""
-  echo ""
-  echo ""
-  echo ""
-  echo "****************************************"
-  echo "python $PROJ_irox_oer/workflow/model_building/gaussian_process/gaussian_proc.ipynb"
-  echo "****************************************"
-  python $PROJ_irox_oer/workflow/model_building/gaussian_process/gaussian_proc.py
+  python $PROJ_irox_oer/workflow/feature_engineering/analyse_features/feature_covariance/feat_correlation.py
   # __|
 
   # 5jfds7u8ik | Parser End

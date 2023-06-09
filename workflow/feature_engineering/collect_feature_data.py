@@ -43,13 +43,13 @@ from methods import (
     get_df_atoms_sorted_ind,
     get_df_jobs_paths,
     get_df_dft,
-
     get_df_octa_vol,
     get_df_eff_ox,
     get_df_angles,
     get_df_pdos_feat,
     get_df_bader_feat,
-
+    get_df_octa_steric,
+    get_df_octa_steric_init,
     get_df_coord,
     )
 # -
@@ -75,7 +75,6 @@ df_atoms_sorted_ind = get_df_atoms_sorted_ind()
 
 df_jobs_paths = get_df_jobs_paths()
 
-
 # Features dataframes
 df_octa_vol = get_df_octa_vol()
 
@@ -86,7 +85,17 @@ df_angles = get_df_angles()
 df_pdos_feat = get_df_pdos_feat()
 
 df_bader_feat = get_df_bader_feat()
+
+# +
+# COMBAK
+
+from methods import get_df_octa_info
+
+df_octa_info = get_df_octa_info()
 # -
+
+df_octa_steric = get_df_octa_steric()
+df_octa_steric_init = get_df_octa_steric_init()
 
 # ### Filtering down to `oer_adsorbate` jobs
 
@@ -105,6 +114,7 @@ df_dict_i = {
     "df_angles": df_angles,
     "df_pdos_feat": df_pdos_feat,
     "df_bader_feat": df_bader_feat,
+    "df_octa_steric": df_octa_steric,
     }
 
 df_features = combine_dfs_with_same_cols(
@@ -281,6 +291,57 @@ df_features = df_features.reindex(
     columns=list(df_features.columns.levels[0]),
     level=0)
 # #########################################################
+# -
+
+# ### Adding octahedra info from `df_octa_info`
+
+# +
+def method(row_i):
+    new_column_values_dict = {
+        "oxy_opp_as_bl": None,
+        }
+
+
+    # row_i = df_features.iloc[0]
+
+    compenv_i = row_i.name[0]
+    slab_id_i = row_i.name[1]
+    ads_i = row_i.name[2]
+    active_site_i = row_i.name[3]
+    att_num_i = row_i.name[4]
+    from_oh_i = row_i.name[5]
+
+    name_octa_info_i = ("final", compenv_i, slab_id_i,
+        ads_i, active_site_i, att_num_i, from_oh_i, )
+
+    row_octa_info = df_octa_info.loc[name_octa_info_i]
+
+    oxy_opp_as_bl_i = row_octa_info.oxy_opp_as_bl
+    degrees_off_of_straight__as_opp = row_octa_info.degrees_off_of_straight__as_opp
+
+    # #####################################################
+    new_column_values_dict["oxy_opp_as_bl"] = oxy_opp_as_bl_i
+    new_column_values_dict["degrees_off_of_straight__as_opp"] = degrees_off_of_straight__as_opp
+    # #####################################################
+    for key, value in new_column_values_dict.items():
+        row_i[("features", key)] = value
+    return(row_i)
+
+df_features = df_features.apply(method, axis=1)
+df_features = df_features.reindex(columns = ["data", "features", ], level=0)
+
+# +
+# df_octa_info
+# df_features.columns
+
+df_features[("features", "as_ir_opp_bl_ratio")] = \
+    df_features.features.active_o_metal_dist / df_features.features.oxy_opp_as_bl
+# -
+
+df_features
+
+# +
+# assert False
 # -
 
 # ### Save data to pickle

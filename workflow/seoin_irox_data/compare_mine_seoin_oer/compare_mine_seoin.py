@@ -182,14 +182,14 @@ fig.show()
 #
 #
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # df_seoin_i.shape
 # df_seoin.shape
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # reg.predict(np.array([[3, 5]]))
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # # Pickling data ###########################################
 # directory = os.path.join(
 #     os.environ["PROJ_irox_oer"],
@@ -203,7 +203,7 @@ fig.show()
 #     pickle.dump(df_features_targets, fle)
 # # #########################################################
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # # df_mine_i = 
 # # df_seoin[
 # #     (df_mine["targets"]["g_oh"] > -1) & \
@@ -213,7 +213,7 @@ fig.show()
 # (df_mine["targets"]["g_oh"] > -1)
 # #     (df_mine["targets"]["g_oh"] < 0.8)
 
-# + jupyter={"source_hidden": true}
+# + jupyter={}
 # X
 # df_mine_i["targets"]
 

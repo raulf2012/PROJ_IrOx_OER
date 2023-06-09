@@ -81,10 +81,10 @@ def get_indices_of_neigh(
         elem_i = nn_i["site"].specie.name
 
         if elem_i == metal_atom_symbol:
-            active_metal_index = nn_i["site_index"]
-            neighbor_metal_indices.append(active_metal_index)
+            metal_active_site = nn_i["site_index"]
+            neighbor_metal_indices.append(metal_active_site)
 
-            df_j = df_coord_slab_i[df_coord_slab_i.structure_index == active_metal_index]
+            df_j = df_coord_slab_i[df_coord_slab_i.structure_index == metal_active_site]
             row_j = df_j.iloc[0]
 
             for nn_j in row_j.nn_info:

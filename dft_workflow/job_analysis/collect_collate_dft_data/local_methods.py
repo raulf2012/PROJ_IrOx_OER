@@ -257,6 +257,7 @@ def get_oer_triplet(
                 from_oh_i = True
 
             i_tmp_2 = (
+                "final",
                 i[0], i[1], i[2],
                 active_site_i,
                 i[4], from_oh_i,
@@ -277,12 +278,12 @@ def get_oer_triplet(
 
         new_indices_o = []
         for name_i, row_i in df_octa_info_i_2.iterrows():
-            compenv = name_i[0]
-            slab_id = name_i[1]
-            ads = name_i[2]
-            active_site = name_i[3]
-            att_num = name_i[4]
-            from_oh = name_i[5]
+            compenv = name_i[1]
+            slab_id = name_i[2]
+            ads = name_i[3]
+            active_site = name_i[4]
+            att_num = name_i[5]
+            from_oh = name_i[6]
 
             if from_oh is False:
                 active_site = "NaN"
@@ -370,6 +371,7 @@ def get_oer_triplet(
         for i in df_ads_oh.index.tolist():
             i_tmp_1 = list(i)
             i_tmp_1.append(True)
+            i_tmp_1 = ["final"] + i_tmp_1
             i_tmp_2 = tuple(i_tmp_1)
             new_index.append(i_tmp_2)
 
@@ -377,9 +379,15 @@ def get_oer_triplet(
 
         df_octa_info_i_2 = df_octa_info_i[df_octa_info_i.error == False]
 
+
+        # new_index_oh = []
+        # for i in df_octa_info_i_2.index.tolist():
+        #     new_index_oh.append(tuple(list(i)[0:-1]))
+
         new_index_oh = []
         for i in df_octa_info_i_2.index.tolist():
-            new_index_oh.append(tuple(list(i)[0:-1]))
+            new_index_oh.append(tuple(list(i)[1:-1]))
+
 
 
 

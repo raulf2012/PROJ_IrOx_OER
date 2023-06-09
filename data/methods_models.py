@@ -6,12 +6,17 @@ import os
 import copy
 
 import pickle
+import random
 
 import numpy as np
+# np.warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
+np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 import pandas as pd
 
 # SciKitLearn
 from sklearn.decomposition import PCA
+
+from abc import ABC, abstractmethod
 
 # Catlearn
 from catlearn.regression.gaussian_process import GaussianProcess
@@ -24,68 +29,313 @@ from catlearn.preprocess.scaling import standardize
 from IPython.display import display
 # __|
 
-from abc import ABC, abstractmethod
+from sklearn.metrics import r2_score
+from sklearn import svm
+
+from sklearn.linear_model import LinearRegression
+
+import plotly.graph_objs as go
 
 
-class ModelAgent:
-    """
-    I'm going to construct this class to encapsulate all model building, running, etc.
 
-    """
-
-    # | - ModelAgent
-
-class ModelWorkflow:
-    """Encapsulates everything to do with running a regression workflow, including training
+class ModelAgent_Plotter:
+    """Plotting class for ModelAgent regression workflows.
     """
 
-    # | - ModelWorkflow
-
-
-    # df_data=df_features_targets
+    # | - ModelAgent_Plotter
 
     def __init__(self,
-        df_data=None,
-
-        adsorbates=None,
+        ModelAgent=None,
+        layout_shared=None,
         ):
         """
         Parameters
         ----------
-        df_data : pandas.core.frame.DataFrame
-            Main dataframe continaing all training data, features, outputs, etc.
-        adsorbates : list of strings
-            List of possible adsorbates
-            ["o", "oh", "bare", ]
-
+        ModelAgent : ModelAgent instance
+            Instance of ModelAgent class
         """
         # | - __init__
         # #################################################
-        self.df_data__init = df_data
-        self.adsorbates = adsorbates
+        self.ModelAgent = ModelAgent
+        self.layout_shared = layout_shared
+        # #################################################
+
+        # #################################################
+
+        # __|
+
+
+    def plot_residuals(self):
+        """
+        """
+        #| - plot_residuals
+        # #################################################
+        MA = self.ModelAgent
+        layout_shared = self.layout_shared
+        # #################################################
+        df_predict = MA.df_predict
+        # #################################################
+
+
+        # | - layout
+        layout = go.Layout(
+
+            xaxis=go.layout.XAxis(
+                title=go.layout.xaxis.Title(
+                    font=None,
+                    text="Systems",
+                    ),
+                ),
+
+            yaxis=go.layout.YAxis(
+                title=go.layout.yaxis.Title(
+                    font=None,
+                    text="Residuals (eV)",
+                    ),
+                ),
+
+            )
+        # __|
+
+
+        layout.update(dict1=layout_shared)
+
+        df_predict["error_abs"] = df_predict.error.abs()
+
+
+        trace = go.Scatter(
+            y=df_predict.sort_values("error_abs", ascending=False).error_abs
+            )
+        data = [trace]
+
+        fig = go.Figure(data=data, layout=layout)
+        # fig.show()
+
+
+        # #################################################
+        self.plot_residuals__PLT = fig
+        # #################################################
+        # __|
+
+    def _plot_parity(self, df_predict):
+        """
+        """
+        # | - plot_parity_infold
+        # #################################################
+        MA = self.ModelAgent
+        layout_shared = self.layout_shared
+        # #################################################
+        # df_predict = MA.RW_infold.df_predict
+        target_ads = MA.target_ads
+        # #################################################
+
+
+        max_val = df_predict[["prediction", "actual"]].max().max()
+        min_val = df_predict[["prediction", "actual"]].min().min()
+
+        dd = 0.1
+
+        trace_parity = go.Scatter(
+            y=[min_val - 2 * dd, max_val + 2 * dd],
+            x=[min_val - 2 * dd, max_val + 2 * dd],
+            mode="lines",
+            name="Parity line",
+            line_color="black",
+            )
+
+        trace_i = go.Scatter(
+            y=df_predict["actual"],
+            x=df_predict["prediction"],
+            mode="markers",
+            name="CV Regression",
+            # opacity=0.8,
+            opacity=1.,
+            marker=dict(
+                # color=df_predict["color"],
+                # **scatter_marker_props.to_plotly_json(),
+                ),
+            )
+
+
+        # #################################################
+        layout_mine = go.Layout(
+
+            showlegend=True,
+
+            yaxis=go.layout.YAxis(
+                range=[min_val - dd, max_val + dd],
+                title=dict(
+                    text="Simulated ΔG<sub>*{}</sub>".format(target_ads.upper()),
+                    ),
+                ),
+
+            xaxis=go.layout.XAxis(
+                range=[min_val - dd, max_val + dd],
+                title=dict(
+                    text="Predicted ΔG<sub>*{}</sub>".format(target_ads.upper()),
+                    ),
+                ),
+
+            )
+
+
+        # #########################################################
+        layout_shared_i = copy.deepcopy(layout_shared)
+        layout_shared_i = layout_shared_i.update(layout_mine)
+
+        # data = [trace_parity, trace_i, trace_j]
+        data = [trace_parity, trace_i, ]
+
+        fig = go.Figure(data=data, layout=layout_shared_i)
+
+        # fig.show()
+
+        return(fig)
+
+        # self.plot_parity_infold__PLT = fig
+        # __|
+
+    def plot_parity(self):
+        """
+        """
+        # | - plot_parity_infold
+        # #################################################
+        MA = self.ModelAgent
+        # #################################################
+        df_predict = MA.df_predict
+        # #################################################
+        _plot_parity = self._plot_parity
+        # #################################################
+
+
+        fig = _plot_parity(df_predict)
+
+        self.plot_parity__PLT = fig
+        # __|
+
+    def plot_parity_infold(self):
+        """
+        """
+        # | - plot_parity_infold
+        # #################################################
+        MA = self.ModelAgent
+        # layout_shared = self.layout_shared
+        # #################################################
+        df_predict = MA.RW_infold.df_predict
+        # target_ads = MA.target_ads
+        # #################################################
+        _plot_parity = self._plot_parity
+        # #################################################
+
+
+        fig = _plot_parity(df_predict)
+
+        self.plot_parity_infold__PLT = fig
+        # __|
+
+    #__|
+
+class ModelAgent:
+    """I'm going to construct this class to encapsulate all model building, running, etc.
+    """
+
+    # | - ModelAgent **************************************
+
+    def __init__(self,
+        df_features_targets=None,
+        Regression=None,
+        Regression_class=None,
+
+        use_pca=False,
+        num_pca=None,
+        adsorbates=None,
+        stand_targets=False,
+        ):
+        """
+        Parameters
+        ----------
+        df_features_targets : pandas.core.frame.DataFrame
+            Main dataframe continaing all training data, features, outputs, etc.
+        Regression : RegressionModel (GP_Regression, SVR_Regression, etc.)
+            Regression model class, will take care of training and prediction
+        Regression_class : Uninstantiated RegressionModel (GP_Regression, SVR_Regression, etc.)
+            Regression model class object, not instantiated, will be used to instantiate different instances of the Regression class for various purposes
+        use_pca : boolean
+            Whether to use PCA decomposition on features
+        num_pca : integer
+            Number of PCA components
+        adsorbates : list of strings
+            List of possible adsorbates
+            ["o", "oh", "bare", ]
+        stand_targets : boolean
+            Whether to standardize targets for regression (subtract mean, normalize by std. dev.)
+        """
+        #| - __init__
+        # #################################################
+        self._df_features_targets__init = df_features_targets
+        self.Regression = Regression
+        self.Regression_class = Regression_class
+        self._use_pca = use_pca
+        self.num_pca = num_pca
+        self._adsorbates = adsorbates
+        self._stand_targets = stand_targets
         # #################################################
         self.percent_reduction = None
-        # self.PCA_instance = None
-        # self.__TEMP = None
+        self.cv_data = None
+        self.RW_infold = None
+        self.mae_infold = None
+        self.mae = None
+        self.r2 = None
+        self.target_ads = None
+        self.PCA_infold = None
+        self.df_pca_comp = None
+        self.can_run = None
         # #################################################
 
+
+        # print(111 * "TEMP | ")
+
         # Process dataframe
-        df_data = self._process_df_data()
-        self.df_data = df_data
-        #__|
+        df_features_targets = self._process_df_data()
+        self.df_features_targets = df_features_targets
+
+        self._get_target_col_ads()
+
+        self._check_if_can_run()
+        # __|
 
 
+    def _check_if_can_run(self):
+        """Checking whether there are enough feature columns for PCA analysis
+        """
+        # | - _check_if_can_run
+        # #################################################
+        df_features_targets = self.df_features_targets
+        num_pca = self.num_pca
+        use_pca = self._use_pca
+        # #################################################
+
+        can_run = True
+        if df_features_targets.features.shape[1] < num_pca:
+            if use_pca:
+                can_run = False
+
+
+        # #################################################
+        self.can_run = can_run
+        # #################################################
+        # __|
 
     def _process_df_data(self):
         """Tue Jun  8 15:16:47 PDT 2021
         """
         # | - _process_df_data
         # #################################################
-        df_data__init = self.df_data__init
-        adsorbates = self.adsorbates
+        df_features_targets__init = self._df_features_targets__init
+        adsorbates = self._adsorbates
         # #################################################
 
-        df_data = copy.deepcopy(df_data__init)
+        df_data = copy.deepcopy(df_features_targets__init)
 
         # | - Create df_cols
         data_dict_list = []
@@ -110,8 +360,6 @@ class ModelWorkflow:
         # TEMP
         if all_cols_are_len_3:
             tmp = 42
-
-
 
         #| - Generate new columns from old
         new_cols = []
@@ -147,7 +395,7 @@ class ModelWorkflow:
                         if not col_lev_j == "":
                             col_levs.append(col_lev_j)
                 else:
-                    Print("Woops")
+                    print("Woops")
 
                 new_col_i = tuple(col_levs)
 
@@ -172,53 +420,525 @@ class ModelWorkflow:
         percent_reduction = np.abs(percent_reduction)
 
 
+        # #################################################
+        # Remove columns that have 0 variance
+        df_data_3 = copy.deepcopy(df_data_2)
+
+        for col_i in df_data_2.features.columns:
+            std_i = df_data_3.features[col_i].std()
+
+            if std_i == 0:
+                print('Removing column "{0}" because it has a standard deviation of 0'.format(col_i))
+                df_data_3 = df_data_3.drop(columns=[("features", col_i, )])
 
 
         # #################################################
         self.percent_reduction = percent_reduction
         # #################################################
-        return(df_data_2)
+        return(df_data_3)
         # #################################################
         # __|
 
-    def _run_pca(self, num_pca=None):
+
+    def _run_pca(self,
+        df_data,
+        df_test=None,
+        num_pca=None,
+        ):
         """Tue Jun  8 22:16:54 PDT 2021
         """
         # | - run_pca
-        # #################################################
-        df_data = self.df_data
-        # #################################################
-
         pca_out_dict = process_pca_analysis(
             df_features_targets=df_data,
+            df_test=df_test,
             num_pca_comp=num_pca,
             )
-        pca = pca_out_dict["pca"]
-        df_pca = pca_out_dict["df_pca"]
+        PCA = pca_out_dict["PCA"]
+        df_pca_train = pca_out_dict["df_pca_train"]
+        df_pca_test = pca_out_dict["df_pca_test"]
 
-        # self.PCA_instance = pca
 
-
-        return(df_pca)
+        return(df_pca_train, df_pca_test, PCA)
         # __|
 
 
-    def temp_method(self):
-        """Tue Jun  8 15:16:47 PDT 2021
+    # self = MA
+    # k_fold_partition_size=100
+    # from methods_models import RegressionWorkflow
+
+    def _run_kfold_cv_workflow__run_infold(self):
+        """Thu Jun 10 16:03:57 PDT 2021
         """
-        # | - temp_method
-        tmp = 2 + 2
+        # | - _run_kfold_cv_workflow__run_infold
+        # #################################################
+        df_features_targets = self.df_features_targets
+        Regression = self.Regression
+        Regression_class = self.Regression_class
+        use_pca = self._use_pca
+        num_pca = self.num_pca
+        stand_targets = self._stand_targets
+        # #################################################
+        _standardize_train_test = self._standardize_train_test
+        # #################################################
+        init_params = Regression.init_params
+        # #################################################
+
+
+        df_data = df_features_targets
+
+        df_train = df_data
+        df_test = df_data
+
+        df_train_std, df_test_std = \
+            _standardize_train_test(
+                df_train,
+                df_test=df_test,
+                stand_targets=stand_targets,
+                )
+        df_train_final = df_train_std
+        df_test_final = df_test_std
+
+
+        if use_pca:
+            df_pca_train, df_pca_test, PCA = \
+                self._run_pca(df_train, df_test=df_test, num_pca=num_pca)
+            df_train_final = df_pca_train
+            df_test_final = df_pca_test
+
+        # #############################################
+        # Running regression workflow
+        RC = Regression_class(**init_params)
+
+        RW_infold = RegressionWorkflow(
+            df_data=df_train_final,
+            Regression=RC,
+            )
+        RW_infold.run_Regression()
+
+        RW_infold.predict(df_test_final.features, df_test_final.targets)
+
+        df_predict = RW_infold.df_predict
+        mae_infold = df_predict.error.abs().mean()
+
+
+        # #################################################
+        self.RW_infold = RW_infold
+        self.mae_infold = mae_infold
+        self.PCA_infold = PCA
+        # #################################################
         # __|
 
-    # __|
+
+    # import random
+    #
+    # self = MA
+    # k_fold_partition_size=100
+    # from methods_models import RegressionWorkflow
+
+    def _run_kfold_cv_workflow__get_cv_data(self,
+        k_fold_partition_size=None,
+        ):
+        """Wed Jun  9 20:48:08 PDT 2021
+        """
+        # | - _run_kfold_cv_workflow__get_cv_data
+        # #################################################
+        df_features_targets = self.df_features_targets
+        Regression = self.Regression
+        Regression_class = self.Regression_class
+        use_pca = self._use_pca
+        num_pca = self.num_pca
+        stand_targets = self._stand_targets
+        # #################################################
+        _standardize_train_test = self._standardize_train_test
+        # #################################################
+        init_params = Regression.init_params
+        # #################################################
 
 
+        df_data = df_features_targets
+
+        df_train = df_data
+        df_test = df_data
+
+        df_train_std, df_test_std = \
+            _standardize_train_test(
+                df_train,
+                df_test=df_test,
+                stand_targets=stand_targets,
+                )
+        df_train_final = df_train_std
+        df_test_final = df_test_std
+
+
+        if use_pca:
+            df_pca_train, df_pca_test, PCA = \
+                self._run_pca(df_train, df_test=df_test, num_pca=num_pca)
+            df_train_final = df_pca_train
+            df_test_final = df_pca_test
+
+        # #############################################
+        # Running regression workflow
+        RC = Regression_class(**init_params)
+
+        RW_infold = RegressionWorkflow(
+            df_data=df_train_final,
+            Regression=RC,
+            )
+        RW_infold.run_Regression()
+
+        RW_infold.predict(df_test_final.features, df_test_final.targets)
+
+        df_predict = RW_infold.df_predict
+        mae_infold = df_predict.error.abs().mean()
+
+
+        #| - Creating k-fold partitions
+        indices = df_data.index.tolist()
+        random.shuffle(indices)
+
+        partitions = []
+        for i in range(0, len(indices), k_fold_partition_size):
+            slice_item = slice(i, i + k_fold_partition_size, 1)
+            partitions.append(indices[slice_item])
+        #__|
+
+        #| - Run k-fold cross-validation
+        cv_data = dict()
+        for part_i, test_partition in enumerate(partitions):
+            train_partition = partitions[0:part_i] + partitions[part_i + 1:]
+            train_partition = [item for sublist in train_partition for item in sublist]
+
+            df_test = df_data.loc[test_partition]
+            df_train = df_data.loc[train_partition]
+
+            df_train_std, df_test_std = \
+                _standardize_train_test(
+                    df_train,
+                    df_test=df_test,
+                    stand_targets=stand_targets,
+                    )
+            df_train_final = df_train_std
+            df_test_final = df_test_std
+
+
+            if use_pca:
+                df_pca_train, df_pca_test, PCA = \
+                    self._run_pca(df_train, df_test=df_test, num_pca=num_pca)
+                df_train_final = df_pca_train
+                df_test_final = df_pca_test
+
+
+            # #############################################
+            # Running regression workflow
+            RC = Regression_class(**init_params)
+
+            RW = RegressionWorkflow(
+                df_data=df_train_final,
+                Regression=RC,
+                )
+            RW.run_Regression()
+
+            RW.predict(df_test_final.features, df_test_final.targets)
+
+
+
+            # #############################################
+            data_dict_i = dict()
+            # #############################################
+            data_dict_i["RegressionWorkflow"] = RW
+            data_dict_i["df_train"] = df_train_final
+            data_dict_i["df_test"] = df_test_final
+            # #############################################
+            cv_data[part_i] = data_dict_i
+            # #############################################
+            # __|
+
+
+        # #################################################
+        self.cv_data = cv_data
+        # #################################################
+        # __|
+
+
+    def _run_kfold_cv_workflow__process_df_predict(self,
+        ):
+        """Wed Jun  9 20:56:08 PDT 2021
+        """
+        # | - _run_kfold_cv_workflow__get_cv_data
+        # #################################################
+        cv_data = self.cv_data
+        # #################################################
+
+
+        df_predict_list = []
+        for ind_i, cv_data_i in cv_data.items():
+            RW = cv_data_i["RegressionWorkflow"]
+
+            df_predict_i = RW.df_predict
+            df_predict_list.append(df_predict_i)
+
+        df_predict_comb = pd.concat(df_predict_list)
+
+        mae = np.abs(df_predict_comb.error).mean()
+
+
+
+        # Calculate R2 metric
+        r2 = r2_score(
+            df_predict_comb.actual,
+            df_predict_comb.prediction,
+            )
+
+        # #################################################
+        self.df_predict = df_predict_comb
+        self.mae = mae
+        self.r2 = r2
+        # #################################################
+        # __|
+
+
+    # self = MA
+    # k_fold_partition_size=30
+
+    def run_kfold_cv_workflow(self,
+        k_fold_partition_size=None,
+        ):
+        """Wed Jun  9 20:48:08 PDT 2021
+        """
+        # | - run_kfold_cv_workflow
+        # #################################################
+        can_run = self.can_run
+        # #################################################
+        _run_kfold_cv_workflow__get_cv_data = \
+            self._run_kfold_cv_workflow__get_cv_data
+        _run_kfold_cv_workflow__process_df_predict = \
+            self._run_kfold_cv_workflow__process_df_predict
+        _run_kfold_cv_workflow__run_infold = \
+            self._run_kfold_cv_workflow__run_infold
+        # #################################################
+
+        if can_run:
+            _run_kfold_cv_workflow__run_infold()
+
+            _run_kfold_cv_workflow__get_cv_data(
+                k_fold_partition_size=k_fold_partition_size,
+                )
+
+            _run_kfold_cv_workflow__process_df_predict()
+        else:
+            print("Can't run workflow, check 'can_run'")
+        # __|
+
+
+    # self=MA
+    # df_train=df_train
+    # df_test=df_test
+
+    def _standardize_train_test(self,
+        df_train,
+        df_test=None,
+        stand_targets=False,
+        ):
+        """Wed Jun  9 20:34:05 PDT 2021
+        """
+        # | - _standardize_train_test
+
+        # Standardize training data first
+        df_train_feat = df_train["features"]
+        df_train_targets = df_train["targets"]
+
+
+        df_train_feat_std = (df_train_feat - df_train_feat.mean()) / df_train_feat.std()
+        df_train["features"] = df_train_feat_std
+
+        if stand_targets:
+            df_train_targets_std = (df_train_targets - df_train_targets.mean()) / df_train_targets.std()
+            df_train["targets"] = df_train_targets_std
+
+        if df_test is not None:
+            # Standardize testing data using mean and std from training set
+            df_test_feat = df_test["features"]
+            df_test_targets = df_test["targets"]
+
+
+            df_test_feat_std = (df_test_feat - df_train_feat.mean()) / df_train_feat.std()
+            df_test["features"] = df_test_feat_std
+
+            if stand_targets:
+                df_test_targets_std = \
+                    (df_test_targets - df_train_targets.mean()) / df_train_targets.std()
+                df_test["targets"] = df_test_targets_std
+
+
+            out_tuple = (df_train, df_test)
+        else:
+            out_tuple = (df_train, )
+
+        return(out_tuple)
+        # __|
+
+
+    def _get_target_col_ads(self):
+        """Sun Jun 13 18:00:19 PDT 2021
+        """
+        # | - _get_target_col_ads
+        # #################################################
+        df_features_targets = self.df_features_targets
+        # #################################################
+
+
+        target_col = df_features_targets.targets.columns[0]
+
+        ads = None
+        if target_col == "g_oh":
+            ads = "oh"
+        elif target_col == "g_o":
+            ads = "o"
+
+        # #################################################
+        self.target_ads = ads
+        # #################################################
+        # __|
+
+
+    def run_pca_analysis(self):
+        """
+        """
+        # | - run_pca_analysis
+        # #################################################
+        PCA = self.PCA_infold
+        df_features_targets = self.df_features_targets
+        # #################################################
+        # #################################################
+
+
+        verbose = True
+
+        if verbose:
+            print("Explained variance percentage")
+            print(40 * "-")
+            tmp = [print(100 * i) for i in PCA.explained_variance_ratio_]
+            print("")
+
+        df_pca_comp = pd.DataFrame(
+            abs(PCA.components_),
+            columns=list(df_features_targets.features.columns),
+            )
+
+        # if verbose:
+        #     display(df_pca_comp)
+
+        if verbose:
+            for i in range(df_pca_comp.shape[0]):
+                print(40 * "-")
+                print(i)
+                print(40 * "-")
+
+                df_pca_comp_i = df_pca_comp.loc[i].sort_values(ascending=False)
+
+                print(df_pca_comp_i.iloc[0:4].to_string())
+                print("")
+
+
+        # #################################################
+        self.df_pca_comp = df_pca_comp
+        # #################################################
+        # __|
+
+
+    def cleanup_for_pickle(self):
+        """Tue Jun 15 19:01:55 PDT 2021
+        """
+        # | - cleanup_for_pickle
+        # #################################################
+        cv_data = self.cv_data
+        # #################################################
+
+        if cv_data is not None:
+            for cv_ind_i, cv_data_i in cv_data.items():
+                RW = cv_data_i["RegressionWorkflow"]
+
+                Regression = RW.Regression
+                Regression.cleanup_for_pickle()
+        else:
+            print("cv_data is None, can't clean")
+        # __|
+
+    # __| *************************************************
+
+class RegressionWorkflow:
+    """Encapsulates everything to do with running a regression workflow, including training and prediction and all analysis
+    """
+
+    # | - RegressionWorkflow ******************************
+
+
+    # df_data=df_features_targets
+
+    def __init__(self,
+        df_data=None,
+        Regression=None,
+        ):
+        """
+        Parameters
+        ----------
+        df_data : pandas.core.frame.DataFrame
+            Main dataframe continaing all training data, features, outputs, etc.
+        Regression : RegressionModel (GP_Regression, SVR_Regression, etc.)
+            Regression model class, will take care of training and prediction
+        """
+        # | - __init__
+        # #################################################
+        self.df_data = df_data
+        self.Regression = Regression
+        # #################################################
+        self.df_predict = None
+        # #################################################
+
+        #__|
+
+    def run_Regression(self):
+        """Wed Jun  9 00:30:03 PDT 2021
+        """
+        # | - run_Regression
+        # #################################################
+        df_data = self.df_data
+        Regression = self.Regression
+        # #################################################
+
+
+        # Run regression (train model)
+        Regression.run_regression(
+            train_features=df_data.features,
+            train_targets=df_data.targets,
+            )
+        # __|
+
+    def predict(self, df_features, df_targets=None):
+        """Wed Jun  9 10:11:15 PDT 2021
+        """
+        # | - run_Regression
+        # #################################################
+        Regression = self.Regression
+        # #################################################
+
+
+        df_predict = Regression.predict(df_features, df_targets=df_targets)
+
+        self.df_predict = df_predict
+        # __|
+
+    # __| *************************************************
+
+
+# #########################################################
+# Regression model classes
+# #########################################################
 
 class RegressionModel_2(ABC):
-    """
-    """
+    """Generic regression model parent class"""
 
-    # | - RegressionModel_2
+    # | - RegressionModel_2 *******************************
     print("RegressionModel_2 will eventually replace  RegressionModel_1")
 
     def __init__(self):
@@ -236,11 +956,10 @@ class RegressionModel_2(ABC):
     def predict_wrap(self):
         """Regression method specific method to carry out prediction"""
 
-    # @property
-    # @abstractmethod
+
     def predict(self,
-        test_features,
-        test_targets=None,
+        df_features,
+        df_targets=None,
         ):
         """
         """
@@ -250,16 +969,13 @@ class RegressionModel_2(ABC):
         #################################################
 
 
-        df_predict = predict_wrap(
-            test_features,
-            test_targets=test_targets,
-            )
+        df_predict = predict_wrap(df_features)
 
         # | - Attach actual target values if test_targets is given
-        if test_targets is not None:
-            test_targets.columns = ["actual"]
+        if df_targets is not None:
+            df_targets.columns = ["actual"]
 
-            df_predict = pd.concat([df_predict, test_targets], axis=1)
+            df_predict = pd.concat([df_predict, df_targets], axis=1)
             df_predict["error"] = df_predict.prediction - df_predict.actual
 
             df_predict_cols = df_predict.columns.tolist()
@@ -275,16 +991,14 @@ class RegressionModel_2(ABC):
         # __|
 
 
-    # __|
+    # __| *************************************************
 
 class GP_Regression(RegressionModel_2):
-    """
-    """
+    """Gaussian Process Regression class"""
 
-    # | - GP_Regression
+    # | - GP_Regression ***********************************
 
     def __init__(self,
-
         kernel_list=None,
         regularization=None,
         optimize_hyperparameters=None,
@@ -294,7 +1008,6 @@ class GP_Regression(RegressionModel_2):
 
         """
         # | - __init__
-
         # #################################################
         self.kernel_list = kernel_list
         self.regularization = regularization
@@ -302,11 +1015,18 @@ class GP_Regression(RegressionModel_2):
         self.scale_data = scale_data
         # #################################################
         self.model = None
+        self.init_params = None
         # #################################################
 
 
         # Inherit all methods and properties from parent RegressionModel class
         super().__init__()
+
+        init_params = dict(
+            kernel_list=kernel_list, regularization=regularization,
+            optimize_hyperparameters=optimize_hyperparameters, scale_data=scale_data,
+            )
+        self.init_params = init_params
         #__|
 
 
@@ -321,6 +1041,11 @@ class GP_Regression(RegressionModel_2):
         scale_data = self.scale_data
         # #################################################
 
+        # GP = GaussianProcess(
+        #     kernel_list=kdict, regularization=noise, train_fp=train_features,
+        #     train_target=train_target, optimize_hyperparameters=False,
+        #     scale_data=False,
+        #     )
 
         GP = GaussianProcess(
             kernel_list=kernel_list,
@@ -347,10 +1072,9 @@ class GP_Regression(RegressionModel_2):
     # test_features=df_data.features
     # test_targets=df_data.targets
 
-    # def predict(self,
     def predict_wrap(self,
-        test_features,
-        test_targets=None,
+        df_features,
+        # df_targets=None,
         ):
         """
         """
@@ -360,7 +1084,7 @@ class GP_Regression(RegressionModel_2):
         # #################################################
 
         prediction = model.predict(
-            test_fp=test_features,
+            test_fp=df_features,
             uncertainty=True,
             )
 
@@ -370,86 +1094,604 @@ class GP_Regression(RegressionModel_2):
         df_predict["uncertainty"] = prediction["uncertainty"]
         df_predict["uncertainty_with_reg"] = prediction["uncertainty"]
 
-        df_predict.index = test_features.index
+        df_predict.index = df_features.index
+
+        return(df_predict)
+        # __|
+
+    def cleanup_for_pickle(self):
+        """
+        """
+        # | - cleanup_for_pickle
+        model = self.model
+
+        model.cinv = "I replaced this attribute because it causes the pickle to balloon in storage"
+
+        self.model = model
+        # __|
+
+    # __| *************************************************
+
+class SVR_Regression(RegressionModel_2):
+    """Support Vector Regression class"""
+
+    # | - SVR_Regression **********************************
+
+    def __init__(self,
+        # kernel_list=None,
+        # regularization=None,
+        # optimize_hyperparameters=None,
+        # scale_data=None,
+        ):
+        """
+
+        """
+        # | - __init__
+        # #################################################
+        # self.kernel_list = kernel_list
+        # self.regularization = regularization
+        # self.optimize_hyperparameters = optimize_hyperparameters
+        # self.scale_data = scale_data
+        # #################################################
+        self.model = None
+        self.init_params = None
+        # #################################################
+
+
+        # Inherit all methods and properties from parent RegressionModel class
+        super().__init__()
+
+        init_params = dict(
+            # kernel_list=kernel_list, regularization=regularization,
+            # optimize_hyperparameters=optimize_hyperparameters, scale_data=scale_data,
+            )
+        self.init_params = init_params
+        #__|
+
+
+    # train_features=df_data.features
+    # train_targets=df_data.targets
+
+    def run_regression(self, train_features, train_targets):
+        """
+        """
+        # | - run_regression
+        # #################################################
+        # #################################################
+
+        model_SVR = svm.SVR(
+            kernel='rbf',
+            degree=3,
+            # gamma='scale',
+            gamma='auto',
+            coef0=0.0,
+            tol=0.001,
+            C=1.0,
+            epsilon=0.1,
+            shrinking=True,
+            cache_size=200,
+            verbose=False,
+            max_iter=-1,
+            )
+
+        model_SVR.fit(train_features, train_targets.values.ravel())
+
+        # #################################################
+        self.model = model_SVR
+        # #################################################
+        # __|
+
+    # test_features=df_data.features
+    # test_targets=df_data.targets
+
+    def predict_wrap(self,
+        df_features,
+        # df_targets=None,
+        ):
+        """
+        """
+        # | - predict_wrap
+        # #################################################
+        model = self.model
+        # #################################################
+
+        # prediction = model.predict(
+        #     test_fp=df_features,
+        #     uncertainty=True,
+        #     )
+
+        prediction = model.predict(
+            # test_fp=df_features,
+            df_features,
+            # uncertainty=True,
+            )
+
+        # Construct dataframe of predictions
+        df_predict = pd.DataFrame()
+        df_predict["prediction"] = prediction
+        # df_predict["prediction"] = prediction["prediction"].flatten()
+        # df_predict["uncertainty"] = prediction["uncertainty"]
+        # df_predict["uncertainty_with_reg"] = prediction["uncertainty"]
+
+        df_predict.index = df_features.index
 
         return(df_predict)
         # __|
 
 
-    # __|
+    def cleanup_for_pickle(self):
+        """
+        """
+        # | - cleanup_for_pickle
+        print("COMBAK Not implemented")
 
-class SVR_Regression(RegressionModel_2):
-    """
-    """
+        # model = self.model
+        #
+        # model.cinv = "I replaced this attribute because it causes the pickle to balloon in storage"
+        #
+        # self.model = model
+        # __|
 
-    # | - SVR_Regression
+    # __| *************************************************
 
-    # def __init__(self):
-    #     """
-    #
-    #     """
-    #     # | - __init__
-    #     # #################################################
-    #     # self.kernel_list = kernel_list
-    #     # self.regularization = regularization
-    #     # self.optimize_hyperparameters = optimize_hyperparameters
-    #     # self.scale_data = scale_data
-    #     # #################################################
-    #     # self.model = None
-    #     # #################################################
-    #
-    #
-    #     # Inherit all methods and properties from parent RegressionModel class
-    #     super().__init__()
-    #     #__|
+class Linear_Regression(RegressionModel_2):
+    """Linear Regression class"""
+
+    # | - Linear_Regression *******************************
+
+    def __init__(self,
+        # kernel_list=None,
+        # regularization=None,
+        # optimize_hyperparameters=None,
+        # scale_data=None,
+        ):
+        """
+
+        """
+        # | - __init__
+        # #################################################
+        # #################################################
+        self.model = None
+        self.init_params = None
+        # #################################################
 
 
-    # def run_regression(self, train_features, train_targets):
-    #     """
-    #     """
-    #     # | - run_regression
-    #     # #################################################
+        # Inherit all methods and properties from parent RegressionModel class
+        super().__init__()
+
+        init_params = dict(
+            # kernel_list=kernel_list, regularization=regularization,
+            # optimize_hyperparameters=optimize_hyperparameters, scale_data=scale_data,
+            )
+        self.init_params = init_params
+        #__|
+
+
+    # from sklearn.linear_model import LinearRegression
     #
-    #     # #################################################
-    #
-    #
-    #
-    #     # self.model = model
-    #     # __|
+    # train_features=df_data.features
+    # train_targets=df_data.targets
+
+    def run_regression(self, train_features, train_targets):
+        """
+        """
+        # | - run_regression
+        # #################################################
+        # #################################################
+
+
+        X = train_features.to_numpy()
+        X = X.reshape(-1, X.shape[1])
+
+
+        model = LinearRegression()
+        model.fit(X, train_targets)
+
+        self.model = model
+        # __|
 
 
     # test_features=df_data.features
     # test_targets=df_data.targets
 
-    # def predict_wrap(self,
-    #     test_features,
-    #     test_targets=None,
-    #     ):
-    #     """
-    #     """
-    #     # | - predict
-    #     # #################################################
-    #     model = self.model
-    #     # #################################################
-    #
-    #     prediction = model.predict(
-    #         test_fp=test_features,
-    #         uncertainty=True,
-    #         )
-    #
-    #     # Construct dataframe of predictions
-    #     df_predict = pd.DataFrame()
-    #     df_predict["prediction"] = prediction["prediction"].flatten()
-    #     df_predict["uncertainty"] = prediction["uncertainty"]
-    #     df_predict["uncertainty_with_reg"] = prediction["uncertainty"]
-    #
-    #     df_predict.index = test_features.index
-    #
-    #     return(df_predict)
-    #     # __|
-    #
+    def predict_wrap(self,
+        df_features,
+        ):
+        """
+        """
+        # | - predict
+        # #################################################
+        model = self.model
+        # #################################################
+
+        # prediction = model.predict(
+        #     test_fp=df_features,
+        #     uncertainty=True,
+        #     )
+
+        X_pred = df_features.to_numpy()
+        X_pred = X_pred.reshape(-1, X_pred.shape[1])
+
+        # y_pred = df_test_targets["y"].tolist()
+
+
+        prediction = model.predict(df_features)
+
+        # df_test_targets["y_pred"] = y_pred
+
+        # df_target_pred = df_test_targets
+
+
+
+        # Construct dataframe of predictions
+        df_predict = pd.DataFrame()
+        # df_predict["prediction"] = prediction["prediction"].flatten()
+        df_predict["prediction"] = prediction.flatten()
+        # df_predict["uncertainty"] = prediction["uncertainty"]
+        # df_predict["uncertainty_with_reg"] = prediction["uncertainty"]
+
+        df_predict.index = df_features.index
+
+        return(df_predict)
+        # __|
+
+
+    def cleanup_for_pickle(self):
+        """
+        """
+        # | - cleanup_for_pickle
+        print("COMBAK")
+
+        # model = self.model
+        #
+        # model.cinv = "I replaced this attribute because it causes the pickle to balloon in storage"
+        #
+        # self.model = model
+        # __|
+
+    # __| *************************************************
+
+class Decision_Tree_Regression(RegressionModel_2):
+    """Decision Tree Regression class"""
+
+    # | - Decision_Tree_Regression ************************
+
+    def __init__(self,
+        kernel_list=None,
+        regularization=None,
+        optimize_hyperparameters=None,
+        scale_data=None,
+        ):
+        """
+
+        """
+        # | - __init__
+        # #################################################
+        self.kernel_list = kernel_list
+        self.regularization = regularization
+        self.optimize_hyperparameters = optimize_hyperparameters
+        self.scale_data = scale_data
+        # #################################################
+        self.model = None
+        self.init_params = None
+        # #################################################
+
+
+        # Inherit all methods and properties from parent RegressionModel class
+        super().__init__()
+
+        init_params = dict(
+            kernel_list=kernel_list, regularization=regularization,
+            optimize_hyperparameters=optimize_hyperparameters, scale_data=scale_data,
+            )
+        self.init_params = init_params
+        #__|
+
+
+    def run_regression(self, train_features, train_targets):
+        """
+        """
+        # | - run_regression
+        # #################################################
+        kernel_list = self.kernel_list
+        regularization = self.regularization
+        optimize_hyperparameters = self.optimize_hyperparameters
+        scale_data = self.scale_data
+        # #################################################
+
+        from sklearn import tree
+        clf = tree.DecisionTreeRegressor()
+        clf = clf.fit(train_features, train_targets)
+
+        model = clf
+        self.model = model
+        # __|
+
+
+    # test_features=df_data.features
+    # test_targets=df_data.targets
+
+    def predict_wrap(self,
+        df_features,
+        # df_targets=None,
+        ):
+        """
+        """
+        # | - predict
+        # #################################################
+        model = self.model
+        # #################################################
+
+        prediction = model.predict(df_features)
+
+            # test_fp=df_features,
+            # uncertainty=True,
+            # )
+
+        # Construct dataframe of predictions
+        df_predict = pd.DataFrame()
+        df_predict["prediction"] = prediction
+
+        # df_predict["prediction"] = prediction["prediction"].flatten()
+        # df_predict["uncertainty"] = prediction["uncertainty"]
+        # df_predict["uncertainty_with_reg"] = prediction["uncertainty"]
+
+        df_predict.index = df_features.index
+
+        return(df_predict)
+        # __|
+
+    def cleanup_for_pickle(self):
+        """
+        """
+        # | - cleanup_for_pickle
+        model = self.model
+
+        model.cinv = "I replaced this attribute because it causes the pickle to balloon in storage"
+
+        self.model = model
+        # __|
+
+    # __| *************************************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# df_features_targets=df_j
+# df_test=None
+# num_pca_comp=num_pca_comp
+
+def process_pca_analysis(
+    df_features_targets=None,
+    df_test=None,
+    num_pca_comp=None,
+    ):
+    """
+    """
+    #| - process_pca_analysis
+    df_j = df_features_targets
+
+    # #####################################################
+    out_dict = pca_analysis(
+        df_j["features"],
+        pca_mode="num_comp",  # 'num_comp' or 'perc'
+        pca_comp=num_pca_comp,
+        verbose=False,
+        )
+    # #####################################################
+    PCA = out_dict["pca"]
+    df_feat_pca = out_dict["df_pca"]
+    # #####################################################
+
+
+
+    # #####################################################
+    # PCA on train data
+    cols_new = []
+    for col_i in df_feat_pca.columns:
+        col_new_i = ("features", col_i)
+        cols_new.append(col_new_i)
+    df_feat_pca.columns = pd.MultiIndex.from_tuples(cols_new)
+
+    df_pca_train = pd.concat([
+        df_feat_pca,
+        df_j[["targets"]],
+        ], axis=1)
+
+
+    # #####################################################
+    # PCA on test data
+
+    df_pca_test = None
+    if df_test is not None:
+        pca_test_features = PCA.transform(df_test.features)
+
+        num_pca_comp = pca_test_features.shape[-1]
+
+        df_pca_test = pd.DataFrame(
+            pca_test_features,
+            columns=['PCA%i' % i for i in range(num_pca_comp)],
+            index=df_test.index)
+
+
+
+        cols_new = []
+        for col_i in df_pca_test.columns:
+            col_new_i = ("features", col_i)
+            cols_new.append(col_new_i)
+        df_pca_test.columns = pd.MultiIndex.from_tuples(cols_new)
+
+        df_pca_test = pd.concat([
+            df_pca_test,
+            df_test[["targets"]],
+            ], axis=1)
+
+
+
+    # #####################################################
+    out_dict = dict()
+    # #####################################################
+    out_dict["PCA"] = PCA
+    out_dict["df_pca_train"] = df_pca_train
+    out_dict["df_pca_test"] = df_pca_test
+    # #####################################################
+    return(out_dict)
+    # #####################################################
+    # __|
+
+
+# pca_mode = "num_comp"  # 'num_comp' or 'perc'
+# pca_comp = 5
+
+def pca_analysis(
+    df_features,
+    pca_mode="num_comp",  # 'num_comp' or 'perc'
+    pca_comp=5,
+    verbose=True,
+    ):
+    """
+    """
+    # | - pca_analysis
+    df = df_features
+
+    shared_pca_attributes = dict(
+        svd_solver="auto",
+        whiten=True,
+        )
+
+    if pca_mode == "num_comp":
+        num_data_points = df.shape[0]
+        if num_data_points < pca_comp:
+            pca_comp = num_data_points
+
+        pca = PCA(
+            n_components=pca_comp,
+            **shared_pca_attributes)
+
+    elif pca_mode == "perc":
+        pca = PCA(
+            n_components=pca_perc,
+            **shared_pca_attributes)
+
+    else:
+        print("ISDJFIESIFJ NO GOODD")
+
+    pca.fit(df)
+
+
+    # | - Transforming the training data set
+    pca_features_cleaned = pca.transform(df)
+
+    num_pca_comp = pca_features_cleaned.shape[-1]
+
+    if verbose:
+        print("num_pca_comp: ", num_pca_comp)
+        print(df.shape)
+
+    df_pca = pd.DataFrame(
+        pca_features_cleaned,
+        columns=['PCA%i' % i for i in range(num_pca_comp)],
+        index=df.index)
+
+    if verbose:
+        print(df_pca.shape)
+    #__|
+
+    # #####################################################
+    out_dict = dict()
+    # #####################################################
+    out_dict["pca"] = pca
+    out_dict["df_pca"] = df_pca
+    # #####################################################
+    return(out_dict)
+    # #####################################################
+    #__|
+
+
+def plot_mae_vs_pca(
+    df_models=None,
+    layout_shared=None,
+    scatter_marker_props=None,
+    ):
+    """
+    """
+    # | - plot_mae_vs_pca
+
+    layout_mine = go.Layout(
+
+        showlegend=False,
+
+        yaxis=go.layout.YAxis(
+            title=dict(
+                text="K-Fold Cross Validated MAE",
+                ),
+            ),
+
+        xaxis=go.layout.XAxis(
+            title=dict(
+                text="Num PCA Components",
+                ),
+            ),
+
+        )
+
+
+    # #########################################################
+    layout_shared_i = layout_shared.update(layout_mine)
+
+    trace_i = go.Scatter(
+        x=df_models.index,
+        y=df_models.MAE,
+
+        mode="markers",
+        marker=dict(
+            **scatter_marker_props.to_plotly_json(),
+            ),
+        )
+
+    data = [trace_i, ]
+
+    fig = go.Figure(
+        data=data,
+        layout=layout_shared_i,
+        )
+
+    return(fig)
+
+    # if show_plot:
+    #     fig.show()
 
     # __|
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1001,59 +2243,15 @@ def run_SVR_workflow(
     ):
     """
     """
-    # | - run_gp_workflow
-
-    # if model_settings is None:
-    #     # GP kernel parameters
-    #     gp_settings = {
-    #         "noise": 0.02542,
-    #         "sigma_l": 2.5,
-    #         "sigma_f": 0.8,
-    #         "alpha": 0.2,
-    #         }
-    # else:
-    #     gp_settings = model_settings["gp_settings"]
+    # | - run_SVR_workflow
 
     #| - Setting up Gaussian Regression model
-
-    # Instantiate GP regression model
-
-    # RM = RegressionModel(
-    #     df_train=df_train_features,
-    #     train_targets=df_train_targets,
-
-    #     df_test=df_test_features,
-
-    #     opt_hyperparameters=True,
-    #     gp_settings_dict=gp_settings,
-    #     model_settings=model_settings,
-    #     uncertainty_type='regular',
-    #     verbose=True,
-    #     )
-
-    # RM.run_regression()
-
-
-    # Clean up model dataframe a bit
-    # model = RM.model
-    # model = model.drop(columns=["acquired"])
-    # model.columns = ["y_pred", "err_pred"]
-
     train_x = df_train_features.to_numpy()
-    # train_y = train_targets
     train_y = df_train_targets
-    # TEMP
-    # print("train_y.describe():", train_y.describe())
     train_y_standard = (train_y - train_y.mean()) / train_y.std()
 
     from sklearn import svm
 
-    # X = [[0, 0], [2, 2]]
-    # y = [0.5, 2.5]
-
-    # regr = svm.SVR(
-    #
-    #     )
 
     regr = svm.SVR(
         kernel='rbf',

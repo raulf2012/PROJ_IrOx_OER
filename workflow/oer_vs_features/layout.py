@@ -9,7 +9,6 @@ import plotly.graph_objs as go
 
 #| - Main layout object
 layout = go.Layout(
-    angularaxis=None,
     annotations=None,
     annotationdefaults=None,
     autosize=None,
@@ -26,7 +25,6 @@ layout = go.Layout(
     colorscale=None,
     colorway=None,
     datarevision=None,
-    direction=None,
     dragmode=None,
     editrevision=None,
     extendfunnelareacolors=None,
@@ -64,7 +62,6 @@ layout = go.Layout(
     meta=None,
     metasrc=None,
     modebar=None,
-    orientation=None,
     # #########################################################################
     paper_bgcolor="white",
     plot_bgcolor="white",
@@ -72,7 +69,6 @@ layout = go.Layout(
     # plot_bgcolor="rgba(255,255,255,1.)",
     piecolorway=None,
     polar=None,
-    radialaxis=None,
 
     # #########################################################################
     scene=go.layout.Scene(
